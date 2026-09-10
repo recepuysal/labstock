@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { stokSil } from '@/app/envanter/actions';
 
@@ -15,15 +16,33 @@ export function SatirMenu({
 }) {
   const [acik, setAcik] = useState(false);
   const [bekliyor, basla] = useTransition();
-  const kutuRef = useRef<HTMLDivElement>(null);
+  const dugmeRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [konum, setKonum] = useState<{ top: number; right: number } | null>(null);
+
+  // Menü, tablo/ızgaranın "overflow: hidden" (yuvarlak köşe) kapsayıcısı
+  // yüzünden kırpılmasın diye document.body'e portallanıyor — konumu
+  // butonun gerçek ekran koordinatlarından hesaplanır.
+  useLayoutEffect(() => {
+    if (!acik || !dugmeRef.current) return;
+    const dikdortgen = dugmeRef.current.getBoundingClientRect();
+    setKonum({ top: dikdortgen.bottom + 4, right: window.innerWidth - dikdortgen.right });
+  }, [acik]);
 
   useEffect(() => {
     if (!acik) return;
-    function disaTikla(e: MouseEvent) {
-      if (kutuRef.current && !kutuRef.current.contains(e.target as Node)) setAcik(false);
+    function kapat(e: Event) {
+      const hedef = e.target as Node;
+      if (dugmeRef.current?.contains(hedef)) return;
+      if (menuRef.current?.contains(hedef)) return;
+      setAcik(false);
     }
-    document.addEventListener('mousedown', disaTikla);
-    return () => document.removeEventListener('mousedown', disaTikla);
+    document.addEventListener('mousedown', kapat);
+    document.addEventListener('scroll', kapat, true);
+    return () => {
+      document.removeEventListener('mousedown', kapat);
+      document.removeEventListener('scroll', kapat, true);
+    };
   }, [acik]);
 
   function sil() {
@@ -47,8 +66,9 @@ export function SatirMenu({
   };
 
   return (
-    <div ref={kutuRef} style={{ position: 'relative' }}>
+    <div style={{ position: 'relative' }}>
       <button
+        ref={dugmeRef}
         type="button"
         onClick={() => setAcik((a) => !a)}
         disabled={saltOkunur || bekliyor}
@@ -77,35 +97,44 @@ export function SatirMenu({
         </svg>
       </button>
 
-      {acik && (
-        <div
-          role="menu"
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 26,
-            zIndex: 10,
-            minWidth: 130,
-            background: 'var(--surface)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--r-sm)',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.14)',
-            overflow: 'hidden',
-          }}
-        >
-          <Link
-            href={`/envanter/${stokId}/duzenle`}
-            role="menuitem"
-            onClick={() => setAcik(false)}
-            style={{ ...menuOge, color: 'var(--ink-2)' }}
+      {acik &&
+        konum &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: konum.top,
+              right: konum.right,
+              zIndex: 1000,
+              minWidth: 130,
+              background: 'var(--surface)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--r-sm)',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.14)',
+              overflow: 'hidden',
+            }}
           >
-            Düzenle
-          </Link>
-          <button type="button" role="menuitem" onClick={sil} style={{ ...menuOge, color: 'var(--crit)', borderTop: '1px solid var(--line-soft)' }}>
-            Sil
-          </button>
-        </div>
-      )}
+            <Link
+              href={`/envanter/${stokId}/duzenle`}
+              role="menuitem"
+              onClick={() => setAcik(false)}
+              style={{ ...menuOge, color: 'var(--ink-2)' }}
+            >
+              Düzenle
+            </Link>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={sil}
+              style={{ ...menuOge, color: 'var(--crit)', borderTop: '1px solid var(--line-soft)' }}
+            >
+              Sil
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
