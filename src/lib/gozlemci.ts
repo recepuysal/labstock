@@ -10,6 +10,7 @@ export type AktifGorunum = {
   saltOkunur: boolean;
   /** Bu hesap birinin gözlemcisi mi (bağlıysa, switcher'ı göstermek için) — izleme modunda olup olmadığından bağımsız. */
   gozlemciOf: string | null;
+  /** Bağlı olduğun kişinin adı — izleme modunda olup olmadığından bağımsız, switcher'da her zaman gösterilsin diye. */
   izlenenAdi: string | null;
   izlenenResim: string | null;
 };
@@ -31,24 +32,32 @@ export async function aktifGorunumAl(): Promise<AktifGorunum | null> {
     .maybeSingle();
   const gozlemciOf = profil?.gozlemci_of ?? null;
 
+  // Bağlı olduğun kişinin adı/fotoğrafı, hangi moddayız (kendi/izleme) fark etmeksizin
+  // her zaman çekilir — switcher, izlemiyorken de kime bağlı olduğunu göstersin diye.
+  let izlenenAdi: string | null = null;
+  let izlenenResim: string | null = null;
+  if (gozlemciOf) {
+    const { data } = await supabase.rpc('gozlemci_hedef_bilgisi');
+    const satir = (Array.isArray(data) ? data[0] : data) as
+      | { ad: string | null; resim_url: string | null }
+      | undefined;
+    izlenenAdi = satir?.ad ?? 'bağlı hesap';
+    izlenenResim = satir?.resim_url ?? null;
+  }
+
   const cookieDeposu = await cookies();
   const secilen = cookieDeposu.get(GORUNUM_COOKIE)?.value || null;
   const izliyor = Boolean(gozlemciOf) && secilen === gozlemciOf;
 
   if (!izliyor) {
-    return { kullaniciId: user.id, saltOkunur: false, gozlemciOf, izlenenAdi: null, izlenenResim: null };
+    return { kullaniciId: user.id, saltOkunur: false, gozlemciOf, izlenenAdi, izlenenResim };
   }
-
-  const { data } = await supabase.rpc('gozlemci_hedef_bilgisi');
-  const satir = (Array.isArray(data) ? data[0] : data) as
-    | { ad: string | null; resim_url: string | null }
-    | undefined;
 
   return {
     kullaniciId: gozlemciOf as string,
     saltOkunur: true,
     gozlemciOf,
-    izlenenAdi: satir?.ad ?? 'bağlı hesap',
-    izlenenResim: satir?.resim_url ?? null,
+    izlenenAdi,
+    izlenenResim,
   };
 }

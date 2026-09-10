@@ -57,6 +57,7 @@ export default async function ParcaDuzenleSayfasi({
     para_birimi: s.para_birimi,
     datasheet_url: s.datasheet_url,
     parametreler: s.parametreler,
+    resim_url: s.resim_url,
   };
 
   return (

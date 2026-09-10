@@ -551,3 +551,31 @@ drop policy if exists "profil resmi sahibi siler" on storage.objects;
 create policy "profil resmi sahibi siler" on storage.objects
   for delete to authenticated
   using (bucket_id = 'profil-resimleri' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- --------------------------------------------------------- parça resmi
+-- Ortak katalogdaki parçalar için fotoğraf — herkes okur (ortak katalog
+-- görseli), yükleyen kendi klasörüne (auth.uid()) yazar.
+
+insert into storage.buckets (id, name, public)
+values ('parca-resimleri', 'parca-resimleri', true)
+on conflict (id) do nothing;
+
+drop policy if exists "parca resmi herkes okur" on storage.objects;
+create policy "parca resmi herkes okur" on storage.objects
+  for select to public
+  using (bucket_id = 'parca-resimleri');
+
+drop policy if exists "parca resmi sahibi yukler" on storage.objects;
+create policy "parca resmi sahibi yukler" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'parca-resimleri' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "parca resmi sahibi gunceller" on storage.objects;
+create policy "parca resmi sahibi gunceller" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'parca-resimleri' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "parca resmi sahibi siler" on storage.objects;
+create policy "parca resmi sahibi siler" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'parca-resimleri' and (storage.foldername(name))[1] = (select auth.uid())::text);

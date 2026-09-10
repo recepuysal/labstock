@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { parcaEkle, parcaGuncelle, type EylemDurum } from '@/app/envanter/actions';
@@ -41,6 +41,7 @@ export type ParcaBaslangic = {
   datasheet_url: string | null;
   parametreler: Record<string, string>;
   rohs: boolean | null;
+  resim_url: string | null;
 };
 
 type Props = {
@@ -55,6 +56,8 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
   const eylem = duzenle ? parcaGuncelle : parcaEkle;
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(eylem, {});
   const router = useRouter();
+  const [onizleme, setOnizleme] = useState<string | null>(null);
+  const resimGirdi = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (durum.bilgi) {
@@ -62,6 +65,14 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
       router.refresh();
     }
   }, [durum.bilgi, donus, router]);
+
+  function resimSecildi(e: React.ChangeEvent<HTMLInputElement>) {
+    const dosya = e.target.files?.[0];
+    if (!dosya) return;
+    setOnizleme(URL.createObjectURL(dosya));
+  }
+
+  const gosterilecekResim = onizleme ?? baslangic?.resim_url ?? null;
 
   return (
     <form action={gonder} className="kart" style={{ padding: 22 }}>
@@ -78,6 +89,52 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
           {donus && <input type="hidden" name="donus" value={donus} />}
         </>
       )}
+
+      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 20 }}>
+        <div
+          style={{
+            width: 76,
+            height: 76,
+            flexShrink: 0,
+            borderRadius: 'var(--r)',
+            overflow: 'hidden',
+            background: 'var(--bg)',
+            border: '1px solid var(--line)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--muted-2)',
+          }}
+        >
+          {gosterilecekResim ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={gosterilecekResim} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="9" cy="9" r="1.8" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <label className="etiket">Parça görseli</label>
+          <input
+            ref={resimGirdi}
+            type="file"
+            name="resim"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={resimSecildi}
+            style={{ display: 'none' }}
+          />
+          <button type="button" className="btn" onClick={() => resimGirdi.current?.click()}>
+            Görsel seç
+          </button>
+          <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
+            PNG, JPEG ya da WEBP — en fazla 2 MB.
+          </p>
+        </div>
+      </div>
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="mpn">

@@ -36,6 +36,43 @@ export async function gorunumuDegistir(hedef: 'kendi' | 'gozlemci'): Promise<voi
   });
 }
 
+const IZINLI_RESIM_TURLERI = ['image/png', 'image/jpeg', 'image/webp'];
+const AZAMI_RESIM_BOYUTU = 2 * 1024 * 1024; // 2 MB
+
+/** Formdan gelen (varsa) parça görselini doğrular; geçersizse hata döner, yoksa null döner. */
+function parcaResmiDogrula(ham: FormDataEntryValue | null): { dosya: File | null; hata?: string } {
+  if (!(ham instanceof File) || ham.size === 0) return { dosya: null };
+  if (!IZINLI_RESIM_TURLERI.includes(ham.type)) {
+    return { dosya: null, hata: 'Görsel sadece PNG, JPEG ya da WEBP olabilir.' };
+  }
+  if (ham.size > AZAMI_RESIM_BOYUTU) {
+    return { dosya: null, hata: 'Görsel en fazla 2 MB olabilir.' };
+  }
+  return { dosya: ham };
+}
+
+/** Parça görselini Storage'a yükler ve genel-erişimli URL'ini döner. */
+async function parcaResminiYukle(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  partId: string,
+  dosya: File,
+): Promise<{ url?: string; hata?: string }> {
+  const uzanti = dosya.type.split('/')[1];
+  const yol = `${userId}/${partId}.${uzanti}`;
+
+  const { error: yuklemeHatasi } = await supabase.storage
+    .from('parca-resimleri')
+    .upload(yol, dosya, { upsert: true, contentType: dosya.type });
+  if (yuklemeHatasi) return { hata: `Görsel yüklenemedi: ${yuklemeHatasi.message}` };
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('parca-resimleri').getPublicUrl(yol);
+
+  return { url: `${publicUrl}?t=${Date.now()}` };
+}
+
 function rohsDegerinden(ham: FormDataEntryValue | null): boolean | null {
   const deger = String(ham ?? '');
   if (deger === 'evet') return true;
@@ -116,6 +153,8 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   const paraBirimi = String(formData.get('para_birimi') ?? 'TRY').trim() || 'TRY';
   const datasheetUrl = String(formData.get('datasheet_url') ?? '').trim() || null;
   const parametreler = metinToParametreler(String(formData.get('parametreler') ?? ''));
+  const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'));
+  if (resimHatasi) return { hata: resimHatasi };
 
   if (!Number.isFinite(adet) || adet < 0) return { hata: 'Adet geçersiz.' };
   if (!Number.isFinite(minAdet) || minAdet < 0) return { hata: 'Minimum seviye geçersiz.' };
@@ -159,6 +198,14 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
 
     if (ekleHatasi) return { hata: ekleHatasi.message };
     partId = yeni.id;
+  }
+
+  if (!partId) return { hata: 'Parça oluşturulamadı.' };
+
+  if (resimDosyasi) {
+    const { url, hata } = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi);
+    if (hata) return { hata };
+    await supabase.from('parts').update({ resim_url: url }).eq('id', partId);
   }
 
   // 2) Bu parça bu konumda zaten var mı? (kendi stoğunla sınırlı — izlediğin
@@ -239,6 +286,8 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   const paraBirimi = String(formData.get('para_birimi') ?? 'TRY').trim() || 'TRY';
   const datasheetUrl = String(formData.get('datasheet_url') ?? '').trim() || null;
   const parametreler = metinToParametreler(String(formData.get('parametreler') ?? ''));
+  const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'));
+  if (resimHatasi) return { hata: resimHatasi };
 
   if (!Number.isFinite(minAdet) || minAdet < 0) return { hata: 'Minimum seviye geçersiz.' };
   if (alisFiyati !== null && (!Number.isFinite(alisFiyati) || alisFiyati < 0)) {
@@ -246,16 +295,35 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   }
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  // Katalog alanları (mpn/üretici/açıklama/kategori/kılıf/datasheet/parametreler) sadece
+  let resimUrl: string | undefined;
+  if (resimDosyasi) {
+    const sonuc = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi);
+    if (sonuc.hata) return { hata: sonuc.hata };
+    resimUrl = sonuc.url;
+  }
+
+  // Katalog alanları (mpn/üretici/açıklama/kategori/kılıf/datasheet/parametreler/resim) sadece
   // parçayı ekleyen kullanıcı tarafından güncellenebilir (parts_update_own RLS politikası)
   // — bu ortak bir katalog satırı olduğu için. Başkasının eklediği bir parçaysa bu
   // güncelleme RLS tarafından sessizce hiçbir satırı etkilemeden geçer; stok
   // tarafındaki (konum/min. seviye) güncelleme yine de uygulanır.
-  const { error: parcaHatasi } = await supabase
-    .from('parts')
-    .update({ mpn, uretici, aciklama, kategori, kilif, datasheet_url: datasheetUrl, parametreler })
-    .eq('id', partId);
+  const parcaGuncelleme: Record<string, unknown> = {
+    mpn,
+    uretici,
+    aciklama,
+    kategori,
+    kilif,
+    datasheet_url: datasheetUrl,
+    parametreler,
+  };
+  if (resimUrl) parcaGuncelleme.resim_url = resimUrl;
+
+  const { error: parcaHatasi } = await supabase.from('parts').update(parcaGuncelleme).eq('id', partId);
 
   if (parcaHatasi) return { hata: parcaHatasi.message };
 

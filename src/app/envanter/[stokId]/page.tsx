@@ -347,16 +347,37 @@ export default async function ParcaDetaySayfasi({
           </div>
 
           <div style={{ flex: '1 1 280px', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {s.resim_url && (
-              <div className="kart" style={{ padding: 12 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={s.resim_url}
-                  alt={s.mpn}
-                  style={{ width: '100%', borderRadius: 'var(--r-sm)', display: 'block' }}
-                />
+            <div className="kart" style={{ padding: 12 }}>
+              <div
+                style={{
+                  width: '100%',
+                  aspectRatio: '1 / 1',
+                  borderRadius: 'var(--r-sm)',
+                  overflow: 'hidden',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--line-soft)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--muted-2)',
+                }}
+              >
+                {s.resim_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.resim_url}
+                    alt={s.mpn}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="9" cy="9" r="1.8" />
+                    <path d="m21 15-5-5L5 21" />
+                  </svg>
+                )}
               </div>
-            )}
+            </div>
 
             <KonumHaritasi konumlar={konumlar} konumId={s.konum_id} sayilar={sayilar} />
 

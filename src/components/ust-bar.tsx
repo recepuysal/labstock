@@ -41,7 +41,7 @@ export function UstBar({
       <div style={{ flex: 1 }} />
 
       {gozlemciOf && (
-        <GorunumSecici izleniyor={Boolean(saltOkunur)} izlenenAdi={izlenenAdi || 'İzlediğim'} />
+        <GorunumSecici izleniyor={Boolean(saltOkunur)} izlenenAdi={izlenenAdi || 'bağlı hesap'} />
       )}
 
       {(() => {
