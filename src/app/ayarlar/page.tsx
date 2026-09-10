@@ -5,6 +5,8 @@ import { TemaAnahtari } from '@/components/tema-anahtari';
 import { Hakkinda } from '@/components/hakkinda';
 import { DisaAktarButonu } from '@/components/disa-aktar-butonu';
 import { GozlemciErisimi } from '@/components/gozlemci-erisimi';
+import { EtiketAyarlariFormu } from '@/components/etiket-ayarlari-formu';
+import { etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +31,8 @@ export default async function AyarlarSayfasi() {
     baglandi: string | null;
     son_gorulme: string | null;
   }[];
+
+  const etiketAyarlari = await etiketAyarlariniAl();
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
@@ -60,6 +64,8 @@ export default async function AyarlarSayfasi() {
           </div>
           <TemaAnahtari />
         </div>
+
+        <EtiketAyarlariFormu baslangic={etiketAyarlari} />
 
         <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />
 

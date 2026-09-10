@@ -1,11 +1,24 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/server';
 import type { EylemDurum } from '@/app/envanter/actions';
 import type { EnvanterSatiri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
+import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
+
+/** Etiket (QR) görünüm tercihini (şekil/boyut/marka) kaydeder. */
+export async function etiketAyarlariniKaydet(ayarlar: EtiketAyarlari): Promise<void> {
+  const cookieDeposu = await cookies();
+  cookieDeposu.set(ETIKET_AYAR_COOKIE, JSON.stringify(ayarlar), {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  });
+}
 
 export async function profilGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const ad = String(formData.get('ad') ?? '').trim();
