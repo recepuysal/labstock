@@ -27,7 +27,7 @@ export default async function EnvanterLayout({ children }: { children: React.Rea
   const avatarEtiket = gorunum?.saltOkunur ? gorunum.izlenenAdi || '' : etiket;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <UstBar
         bas={avatarEtiket ? basHarfleri(avatarEtiket) : undefined}
         resimUrl={gorunum?.saltOkunur ? gorunum.izlenenResim : resimUrl}

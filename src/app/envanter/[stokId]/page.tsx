@@ -7,6 +7,7 @@ import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
 import { EtiketlerKarti } from '@/components/etiketler-karti';
+import { GeriButonu } from '@/components/geri-butonu';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
   DURUM_ETIKET,
@@ -143,6 +144,10 @@ export default async function ParcaDetaySayfasi({
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 40px' }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+        <div style={{ marginBottom: 12 }}>
+          <GeriButonu yedekHref="/envanter" />
+        </div>
+
         <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)', marginBottom: 8 }}>
           <Link href="/envanter" style={{ color: 'inherit' }}>
             Envanter
