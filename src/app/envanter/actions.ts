@@ -135,6 +135,42 @@ export async function konumEkle(_onceki: EylemDurum, formData: FormData): Promis
   redirect('/envanter');
 }
 
+export async function konumGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const konumId = String(formData.get('konum_id') ?? '');
+  if (!konumId) return { hata: 'Geçersiz konum.' };
+
+  const ad = String(formData.get('ad') ?? '').trim();
+  if (!ad) return { hata: 'Ad zorunlu.' };
+
+  const kod = String(formData.get('kod') ?? '').trim() || null;
+  const tip = String(formData.get('tip') ?? '').trim() || null;
+  const aciklama = String(formData.get('aciklama') ?? '').trim() || null;
+  const parentId = String(formData.get('parent_id') ?? '') || null;
+
+  if (parentId === konumId) return { hata: 'Bir konum kendi üst konumu olamaz.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('locations')
+    .update({ ad, kod, tip, aciklama, parent_id: parentId })
+    .eq('id', konumId);
+
+  if (error) return { hata: error.message };
+
+  revalidatePath('/envanter');
+  return { bilgi: 'Güncellendi.' };
+}
+
+/** Konumu siler — alt konumları da (parent_id on delete cascade) birlikte silinir. */
+export async function konumSil(konumId: string): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const { error } = await supabase.from('locations').delete().eq('id', konumId);
+  if (error) return { hata: error.message };
+
+  revalidatePath('/envanter');
+  return {};
+}
+
 export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const mpn = String(formData.get('mpn') ?? '').trim();
   if (!mpn) return { hata: 'MPN (parça numarası) zorunlu.' };

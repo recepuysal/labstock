@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
-import { stokKodu, ETIKET_OLCU } from '@/lib/etiket';
+import { stokKodu, ETIKET_OLCU, YAZI_OLCU } from '@/lib/etiket';
 import { qrGorseli, etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 import { YazdirButonu } from '@/components/yazdir-butonu';
 import type { EnvanterSatiri } from '@/lib/types';
@@ -27,6 +27,7 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
   const qr = await qrGorseli(stokKodu(s.stok_id));
   const ayarlar = await etiketAyarlariniAl();
   const olcu = ETIKET_OLCU[ayarlar.boyut];
+  const yazi = YAZI_OLCU[ayarlar.yaziBoyutu];
   const yuvarlak = ayarlar.sekil === 'yuvarlak';
 
   return (
@@ -78,17 +79,18 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qr} alt="QR" width={olcu.qr} height={olcu.qr} style={{ flexShrink: 0 }} />
-            <div className="mn" style={{ fontWeight: 700, fontSize: olcu.mpnBoyut * 0.7, wordBreak: 'break-word' }}>
+            <div className="mn" style={{ fontWeight: 700, fontSize: yazi.mpn * 0.85, wordBreak: 'break-word' }}>
               {s.mpn}
             </div>
             {ayarlar.marka && (
-              <div style={{ fontSize: olcu.altBoyut * 0.85, color: 'var(--muted-2)', fontWeight: 600 }}>LabStock</div>
+              <div style={{ fontSize: yazi.alt * 0.85, color: 'var(--muted-2)', fontWeight: 600 }}>LabStock</div>
             )}
           </div>
         ) : (
           <div
             className="etiket-karti"
             style={{
+              width: olcu.kartGenislik,
               padding: olcu.kartPadding,
               display: 'flex',
               gap: 16,
@@ -106,28 +108,28 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
               height={olcu.qr}
               style={{ flexShrink: 0, borderRadius: 6, border: '1px solid var(--line-soft)' }}
             />
-            <div style={{ minWidth: 0 }}>
-              <div className="mn" style={{ fontWeight: 700, fontSize: olcu.mpnBoyut, wordBreak: 'break-word' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="mn" style={{ fontWeight: 700, fontSize: yazi.mpn, wordBreak: 'break-word', lineHeight: 1.2 }}>
                 {s.mpn}
               </div>
               {(s.uretici || s.kilif) && (
-                <div style={{ fontSize: olcu.altBoyut, color: 'var(--muted)', marginTop: 2 }}>
+                <div style={{ fontSize: yazi.alt, color: 'var(--muted)', marginTop: 4, lineHeight: 1.3 }}>
                   {[s.uretici, s.kilif].filter(Boolean).join(' · ')}
                 </div>
               )}
               {(s.konum_kodu || s.konum_adi) && (
-                <div className="mn" style={{ fontSize: olcu.altBoyut, color: 'var(--copper)', marginTop: 6 }}>
+                <div className="mn" style={{ fontSize: yazi.alt, color: 'var(--copper)', marginTop: 6, fontWeight: 600 }}>
                   {s.konum_kodu ?? s.konum_adi}
                 </div>
               )}
               <div
                 className="mn"
-                style={{ fontSize: olcu.altBoyut * 0.8, color: 'var(--muted-2)', marginTop: 10, letterSpacing: '0.03em' }}
+                style={{ fontSize: yazi.alt * 0.75, color: 'var(--muted-2)', marginTop: 10, letterSpacing: '0.03em' }}
               >
                 {stokKodu(s.stok_id)}
               </div>
               {ayarlar.marka && (
-                <div style={{ fontSize: olcu.altBoyut * 0.9, color: 'var(--muted-2)', marginTop: 4, fontWeight: 600 }}>
+                <div style={{ fontSize: yazi.alt * 0.85, color: 'var(--muted-2)', marginTop: 4, fontWeight: 600 }}>
                   LabStock
                 </div>
               )}

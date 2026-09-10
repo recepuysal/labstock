@@ -57,7 +57,7 @@ export function EtiketAyarlariFormu({ baslangic }: { baslangic: EtiketAyarlari }
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <label className="etiket">Boyut</label>
+        <label className="etiket">Boyut (QR/kart)</label>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" style={pil(ayarlar.boyut === 'kucuk')} onClick={() => guncelle({ boyut: 'kucuk' })}>
             Küçük
@@ -69,6 +69,43 @@ export function EtiketAyarlariFormu({ baslangic }: { baslangic: EtiketAyarlari }
             Büyük
           </button>
         </div>
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <label className="etiket">Yazı büyüklüğü</label>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            style={pil(ayarlar.yaziBoyutu === 'kucuk')}
+            onClick={() => guncelle({ yaziBoyutu: 'kucuk' })}
+          >
+            Küçük
+          </button>
+          <button
+            type="button"
+            style={pil(ayarlar.yaziBoyutu === 'orta')}
+            onClick={() => guncelle({ yaziBoyutu: 'orta' })}
+          >
+            Orta
+          </button>
+          <button
+            type="button"
+            style={pil(ayarlar.yaziBoyutu === 'buyuk')}
+            onClick={() => guncelle({ yaziBoyutu: 'buyuk' })}
+          >
+            Büyük
+          </button>
+          <button
+            type="button"
+            style={pil(ayarlar.yaziBoyutu === 'cok-buyuk')}
+            onClick={() => guncelle({ yaziBoyutu: 'cok-buyuk' })}
+          >
+            Çok büyük
+          </button>
+        </div>
+        <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
+          Etikette boşluk kalıyorsa yazıyı büyütmek alanı daha iyi doldurur.
+        </p>
       </div>
 
       <label

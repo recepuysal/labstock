@@ -22,6 +22,9 @@ export async function etiketAyarlariniAl(): Promise<EtiketAyarlari> {
     return {
       sekil: ayristirilmis.sekil === 'yuvarlak' ? 'yuvarlak' : 'kare',
       boyut: ['kucuk', 'orta', 'buyuk'].includes(ayristirilmis.boyut) ? ayristirilmis.boyut : 'orta',
+      yaziBoyutu: ['kucuk', 'orta', 'buyuk', 'cok-buyuk'].includes(ayristirilmis.yaziBoyutu)
+        ? ayristirilmis.yaziBoyutu
+        : 'orta',
       marka: typeof ayristirilmis.marka === 'boolean' ? ayristirilmis.marka : true,
     };
   } catch {

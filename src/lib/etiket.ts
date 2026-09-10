@@ -13,26 +13,29 @@ export const LSTK_DESENI = /^LSTK:(P|K):([0-9a-fA-F-]{8,})$/;
 
 export type EtiketSekli = 'kare' | 'yuvarlak';
 export type EtiketBoyutu = 'kucuk' | 'orta' | 'buyuk';
+export type YaziBoyutu = 'kucuk' | 'orta' | 'buyuk' | 'cok-buyuk';
 
 export type EtiketAyarlari = {
   sekil: EtiketSekli;
   boyut: EtiketBoyutu;
+  yaziBoyutu: YaziBoyutu;
   marka: boolean;
 };
 
 export const VARSAYILAN_ETIKET_AYARLARI: EtiketAyarlari = {
   sekil: 'kare',
   boyut: 'orta',
+  yaziBoyutu: 'orta',
   marka: true,
 };
 
 export const ETIKET_AYAR_COOKIE = 'labstock_etiket_ayar';
 
-/** Tek parça etiketi için boyuta göre QR/yazı tipi ölçüleri. */
-export const ETIKET_OLCU: Record<EtiketBoyutu, { qr: number; kartPadding: number; mpnBoyut: number; altBoyut: number }> = {
-  kucuk: { qr: 84, kartPadding: 14, mpnBoyut: 13, altBoyut: 10 },
-  orta: { qr: 112, kartPadding: 20, mpnBoyut: 16, altBoyut: 11 },
-  buyuk: { qr: 152, kartPadding: 26, mpnBoyut: 20, altBoyut: 13 },
+/** Tek parça etiketi için boyuta göre QR/kart ölçüleri (yazı boyutu artık ayrı bir ayar). */
+export const ETIKET_OLCU: Record<EtiketBoyutu, { qr: number; kartPadding: number; kartGenislik: number }> = {
+  kucuk: { qr: 84, kartPadding: 14, kartGenislik: 260 },
+  orta: { qr: 112, kartPadding: 20, kartGenislik: 340 },
+  buyuk: { qr: 152, kartPadding: 26, kartGenislik: 440 },
 };
 
 /** Toplu konum etiketleri (ızgara) için boyuta göre QR ölçüsü. */
@@ -40,4 +43,12 @@ export const IZGARA_QR_OLCU: Record<EtiketBoyutu, number> = {
   kucuk: 56,
   orta: 72,
   buyuk: 96,
+};
+
+/** Yazı boyutu — QR/kart boyutundan bağımsız; boş kalan alanı doldurmak için büyütülebilir. */
+export const YAZI_OLCU: Record<YaziBoyutu, { mpn: number; alt: number }> = {
+  kucuk: { mpn: 13, alt: 9.5 },
+  orta: { mpn: 17, alt: 11.5 },
+  buyuk: { mpn: 23, alt: 14.5 },
+  'cok-buyuk': { mpn: 30, alt: 18 },
 };

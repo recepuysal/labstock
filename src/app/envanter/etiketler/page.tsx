@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
-import { konumKodu, IZGARA_QR_OLCU } from '@/lib/etiket';
+import { konumKodu, IZGARA_QR_OLCU, YAZI_OLCU } from '@/lib/etiket';
 import { qrGorseli, etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 import { YazdirButonu } from '@/components/yazdir-butonu';
 import type { Konum } from '@/lib/types';
@@ -43,6 +43,7 @@ export default async function KonumEtiketleriSayfasi() {
 
   const ayarlar = await etiketAyarlariniAl();
   const qrOlcu = IZGARA_QR_OLCU[ayarlar.boyut];
+  const yazi = YAZI_OLCU[ayarlar.yaziBoyutu];
   const yuvarlak = ayarlar.sekil === 'yuvarlak';
 
   return (
@@ -114,11 +115,11 @@ export default async function KonumEtiketleriSayfasi() {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={qr} alt="QR" width={qrOlcu} height={qrOlcu} style={{ flexShrink: 0 }} />
-                <div className="mn" style={{ fontWeight: 700, fontSize: 11 }}>
+                <div className="mn" style={{ fontWeight: 700, fontSize: yazi.mpn * 0.65 }}>
                   {konum.kod ?? konum.ad}
                 </div>
                 {ayarlar.marka && (
-                  <div style={{ fontSize: 7.5, color: 'var(--muted-2)', fontWeight: 600 }}>LabStock</div>
+                  <div style={{ fontSize: yazi.alt * 0.65, color: 'var(--muted-2)', fontWeight: 600 }}>LabStock</div>
                 )}
               </div>
             ) : (
@@ -143,13 +144,15 @@ export default async function KonumEtiketleriSayfasi() {
                   height={qrOlcu}
                   style={{ flexShrink: 0, borderRadius: 4, border: '1px solid var(--line-soft)' }}
                 />
-                <div style={{ minWidth: 0 }}>
-                  <div className="mn" style={{ fontWeight: 700, fontSize: 13 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="mn" style={{ fontWeight: 700, fontSize: yazi.mpn * 0.8, lineHeight: 1.2 }}>
                     {konum.kod ?? konum.ad}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2, lineHeight: 1.4 }}>{yol}</div>
+                  <div style={{ fontSize: yazi.alt * 0.85, color: 'var(--muted)', marginTop: 2, lineHeight: 1.4 }}>
+                    {yol}
+                  </div>
                   {ayarlar.marka && (
-                    <div style={{ fontSize: 8.5, color: 'var(--muted-2)', marginTop: 6, fontWeight: 600 }}>
+                    <div style={{ fontSize: yazi.alt * 0.7, color: 'var(--muted-2)', marginTop: 6, fontWeight: 600 }}>
                       LabStock
                     </div>
                   )}

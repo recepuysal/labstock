@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { KonumDugumu } from '@/lib/types';
+import { KonumSatirMenu } from './konum-satir-menu';
 
 function Dugum({
   dugum,
@@ -10,12 +11,14 @@ function Dugum({
   derinlik,
   arama,
   sayilar,
+  saltOkunur,
 }: {
   dugum: KonumDugumu;
   seciliId?: string;
   derinlik: number;
   arama?: string;
   sayilar: Record<string, number>;
+  saltOkunur?: boolean;
 }) {
   const [acik, setAcik] = useState(true);
   const secili = seciliId === dugum.id;
@@ -88,11 +91,25 @@ function Dugum({
             {sayilar[dugum.id] ?? 0}
           </span>
         </Link>
+
+        {!saltOkunur && (
+          <div style={{ flexShrink: 0, paddingRight: 4, display: 'flex' }}>
+            <KonumSatirMenu konumId={dugum.id} ad={dugum.ad} />
+          </div>
+        )}
       </div>
 
       {acik &&
         dugum.cocuklar.map((c) => (
-          <Dugum key={c.id} dugum={c} seciliId={seciliId} derinlik={derinlik + 1} arama={arama} sayilar={sayilar} />
+          <Dugum
+            key={c.id}
+            dugum={c}
+            seciliId={seciliId}
+            derinlik={derinlik + 1}
+            arama={arama}
+            sayilar={sayilar}
+            saltOkunur={saltOkunur}
+          />
         ))}
     </div>
   );
@@ -164,7 +181,15 @@ export function KonumAgaci({
       </Link>
 
       {agac.map((d) => (
-        <Dugum key={d.id} dugum={d} seciliId={seciliId} derinlik={0} arama={arama} sayilar={sayilar} />
+        <Dugum
+          key={d.id}
+          dugum={d}
+          seciliId={seciliId}
+          derinlik={0}
+          arama={arama}
+          sayilar={sayilar}
+          saltOkunur={saltOkunur}
+        />
       ))}
 
       {agac.length === 0 && (
