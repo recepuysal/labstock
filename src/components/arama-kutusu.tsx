@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { LSTK_DESENI } from '@/lib/etiket';
 
 export function AramaKutusu() {
   const searchParams = useSearchParams();
@@ -41,6 +42,21 @@ export function AramaKutusu() {
     return () => clearTimeout(zamanlayici);
   }, [deger, q, pathname, router, searchParams]);
 
+  // Bir USB barkod/QR okuyucu, taradığı kodu klavyeymiş gibi çok hızlı "yazar".
+  // Bu kod bizim etiket biçimimize (LSTK:P:… / LSTK:K:…) uyuyorsa arama yapmadan
+  // doğrudan ilgili parçaya/konuma atla.
+  function degisti(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    const eslesme = v.trim().match(LSTK_DESENI);
+    if (eslesme) {
+      const [, tur, id] = eslesme;
+      setDeger('');
+      basla(() => router.push(tur === 'P' ? `/envanter/${id}` : `/envanter?konum=${id}`));
+      return;
+    }
+    setDeger(v);
+  }
+
   return (
     <div
       style={{
@@ -72,7 +88,7 @@ export function AramaKutusu() {
       <input
         ref={girdi}
         value={deger}
-        onChange={(e) => setDeger(e.target.value)}
+        onChange={degisti}
         placeholder="Parça, MPN, açıklama ara…"
         style={{
           flex: 1,

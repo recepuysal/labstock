@@ -373,3 +373,30 @@ textarea {
   padding: 9px 12px;
   font-size: 12.5px;
 }
+
+/* --------------------------------------------------------------- etiket/yazdırma */
+
+@media print {
+  header,
+  aside,
+  .yazdirma-disi {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .etiket-karti {
+    background: #fff !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .etiket-izgara {
+    gap: 6mm !important;
+  }
+}
+

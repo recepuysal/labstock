@@ -227,3 +227,13 @@ export async function gozlemcilikKaldir(): Promise<EylemDurum> {
   revalidatePath('/', 'layout');
   return { bilgi: 'Bağlantı kaldırıldı.' };
 }
+
+/** Sahibin, seni izleyen belirli bir hesabı tek taraflı çıkarması. */
+export async function gozlemciyiCikar(gozlemciId: string): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('gozlemciyi_cikar', { p_gozlemci_id: gozlemciId });
+  if (error) return { hata: error.message };
+
+  revalidatePath('/ayarlar');
+  return { bilgi: 'Çıkarıldı.' };
+}

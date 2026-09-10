@@ -511,17 +511,36 @@ $$;
 -- gozlemcilerimi_listele: seni izleyen hesapları (ad + bağlanma/son görülme
 -- zamanı) listeler — profiles RLS'i başkasının satırını göstermediği için
 -- bu bilgilendirme amaçlı security definer fonksiyon üzerinden veriliyor.
+drop function if exists public.gozlemcilerimi_listele();
+
 create or replace function public.gozlemcilerimi_listele()
-returns table (ad text, baglandi timestamptz, son_gorulme timestamptz)
+returns table (id uuid, ad text, baglandi timestamptz, son_gorulme timestamptz)
 language sql
 security definer
 set search_path = public
 stable
 as $$
-  select coalesce(p.ad, 'İsimsiz hesap'), p.gozlemci_baglandi, p.son_gorulme
+  select p.id, coalesce(p.ad, 'İsimsiz hesap'), p.gozlemci_baglandi, p.son_gorulme
   from public.profiles p
   where p.gozlemci_of = auth.uid()
   order by p.gozlemci_baglandi desc nulls last;
+$$;
+
+-- gozlemciyi_cikar: sahibi, kendisini izleyen belirli bir hesabı tek
+-- taraflı olarak çıkarabilir (gözlemci sadece kendi bağlantısını
+-- kaldırabiliyordu, sahibin elinde bir araç yoktu).
+create or replace function public.gozlemciyi_cikar(p_gozlemci_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.profiles
+     set gozlemci_of = null
+   where id = p_gozlemci_id
+     and gozlemci_of = auth.uid();
+end;
 $$;
 
 -- --------------------------------------------------------- profil resmi

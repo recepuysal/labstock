@@ -103,6 +103,32 @@ export function ParcaIzgara({
                 {s.konum_kodu ?? s.konum_adi}
               </span>
             )}
+            {s.rohs === true && (
+              <span
+                style={{
+                  fontSize: 10.5,
+                  color: 'var(--ok)',
+                  background: 'var(--ok-bg)',
+                  borderRadius: 4,
+                  padding: '2px 6px',
+                }}
+              >
+                RoHS
+              </span>
+            )}
+            {s.rohs === false && (
+              <span
+                style={{
+                  fontSize: 10.5,
+                  color: 'var(--crit)',
+                  background: 'var(--crit-bg)',
+                  borderRadius: 4,
+                  padding: '2px 6px',
+                }}
+              >
+                RoHS değil
+              </span>
+            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>

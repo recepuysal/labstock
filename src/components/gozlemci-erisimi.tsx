@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { davetKoduOlustur } from '@/app/ayarlar/actions';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { davetKoduOlustur, gozlemciyiCikar } from '@/app/ayarlar/actions';
 import { zamanOnce } from '@/lib/types';
 
-type Gozlemci = { ad: string; baglandi: string | null; son_gorulme: string | null };
+type Gozlemci = { id: string; ad: string; baglandi: string | null; son_gorulme: string | null };
 
 export function GozlemciErisimi({
   mevcutKod,
@@ -17,6 +18,9 @@ export function GozlemciErisimi({
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [kopyalandi, setKopyalandi] = useState(false);
+  const [cikariliyorId, setCikariliyorId] = useState<string | null>(null);
+  const [cikariliyor, basla] = useTransition();
+  const router = useRouter();
 
   async function olustur() {
     setCalisiyor(true);
@@ -39,6 +43,17 @@ export function GozlemciErisimi({
     } catch {
       // pano izni yoksa sessizce yoksay — kod zaten ekranda okunabilir
     }
+  }
+
+  function cikar(g: Gozlemci) {
+    if (!window.confirm(`${g.ad} artık deponu izleyemesin mi? İstersen kodu tekrar paylaşarak yeniden bağlanabilir.`)) {
+      return;
+    }
+    setCikariliyorId(g.id);
+    basla(async () => {
+      await gozlemciyiCikar(g.id);
+      router.refresh();
+    });
   }
 
   return (
@@ -106,16 +121,36 @@ export function GozlemciErisimi({
             SENİ İZLEYENLER · {gozlemciler.length}/8
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {gozlemciler.map((g, i) => (
+            {gozlemciler.map((g) => (
               <div
-                key={i}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 12.5, gap: 8 }}
+                key={g.id}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, gap: 8 }}
               >
-                <span style={{ fontWeight: 500 }}>{g.ad}</span>
-                <span style={{ color: 'var(--muted)', fontSize: 11, textAlign: 'right' }}>
-                  {g.baglandi && `${zamanOnce(g.baglandi)} bağlandı`}
-                  {g.baglandi && g.son_gorulme && ' · '}
-                  {g.son_gorulme && `son görülme ${zamanOnce(g.son_gorulme)}`}
+                <span style={{ fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {g.ad}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <span style={{ color: 'var(--muted)', fontSize: 11, textAlign: 'right' }}>
+                    {g.baglandi && `${zamanOnce(g.baglandi)} bağlandı`}
+                    {g.baglandi && g.son_gorulme && ' · '}
+                    {g.son_gorulme && `son görülme ${zamanOnce(g.son_gorulme)}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => cikar(g)}
+                    disabled={cikariliyor && cikariliyorId === g.id}
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--crit)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      opacity: cikariliyor && cikariliyorId === g.id ? 0.5 : 1,
+                    }}
+                  >
+                    {cikariliyor && cikariliyorId === g.id ? '…' : 'Çıkar'}
+                  </button>
                 </span>
               </div>
             ))}

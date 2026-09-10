@@ -176,6 +176,12 @@ export default async function ParcaDetaySayfasi({
                   {s.kilif}
                 </span>
               )}
+              {s.rohs === true && <span className="rozet rozet-yesil">RoHS uyumlu</span>}
+              {s.rohs === false && (
+                <span className="rozet" style={{ background: 'var(--crit-bg)', color: 'var(--crit)' }}>
+                  RoHS değil
+                </span>
+              )}
             </div>
 
             {(s.uretici || s.aciklama) && (
@@ -195,6 +201,9 @@ export default async function ParcaDetaySayfasi({
                   Konum değiştir
                 </Link>
               )}
+              <Link href={`/envanter/${s.stok_id}/etiket`} className="btn">
+                Etiket yazdır
+              </Link>
               {s.datasheet_url && (
                 <a href={s.datasheet_url} target="_blank" rel="noopener noreferrer" className="btn">
                   Datasheet

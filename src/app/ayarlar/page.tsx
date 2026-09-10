@@ -23,7 +23,12 @@ export default async function AyarlarSayfasi() {
     .maybeSingle();
 
   const { data: gozlemciVerisi } = await supabase.rpc('gozlemcilerimi_listele');
-  const gozlemciler = (gozlemciVerisi ?? []) as { ad: string; baglandi: string | null; son_gorulme: string | null }[];
+  const gozlemciler = (gozlemciVerisi ?? []) as {
+    id: string;
+    ad: string;
+    baglandi: string | null;
+    son_gorulme: string | null;
+  }[];
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>

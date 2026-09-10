@@ -95,8 +95,14 @@ export function ParcaTablosu({
           </div>
 
           <div style={{ fontSize: 12, color: 'var(--ink-2)' }}>{s.kategori ?? '—'}</div>
-          <div className="mn" style={{ fontSize: 11.5, color: 'var(--ink-2)' }}>
+          <div className="mn" style={{ fontSize: 11.5, color: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 5 }}>
             {s.kilif ?? '—'}
+            {s.rohs === true && (
+              <span title="RoHS uyumlu" style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--ok-dot)', flexShrink: 0 }} />
+            )}
+            {s.rohs === false && (
+              <span title="RoHS değil" style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--crit-dot)', flexShrink: 0 }} />
+            )}
           </div>
 
           <div>
