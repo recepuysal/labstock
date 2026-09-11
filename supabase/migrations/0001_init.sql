@@ -623,3 +623,77 @@ drop policy if exists feedback_select_own on public.feedback;
 create policy feedback_select_own on public.feedback
   for select to authenticated
   using (user_id = (select auth.uid()));
+
+-- Yeni geri bildirim geldiğinde labstockassistant@gmail.com'a Resend üzerinden
+-- bir bildirim maili atar. API anahtarı GİT'E KOMİT EDİLMEZ — bu dosyayı
+-- çalıştırmadan önce (ya da sonra, bir kere) ayrıca şunu çalıştır:
+--   alter database postgres set app.resend_api_key = 're_...';
+-- Anahtar ayarlanmamışsa tetikleyici sessizce hiçbir şey yapmaz (form yine
+-- de normal çalışır, sadece mail gitmez).
+
+create extension if not exists pg_net;
+
+create or replace function public.html_kacis(metin text)
+returns text
+language sql
+immutable
+as $$
+  select replace(replace(replace(replace(replace(coalesce(metin, ''),
+    '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '"', '&quot;'), chr(10), '<br>');
+$$;
+
+create or replace function public.feedback_bildir()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  api_key      text := current_setting('app.resend_api_key', true);
+  gonderen     text;
+  html_govde   text;
+begin
+  if api_key is null or api_key = '' then
+    return new;
+  end if;
+
+  select email into gonderen from auth.users where id = new.user_id;
+
+  html_govde := '<div style="background:#f2ede3;padding:32px 16px;font-family:Segoe UI,Arial,sans-serif">'
+    || '<table role="presentation" width="100%" style="max-width:520px;margin:0 auto;background:#fbf8f2;border:1px solid #e4dccb;border-radius:10px;overflow:hidden">'
+    || '<tr><td style="background:#f2ede3;padding:20px 28px;border-bottom:3px solid #a3611f">'
+    || '<img src="https://raw.githubusercontent.com/recepuysal/labstock/master/labstock-a1-logo/png/yatay-512.png" height="28" alt="LabStock">'
+    || '</td></tr>'
+    || '<tr><td style="padding:24px 28px">'
+    || '<div style="font-size:11px;font-weight:600;letter-spacing:.08em;color:#a19787;text-transform:uppercase;margin-bottom:14px">Yeni Geri Bildirim</div>'
+    || '<table role="presentation" style="width:100%;font-size:13px;color:#4a4238;margin-bottom:18px">'
+    || '<tr><td style="padding:3px 0;color:#837a6b;width:90px">Gönderen</td><td style="padding:3px 0"><b>' || public.html_kacis(coalesce(gonderen, 'bilinmiyor')) || '</b></td></tr>'
+    || '<tr><td style="padding:3px 0;color:#837a6b">Sürüm</td><td style="padding:3px 0">' || public.html_kacis(coalesce(new.surum, '—')) || '</td></tr>'
+    || '<tr><td style="padding:3px 0;color:#837a6b">Tarih</td><td style="padding:3px 0">' || to_char(new.created_at, 'DD.MM.YYYY HH24:MI') || '</td></tr>'
+    || '</table>'
+    || '<div style="background:#f7f2e8;border-left:3px solid #a3611f;border-radius:6px;padding:14px 16px;font-size:13.5px;line-height:1.6;color:#1f1b16;white-space:pre-wrap">'
+    || public.html_kacis(new.mesaj)
+    || '</div>'
+    || '</td></tr>'
+    || '<tr><td style="padding:14px 28px;background:#f7f2e8;font-size:11px;color:#a19787">Bu e-posta, LabStock Ayarlar sayfasındaki geri bildirim formundan otomatik gönderildi.</td></tr>'
+    || '</table></div>';
+
+  perform net.http_post(
+    url := 'https://api.resend.com/emails',
+    headers := jsonb_build_object('Authorization', 'Bearer ' || api_key, 'Content-Type', 'application/json'),
+    body := jsonb_build_object(
+      'from', 'LabStock <onboarding@resend.dev>',
+      'to', jsonb_build_array('labstockassistant@gmail.com'),
+      'subject', 'Yeni geri bildirim — LabStock',
+      'html', html_govde
+    )
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists feedback_bildir_trigger on public.feedback;
+create trigger feedback_bildir_trigger
+  after insert on public.feedback
+  for each row execute function public.feedback_bildir();

@@ -189,6 +189,25 @@ npx electron-builder --win     # electron-app/dist/LabStock-Kurulum.exe üretir
 hafif bir istek atar — ücretsiz plandaki projeler 7 gün hiç istek almazsa
 otomatik duraklatıldığı için bunu önler.
 
+### 5. Geri bildirim maili (isteğe bağlı)
+
+Ayarlar sayfasındaki geri bildirim formu her zaman `feedback` tablosuna yazar;
+ayrıca her yeni kayıtta **labstockassistant@gmail.com**'a güzel bir HTML mail
+gitmesini istersen ([Resend](https://resend.com) ücretsiz planıyla):
+
+1. [resend.com](https://resend.com)'da ücretsiz bir hesap aç, bir **API key**
+   üret (`re_...` ile başlar).
+2. Supabase **SQL Editor**'de (bu komut `0001_init.sql`'in dışında — anahtar
+   git'e komit edilmemesi için ayrı çalıştırılır):
+   ```sql
+   alter database postgres set app.resend_api_key = 're_senin_anahtarin';
+   ```
+3. `supabase/migrations/0001_init.sql`'in geri kalanı zaten `pg_net` ile
+   çalışan tetikleyiciyi kuruyor — dosyanın tamamını (yeniden) çalıştırman yeterli.
+
+Anahtar ayarlanmamışsa tetikleyici sessizce hiçbir şey yapmaz; form yine de
+normal çalışır, sadece mail gitmez.
+
 ## Veri modeli
 
 Kritik tasarım kararı: **parça tanımı ile stok ayrı**.
