@@ -38,7 +38,7 @@ export default async function AktivitelerSayfasi() {
 
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)', marginBottom: 8 }}>
           <Link href="/envanter" style={{ color: 'inherit' }}>
             Envanter

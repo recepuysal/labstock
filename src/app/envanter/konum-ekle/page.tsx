@@ -21,7 +21,7 @@ export default async function KonumEkleSayfasi() {
 
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
-      <div style={{ maxWidth: 620, margin: '0 auto' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
           Konum ekle
         </h1>

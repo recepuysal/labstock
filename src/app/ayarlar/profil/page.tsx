@@ -34,7 +34,7 @@ export default async function ProfilSayfasi() {
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
-      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <Link
           href="/envanter"
           className="btn"

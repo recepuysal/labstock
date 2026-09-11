@@ -61,7 +61,7 @@ export default async function KonumEtiketleriSayfasi() {
       <div
         className="yazdirma-disi"
         style={{
-          maxWidth: 900,
+          maxWidth: 1080,
           margin: '0 auto 8px',
           display: 'flex',
           alignItems: 'center',
@@ -93,7 +93,7 @@ export default async function KonumEtiketleriSayfasi() {
         </div>
       </div>
 
-      <div className="yazdirma-disi" style={{ maxWidth: 900, margin: '0 auto 20px' }}>
+      <div className="yazdirma-disi" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px' }}>
           Konum etiketleri
         </h1>
@@ -111,7 +111,7 @@ export default async function KonumEtiketleriSayfasi() {
         <div
           className="etiket-izgara"
           style={{
-            maxWidth: 900,
+            maxWidth: 1080,
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${yuvarlak ? yuvarlakCap : 240}px, 1fr))`,
