@@ -6,6 +6,7 @@ import { Hakkinda } from '@/components/hakkinda';
 import { DisaAktarButonu } from '@/components/disa-aktar-butonu';
 import { GozlemciErisimi } from '@/components/gozlemci-erisimi';
 import { EtiketAyarlariFormu } from '@/components/etiket-ayarlari-formu';
+import { GeriBildirimFormu } from '@/components/geri-bildirim-formu';
 import { etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,8 @@ export default async function AyarlarSayfasi() {
         <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />
 
         <DisaAktarButonu />
+
+        <GeriBildirimFormu />
 
         <Hakkinda />
       </div>

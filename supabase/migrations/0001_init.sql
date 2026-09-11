@@ -598,3 +598,28 @@ drop policy if exists "parca resmi sahibi siler" on storage.objects;
 create policy "parca resmi sahibi siler" on storage.objects
   for delete to authenticated
   using (bucket_id = 'parca-resimleri' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- ---------------------------------------------------------------- feedback
+-- Ayarlar sayfasındaki geri bildirim formu. Kullanıcı sadece kendi
+-- gönderdiklerini görür/ekler; tüm kayıtlar Supabase dashboard'dan
+-- (postgres/service role RLS'i atlar) okunur, ayrı bir yönetici arayüzü yok.
+
+create table if not exists public.feedback (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  mesaj      text not null,
+  surum      text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.feedback enable row level security;
+
+drop policy if exists feedback_insert_own on public.feedback;
+create policy feedback_insert_own on public.feedback
+  for insert to authenticated
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists feedback_select_own on public.feedback;
+create policy feedback_select_own on public.feedback
+  for select to authenticated
+  using (user_id = (select auth.uid()));

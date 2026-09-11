@@ -1,0 +1,79 @@
+LabStock License 1.0
+
+Copyright (c) 2026 Recep Uysal — LabStock. All rights reserved.
+
+Bu yazılımın kaynak kodu (bu depo) ve derlenmiş sürümleri (GitHub Releases'te
+yayınlanan .exe dosyaları) aşağıdaki şartlarla ücretsiz kullanıma sunulmuştur.
+
+1. KULLANIM İZNİ
+   Bu yazılımı, kişisel veya ticari herhangi bir amaçla (kendi işinizde,
+   şirketinizde ya da müşterileriniz için dahili stok/envanter takibi dahil)
+   ücretsiz olarak indirebilir, kurabilir ve kullanabilirsiniz.
+
+2. DAĞITIM YASAĞI
+   Bu yazılımın orijinal ya da değiştirilmiş herhangi bir kopyasını üçüncü
+   kişilere dağıtamaz, yayınlayamaz, satamaz, kiralayamaz ya da alt lisans
+   veremezsiniz. Yazılımın resmî dağıtım kanalı yalnızca
+   https://github.com/recepuysal/labstock adresindeki GitHub Releases
+   sayfasıdır.
+
+3. DEĞİŞİKLİK
+   Kendi kullanımınız için kaynak kodda değişiklik yapabilirsiniz, ancak bu
+   değiştirilmiş sürümü başkalarıyla paylaşamaz ya da yayınlayamazsınız.
+   Projeye katkıda bulunmak isterseniz, değişikliklerinizi bir pull request
+   olarak resmî depoya gönderebilirsiniz; kabul edilen katkılar bu lisansın
+   kapsamına girer ve telif hakkı sahibine devredilir.
+
+4. MARKA VE İSİM
+   "LabStock" adı, logosu ve marka unsurları telif hakkı sahibine aittir.
+   Bu yazılımı temel alan hiçbir ürün "LabStock" adıyla ya da onunla
+   karıştırılabilecek bir adla sunulamaz.
+
+5. GARANTİ REDDİ
+   BU YAZILIM "OLDUĞU GİBİ" SUNULMAKTADIR, AÇIK YA DA ZIMNİ HİÇBİR GARANTİ
+   VERİLMEMEKTEDİR. TELİF HAKKI SAHİBİ, BU YAZILIMIN KULLANIMINDAN DOĞABİLECEK
+   HİÇBİR DOĞRUDAN YA DA DOLAYLI ZARARDAN SORUMLU TUTULAMAZ.
+
+6. FESİH
+   Bu şartlara aykırı davranıldığında yazılımı kullanma izniniz kendiliğinden
+   sona erer.
+
+---
+
+LabStock License 1.0
+
+Copyright (c) 2026 Recep Uysal — LabStock. All rights reserved.
+
+The source code in this repository and the compiled builds published under
+GitHub Releases are made available free of charge under the following terms.
+
+1. PERMITTED USE
+   You may download, install, and use this software free of charge for any
+   purpose, personal or commercial — including running your own or your
+   employer's internal inventory tracking on it.
+
+2. NO REDISTRIBUTION
+   You may not distribute, publish, sell, rent, or sublicense any copy of
+   this software, original or modified, to any third party. The only
+   official distribution channel is the GitHub Releases page at
+   https://github.com/recepuysal/labstock.
+
+3. MODIFICATIONS
+   You may modify the source code for your own use, but you may not share
+   or publish a modified copy. Contributions are welcome via pull request
+   to the official repository; accepted contributions fall under this
+   license and are assigned to the copyright holder.
+
+4. TRADEMARK
+   The "LabStock" name, logo, and brand elements belong to the copyright
+   holder. No product based on this software may be offered under the name
+   "LabStock" or a confusingly similar name.
+
+5. NO WARRANTY
+   THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED. THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY DAMAGES
+   ARISING FROM THE USE OF THIS SOFTWARE.
+
+6. TERMINATION
+   Your rights under this license terminate automatically if you violate
+   any of these terms.

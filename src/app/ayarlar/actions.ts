@@ -9,6 +9,25 @@ import type { EnvanterSatiri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
 
+export async function geriBildirimGonder(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const mesaj = String(formData.get('mesaj') ?? '').trim();
+  const surum = String(formData.get('surum') ?? '').trim() || null;
+
+  if (!mesaj) return { hata: 'Bir şeyler yaz.' };
+  if (mesaj.length > 4000) return { hata: 'Mesaj en fazla 4000 karakter olabilir.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { error } = await supabase.from('feedback').insert({ user_id: user.id, mesaj, surum });
+  if (error) return { hata: error.message };
+
+  return { bilgi: 'Gönderildi, teşekkürler!' };
+}
+
 /** Etiket (QR) görünüm tercihini (şekil/boyut/marka) kaydeder. */
 export async function etiketAyarlariniKaydet(ayarlar: EtiketAyarlari): Promise<void> {
   const cookieDeposu = await cookies();

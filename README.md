@@ -1,9 +1,91 @@
-# LabStock
+<p align="center">
+  <img src="labstock-a1-logo/png/yatay-1024.png" alt="LabStock" width="360">
+</p>
 
-Elektronik komponent deposu için stok takip uygulaması. Next.js 16 (App Router) +
-Supabase (Postgres, Auth, RLS) üzerine kurulu; **Windows masaüstü uygulaması**
-olarak Electron ile paketleniyor ve GitHub Releases üzerinden kendini otomatik
-güncelliyor.
+<p align="center">
+  Elektronik komponent deposu için stok takip uygulaması — Windows masaüstünde
+  çalışır, kendini otomatik günceller, ekibinle paylaşabilirsin.
+</p>
+
+<p align="center">
+  <a href="https://github.com/recepuysal/labstock/releases/latest">
+    <strong>⬇ En son sürümü indir</strong>
+  </a>
+  ·
+  <a href="#geri-bildirim--iletişim">Geri bildirim gönder</a>
+  ·
+  <a href="#lisans">Lisans</a>
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/screenshots/envanter-listesi.png" alt="Envanter listesi" width="820">
+</p>
+
+## Neden LabStock?
+
+Elektronik hobisiyle uğraşan ya da küçük bir üretim atölyesi işleten herkes aynı
+soruyu sorar: *"O direnç hangi çekmecedeydi?"* LabStock, parçalarını fiziksel
+konumlarıyla (oda › dolap › çekmece › bölme) eşleştirip arama, filtreleme,
+Excel'den toplu aktarma ve QR etiketleriyle bunu çözüyor — üstelik masaüstünde
+her açılışta kendini sessizce günceller, kurulumdan sonra elle bir şey yapmana
+gerek kalmaz.
+
+## Özellikler
+
+**Konum ağacı ve parça listesi**
+Oda › dolap › çekmece › bölme şeklinde hiyerarşik bir konum ağacı; parça
+listesini konuma, kategoriye, kılıfa, duruma ve etikete göre filtrele, liste ya
+da ızgara görünümünde incele.
+
+<p align="center">
+  <img src="docs/screenshots/envanter-izgara.png" alt="Izgara görünümü" width="820">
+</p>
+
+**Parça detayı**
+MPN, üretici, parametreler, hareket geçmişi, konum haritası, tedarik bilgisi ve
+hangi projelerde kullanıldığı — tek sayfada. LCSC kodunu yapıştırıp "çek"
+dediğinde üretici/açıklama/kategori/görsel otomatik doldurulur.
+
+<p align="center">
+  <img src="docs/screenshots/parca-detay.png" alt="Parça detay sayfası" width="820">
+</p>
+
+**Yazdırılabilir QR etiketler**
+Her parça ve konum için tamamen çevrimdışı üretilen QR etiketler — yazdır, kes,
+çekmeceye yapıştır. Bir USB barkod okuyucuyla (ya da arama kutusuna elle
+yapıştırarak) taratınca doğrudan ilgili parçaya/konuma atlar.
+
+<p align="center">
+  <img src="docs/screenshots/etiket-qr.png" alt="Yazdırılabilir QR etiketler" width="700">
+</p>
+
+**Excel ile toplu aktarım**
+Elindeki envanteri tek bir `.xlsx`/`.csv` dosyasıyla içe aktar; tüm depoyu
+istediğin an `.xlsx` olarak dışa aktar.
+
+**Gözlemci (salt-okunur paylaşım)**
+Ayarlar'dan ürettiğin bir davet koduyla, deponu bir meslektaşınla ya da
+öğrencinle salt-okunur paylaş — düzenleme/silme arayüzü onlar için otomatik
+gizlenir, sen tek taraflı erişimi istediğin an kaldırabilirsin.
+
+**Masaüstü uygulaması + otomatik güncelleme**
+Windows'a kurulum sihirbazıyla kurulur (yönetici izni gerekmez), her açılışta
+arka planda güncelleme kontrolü yapar; yeni sürüm varsa uygulama içi sessiz bir
+bildirimle indirilip kurulur — hiçbir pencere açılmaz.
+
+<p align="center">
+  <img src="docs/screenshots/masaustu-guncelleme.png" alt="Otomatik güncelleme bildirimi" width="820">
+</p>
+
+**Ayarlar**
+Koyu/açık tema, etiket (QR) görünüm tercihleri, sürüm bilgisi, gözlemci
+yönetimi ve doğrudan uygulama içinden geri bildirim gönderme.
+
+<p align="center">
+  <img src="docs/screenshots/ayarlar.png" alt="Ayarlar sayfası" width="700">
+</p>
 
 ## Kurulum (kullanıcı olarak)
 
@@ -22,7 +104,26 @@ varsa sağ altta uygulama içi bir bildirim çıkar (Windows penceresi değil) �
 "İndir" dedikten sonra ilerleme çubuğunu görürsün, "Yeniden başlat ve kur"
 dediğinde de hiçbir pencere açılmadan sessizce güncellenip kendini yeniden açar.
 
+## Geri bildirim & iletişim
+
+Bir hata mı buldun, bir özellik mi eksik? İki yolu var:
+
+- Uygulama içinden: **Ayarlar → Geri Bildirim** kartından doğrudan yaz, gönder.
+- E-posta: **labstockassistant@gmail.com**
+
+## Lisans
+
+LabStock ücretsizdir — kişisel ya da ticari amaçla kurup kullanabilirsin. Kaynak
+kodu ya da değiştirilmiş bir sürümünü başkalarına dağıtamaz/yayınlayamazsın;
+tek resmî dağıtım kanalı bu depodaki [Releases](https://github.com/recepuysal/labstock/releases)
+sayfasıdır. Tam şartlar için [LICENSE](LICENSE) dosyasına bak.
+
+---
+
 ## Geliştirme
+
+Aşağısı katkıda bulunmak ya da projeyi kendi Supabase projenle çalıştırmak
+isteyenler için.
 
 ### 1. Supabase projesi
 
@@ -98,6 +199,7 @@ Kritik tasarım kararı: **parça tanımı ile stok ayrı**.
 | `projects`, `project_bom` | Proje ve malzeme listesi. Parça detay sayfasından ekleniyor; ayrı bir Projeler sayfası henüz yok. |
 | `tags`, `stock_item_tags` | Kullanıcıya özel serbest etiketler; bir stok kalemine birden fazla etiket iliştirilebilir. |
 | `profiles` | Ad/telefon/şirket bilgisi, profil fotoğrafı, tema tercihi ve gözlemcilik alanları (`davet_kodu`, `gozlemci_of`, `gozlemci_baglandi`, `son_gorulme`). |
+| `feedback` | Ayarlar sayfasındaki geri bildirim formundan gelen mesajlar. |
 
 Adet doğrudan yazılmaz: `stok_hareket()` RPC'si `stock_items.adet` güncellemesi ile
 hareket kaydını birlikte yapar.
@@ -130,30 +232,26 @@ kendi deposunu salt-okunur izlemesine izin verebilir:
 ## Şu an ne var
 
 - E-posta + şifre ile kayıt/giriş, "beni hatırla", 6 haneli kodla e-posta doğrulama
-- Konum ağacı: alt ağaca göre filtreleme, adet rozetleri, aç/kapa, bölme haritası
+- Konum ağacı: alt ağaca göre filtreleme, adet rozetleri, aç/kapa, bölme haritası, düzenle/sil
 - Parça listesi: arama, kategori/kılıf/durum/etiket filtreleri, sıralama, liste/ızgara görünümü
 - Parça detay sayfası: parametreler, hareket geçmişi, konum haritası, tedarik bilgisi,
-  kullanıldığı projeler, serbest etiketler
+  kullanıldığı projeler, serbest etiketler, RoHS rozeti, parça görseli
+- Yazdırılabilir QR etiketler (tek parça + toplu konum), USB barkod okuyucu desteği
 - Excel/CSV toplu içe aktarma; Ayarlar'dan tüm envanteri `.xlsx` olarak dışa aktarma
 - Son Aktiviteler: depodaki tüm stok hareketlerinin tek sayfada listesi
-- Ayarlar: koyu/açık tema (kaydırmalı anahtar), sürüm bilgisi ve güncelleme kontrolü,
-  gözlemci davet kodu yönetimi
+- Ayarlar: koyu/açık tema, etiket (QR) görünüm ayarları, sürüm bilgisi ve güncelleme
+  kontrolü, gözlemci davet kodu yönetimi, uygulama içi geri bildirim formu
 - Profil: kişisel/şirket bilgileri, profil fotoğrafı/şirket logosu yükleme, gözlemcilik bağlantısı
-- Gözlemci rolü: davet koduyla salt-okunur depo paylaşımı, kendi depon ile izlediğin
-  depo arasında geçiş
+- Gözlemci rolü: davet koduyla salt-okunur depo paylaşımı, sahip tarafından tek taraflı çıkarma
 - Windows masaüstü uygulaması: Electron ile paketleme, GitHub Releases üzerinden
   sessiz otomatik güncelleme, Supabase projesini uyanık tutan zamanlanmış ping
 
 ## Sırada
 
-- RoHS rozeti, çoklu tedarikçi fiyat karşılaştırması (`part_suppliers` şeması hazır,
-  arayüzü yok)
-- Barkod/QR ile parça arama (masaüstü uygulamasında kamera erişimi mümkün)
+- Çoklu tedarikçi fiyat karşılaştırması (`part_suppliers` şeması hazır, arayüzü yok)
 - Ayrı bir Projeler sayfası: bir projeyi üretmek için eksik parça hesaplama
 - Sistem tepsisi simgesi, Windows açılışında otomatik başlatma
 - Düşük stok için bildirim
-- Sahibin belirli bir gözlemciyi tek taraflı çıkarabilmesi (şu an sadece
-  gözlemci kendi bağlantısını kaldırabiliyor)
 
 ## Notlar
 
