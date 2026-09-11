@@ -30,6 +30,16 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
   const yazi = YAZI_OLCU[ayarlar.yaziBoyutu];
   const yuvarlak = ayarlar.sekil === 'yuvarlak';
 
+  // Yuvarlak etiket: çap sadece QR'a göre değil, altındaki MPN/marka satırlarının
+  // gerçek yüksekliğine göre de hesaplanmalı — yoksa içerik daireyi taşırıp
+  // (aspect-ratio içeriği durduramadığı için) kutuyu elipse dönüştürüyordu.
+  const yuvarlakBosluk = 6;
+  const yuvarlakMpnYuksekligi = yazi.mpn * 0.85 * 1.25;
+  const yuvarlakMarkaYuksekligi = ayarlar.marka ? yuvarlakBosluk + yazi.alt * 0.85 * 1.25 : 0;
+  const yuvarlakIcerikYuksekligi =
+    olcu.qr + yuvarlakBosluk + yuvarlakMpnYuksekligi + yuvarlakMarkaYuksekligi;
+  const yuvarlakCap = Math.ceil(Math.max(olcu.qr, yuvarlakIcerikYuksekligi) + olcu.kartPadding * 2);
+
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
       <div
@@ -42,8 +52,22 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
           justifyContent: 'space-between',
         }}
       >
-        <Link href={`/envanter/${s.stok_id}`} className="mn" style={{ fontSize: 12, color: 'var(--muted)' }}>
-          ← Parçaya dön
+        <Link
+          href={`/envanter/${s.stok_id}`}
+          className="btn mn"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            color: 'var(--copper)',
+            borderColor: 'var(--copper-line)',
+            fontWeight: 600,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Parçaya dön
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/ayarlar" className="mn" style={{ fontSize: 11.5, color: 'var(--muted)' }}>
@@ -63,10 +87,11 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
           <div
             className="etiket-karti"
             style={{
-              width: olcu.qr + olcu.kartPadding * 2,
-              aspectRatio: '1 / 1',
+              width: yuvarlakCap,
+              height: yuvarlakCap,
               borderRadius: '50%',
               padding: olcu.kartPadding,
+              boxSizing: 'border-box',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',

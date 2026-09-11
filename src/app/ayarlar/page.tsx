@@ -40,9 +40,20 @@ export default async function AyarlarSayfasi() {
         <Link
           href="/envanter"
           className="btn"
-          style={{ marginBottom: 18, color: 'var(--copper)', borderColor: 'var(--copper-line)', fontWeight: 600 }}
+          style={{
+            marginBottom: 18,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            color: 'var(--copper)',
+            borderColor: 'var(--copper-line)',
+            fontWeight: 600,
+          }}
         >
-          ← Envantere dön
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Envantere dön
         </Link>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
           Ayarlar

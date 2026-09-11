@@ -46,6 +46,16 @@ export default async function KonumEtiketleriSayfasi() {
   const yazi = YAZI_OLCU[ayarlar.yaziBoyutu];
   const yuvarlak = ayarlar.sekil === 'yuvarlak';
 
+  // Tek parça etiketindeki gibi: çap, QR'ın altındaki kod/marka satırlarının
+  // gerçek yüksekliğine göre hesaplanmalı — yoksa aspect-ratio içeriği
+  // durduramayıp kutuyu elipse dönüştürüyor.
+  const yuvarlakPadding = 12;
+  const yuvarlakBosluk = 4;
+  const yuvarlakKodYuksekligi = yazi.mpn * 0.65 * 1.25;
+  const yuvarlakMarkaYuksekligi = ayarlar.marka ? yuvarlakBosluk + yazi.alt * 0.65 * 1.25 : 0;
+  const yuvarlakIcerikYuksekligi = qrOlcu + yuvarlakBosluk + yuvarlakKodYuksekligi + yuvarlakMarkaYuksekligi;
+  const yuvarlakCap = Math.ceil(Math.max(qrOlcu, yuvarlakIcerikYuksekligi) + yuvarlakPadding * 2);
+
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
       <div
@@ -58,8 +68,22 @@ export default async function KonumEtiketleriSayfasi() {
           justifyContent: 'space-between',
         }}
       >
-        <Link href="/envanter" className="mn" style={{ fontSize: 12, color: 'var(--muted)' }}>
-          ← Envantere dön
+        <Link
+          href="/envanter"
+          className="btn mn"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            color: 'var(--copper)',
+            borderColor: 'var(--copper-line)',
+            fontWeight: 600,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Envantere dön
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/ayarlar" className="mn" style={{ fontSize: 11.5, color: 'var(--muted)' }}>
@@ -90,7 +114,7 @@ export default async function KonumEtiketleriSayfasi() {
             maxWidth: 900,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: `repeat(auto-fill, minmax(${yuvarlak ? qrOlcu + 60 : 240}px, 1fr))`,
+            gridTemplateColumns: `repeat(auto-fill, minmax(${yuvarlak ? yuvarlakCap : 240}px, 1fr))`,
             gap: 12,
           }}
         >
@@ -100,8 +124,11 @@ export default async function KonumEtiketleriSayfasi() {
                 key={konum.id}
                 className="etiket-karti"
                 style={{
-                  padding: 12,
-                  aspectRatio: '1 / 1',
+                  width: yuvarlakCap,
+                  height: yuvarlakCap,
+                  justifySelf: 'center',
+                  padding: yuvarlakPadding,
+                  boxSizing: 'border-box',
                   borderRadius: '50%',
                   display: 'flex',
                   flexDirection: 'column',
