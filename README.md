@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="labstock-a1-logo/png/yatay-1024.png" alt="LabStock" width="360">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="labstock-a1-logo/png/yatay-2048-koyu.png">
+    <img src="labstock-a1-logo/png/yatay-1024.png" alt="LabStock" width="360">
+  </picture>
 </p>
 
 <p align="center">
