@@ -2,36 +2,122 @@
 // çeviriyor. Resmi API değil, ama normal bir sayfa isteği — LCSC sayfasında
 // arama motorları için zaten yayınladığı yapılandırılmış veriyi okuyoruz.
 
+// LCSC'nin kendi katalog kategorilerine yakın bir eşleme — sırası önemli,
+// ilk eşleşen kazanır; bu yüzden dar/özel anahtarlar geniş olanlardan önce durur.
 const KATEGORI_ANAHTAR: [string, string][] = [
+  // pasif
+  ['potentiometer', 'Potansiyometre'],
+  ['trimmer', 'Potansiyometre'],
+  ['rheostat', 'Potansiyometre'],
   ['resistor', 'Direnç'],
   ['capacitor', 'Kondansatör'],
+  ['choke', 'Bobin'],
+  ['ferrite bead', 'Bobin'],
   ['inductor', 'Bobin'],
+  ['transformer', 'Transformatör'],
+
+  // ayrık yarı iletken
+  ['rectifier', 'Diyot'],
   ['diode', 'Diyot'],
-  ['transistor', 'Transistör'],
   ['mosfet', 'Transistör'],
+  ['igbt', 'Transistör'],
+  ['thyristor', 'Transistör'],
+  ['triac', 'Transistör'],
+  ['transistor', 'Transistör'],
+
+  // entegreler — özel olanlar genel "ic"/"circuit"tan önce
+  ['microcontroller', 'Mikrodenetleyici / İşlemci'],
+  ['microprocessor', 'Mikrodenetleyici / İşlemci'],
+  ['fpga', 'Mikrodenetleyici / İşlemci'],
+  ['cpld', 'Mikrodenetleyici / İşlemci'],
+  ['mcu', 'Mikrodenetleyici / İşlemci'],
+  ['eeprom', 'Bellek'],
+  ['sram', 'Bellek'],
+  ['dram', 'Bellek'],
+  ['flash memory', 'Bellek'],
+  ['memory', 'Bellek'],
+  ['dc-dc', 'Güç Yönetimi IC'],
+  ['dc/dc', 'Güç Yönetimi IC'],
+  ['battery management', 'Güç Yönetimi IC'],
+  ['power management', 'Güç Yönetimi IC'],
+  ['charger', 'Güç Yönetimi IC'],
+  ['pmic', 'Güç Yönetimi IC'],
   ['regulator', 'Regülatör'],
+  ['ldo', 'Regülatör'],
+  ['transceiver', 'Arayüz IC'],
+  ['rs485', 'Arayüz IC'],
+  ['rs232', 'Arayüz IC'],
+  ['can bus', 'Arayüz IC'],
+  ['interface', 'Arayüz IC'],
+  ['real-time clock', 'Saat / Zamanlama'],
+  ['rtc', 'Saat / Zamanlama'],
+  ['clock', 'Saat / Zamanlama'],
+  ['timing', 'Saat / Zamanlama'],
+  ['isolator', 'İzolatör'],
+  ['optocoupler', 'İzolatör'],
+  ['bluetooth', 'RF / Kablosuz'],
+  ['zigbee', 'RF / Kablosuz'],
+  ['wifi', 'RF / Kablosuz'],
+  ['lora', 'RF / Kablosuz'],
+  ['wireless', 'RF / Kablosuz'],
+  ['antenna', 'RF / Kablosuz'],
+  ['amplifier', 'Entegre'],
+  ['logic', 'Entegre'],
+  ['circuit', 'Entegre'],
+  ['ic ', 'Entegre'],
+
+  // opto/görsel
   ['led', 'Optoelektronik'],
-  ['opto', 'Optoelektronik'],
+  ['display', 'Optoelektronik'],
   ['photo', 'Optoelektronik'],
+  ['opto', 'Optoelektronik'],
+
+  // sensör
+  ['thermistor', 'Sensör'],
+  ['accelerometer', 'Sensör'],
+  ['gyroscope', 'Sensör'],
+  ['humidity', 'Sensör'],
+  ['sensor', 'Sensör'],
+
+  // elektromekanik
+  ['relay', 'Röle'],
+  ['tact', 'Anahtar'],
+  ['switch', 'Anahtar'],
+
+  // bağlantı
+  ['terminal block', 'Kablo / Terminal'],
+  ['cable', 'Kablo / Terminal'],
+  ['wire', 'Kablo / Terminal'],
   ['connector', 'Konnektör'],
   ['header', 'Konnektör'],
+
+  // zamanlayıcı parçalar
   ['crystal', 'Kristal / Osilatör'],
   ['oscillator', 'Kristal / Osilatör'],
   ['resonator', 'Kristal / Osilatör'],
-  ['module', 'Modül'],
+
+  ['filter', 'Filtre'],
+
+  ['varistor', 'Koruma'],
   ['fuse', 'Koruma'],
   ['tvs', 'Koruma'],
   ['esd', 'Koruma'],
   ['protection', 'Koruma'],
-  ['switch', 'Mekanik'],
+
+  ['actuator', 'Motor / Fan / Aktüatör'],
+  ['buzzer', 'Motor / Fan / Aktüatör'],
+  ['speaker', 'Motor / Fan / Aktüatör'],
+  ['motor', 'Motor / Fan / Aktüatör'],
+  ['fan', 'Motor / Fan / Aktüatör'],
+
+  ['development board', 'Modül'],
+  ['module', 'Modül'],
+
   ['screw', 'Mekanik'],
   ['standoff', 'Mekanik'],
   ['enclosure', 'Mekanik'],
-  ['circuit', 'Entegre'],
-  ['ic ', 'Entegre'],
-  ['microcontroller', 'Entegre'],
-  ['amplifier', 'Entegre'],
-  ['logic', 'Entegre'],
+  ['heat sink', 'Mekanik'],
+  ['heatsink', 'Mekanik'],
 ];
 
 function kategoriTahminEt(metin: string): string {

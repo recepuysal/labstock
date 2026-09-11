@@ -6,19 +6,36 @@ import { useRouter } from 'next/navigation';
 import { parcaEkle, parcaGuncelle, type EylemDurum } from '@/app/envanter/actions';
 import { parametrelerToMetin } from '@/lib/types';
 
+// LCSC'nin kendi katalog kategorilerine yakın, daha ayrıntılı bir liste —
+// LCSC'den çekilen parçalar da bu kategorilere eşleniyor (bkz. src/lib/lcsc.ts).
 const KATEGORILER = [
   'Direnç',
+  'Potansiyometre',
   'Kondansatör',
   'Bobin',
+  'Transformatör',
   'Diyot',
   'Transistör',
   'Entegre',
+  'Mikrodenetleyici / İşlemci',
+  'Bellek',
+  'Güç Yönetimi IC',
+  'Arayüz IC',
+  'Saat / Zamanlama',
   'Regülatör',
+  'İzolatör',
+  'RF / Kablosuz',
   'Optoelektronik',
+  'Sensör',
+  'Röle',
+  'Anahtar',
   'Konnektör',
+  'Kablo / Terminal',
   'Kristal / Osilatör',
-  'Modül',
+  'Filtre',
   'Koruma',
+  'Motor / Fan / Aktüatör',
+  'Modül',
   'Mekanik',
   'Diğer',
 ];
