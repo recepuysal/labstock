@@ -738,3 +738,25 @@ create policy alinacaklar_gozlemci_yazar on public.alinacaklar
   for all to authenticated
   using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())))
   with check (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+-- "olusturan": user_id listenin SAHİBİni gösterir (gözlemci başkasının
+-- listesine eklerken de user_id hedefe yazılır), olusturan ise satırı
+-- GERÇEKTEN ekleyen hesabı — bildirim metninde "kim ekledi" diyebilmek için.
+-- Not null/default'u ayrı adımda uyguluyoruz: bu SQL yönetici bağlamında
+-- (auth.uid() = null) çalıştığından tek adımda "not null default auth.uid()"
+-- eklemek var olan satırlarda backfill hatası verir.
+alter table public.alinacaklar add column if not exists olusturan uuid references auth.users (id) on delete cascade;
+update public.alinacaklar set olusturan = user_id where olusturan is null;
+alter table public.alinacaklar alter column olusturan set not null;
+alter table public.alinacaklar alter column olusturan set default auth.uid();
+
+-- Ekleme/güncelleme/silme bildirimlerini canlı almak için Realtime'a ekle.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'alinacaklar'
+  ) then
+    alter publication supabase_realtime add table public.alinacaklar;
+  end if;
+end $$;

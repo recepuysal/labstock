@@ -345,6 +345,28 @@ textarea {
   color: var(--crit);
 }
 
+@keyframes alinacak-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.alinacak-toast {
+  animation: alinacak-toast 2200ms ease forwards;
+}
+
 .filtre {
   height: 28px;
   padding: 0 7px;

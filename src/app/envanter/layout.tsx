@@ -1,4 +1,5 @@
 import { UstBar } from '@/components/ust-bar';
+import { AlinacaklarBildirimi } from '@/components/alinacaklar-bildirimi';
 import { createClient } from '@/lib/supabase/server';
 import { basHarfleri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
@@ -26,6 +27,15 @@ export default async function EnvanterLayout({ children }: { children: React.Rea
 
   const avatarEtiket = gorunum?.saltOkunur ? gorunum.izlenenAdi || '' : etiket;
 
+  // "Kim ekledi" bildirimi için: sadece kendi deponu görüntülerken anlamlı —
+  // seni izleyenlerin adlarını çözebiliyoruz. Başkasının deposunu izlerken
+  // eklemeyi o kişi yaptıysa zaten izlenenAdi ile gösteriyoruz.
+  let izleyenler: { id: string; ad: string }[] = [];
+  if (user && !gorunum?.saltOkunur) {
+    const { data } = await supabase.rpc('gozlemcilerimi_listele');
+    izleyenler = ((data ?? []) as { id: string; ad: string }[]).map((i) => ({ id: i.id, ad: i.ad }));
+  }
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <UstBar
@@ -36,6 +46,13 @@ export default async function EnvanterLayout({ children }: { children: React.Rea
         izlenenAdi={gorunum?.izlenenAdi ?? null}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>{children}</div>
+      {gorunum && (
+        <AlinacaklarBildirimi
+          hedef={gorunum.kullaniciId}
+          izlenenAdi={gorunum.izlenenAdi}
+          izleyenler={izleyenler}
+        />
+      )}
     </div>
   );
 }
