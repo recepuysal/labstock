@@ -64,6 +64,21 @@ export const DURUM_ETIKET: Record<Durum, string> = {
   yok: 'Tükendi',
 };
 
+export const ALINACAK_DURUMLAR = ['bekliyor', 'siparis_verildi', 'alindi'] as const;
+export type AlinacakDurumu = (typeof ALINACAK_DURUMLAR)[number];
+
+export const ALINACAK_DURUM_ETIKET: Record<AlinacakDurumu, string> = {
+  bekliyor: 'Bekliyor',
+  siparis_verildi: 'Sipariş verildi',
+  alindi: 'Alındı',
+};
+
+export const ALINACAK_DURUM_ROZET: Record<AlinacakDurumu, string> = {
+  bekliyor: 'rozet-notr',
+  siparis_verildi: 'rozet-mavi',
+  alindi: 'rozet-yesil',
+};
+
 export function agacKur(konumlar: Konum[]): KonumDugumu[] {
   const harita = new Map<string, KonumDugumu>();
   for (const k of konumlar) harita.set(k.id, { ...k, cocuklar: [] });

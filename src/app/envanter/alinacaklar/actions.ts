@@ -2,9 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { ALINACAK_DURUMLAR, type AlinacakDurumu } from '@/lib/types';
 import type { EylemDurum } from '@/app/envanter/actions';
 
-function alanlariOku(formData: FormData): { malzemeAdi: string; adet: number; notMetni: string | null; link: string | null } | { hata: string } {
+function alanlariOku(
+  formData: FormData,
+): { malzemeAdi: string; adet: number; notMetni: string | null; link: string | null } | { hata: string } {
   const malzemeAdi = String(formData.get('malzeme_adi') ?? '').trim();
   if (!malzemeAdi) return { hata: 'Malzeme adı gerekli.' };
 
@@ -16,6 +19,11 @@ function alanlariOku(formData: FormData): { malzemeAdi: string; adet: number; no
   const link = String(formData.get('link') ?? '').trim() || null;
 
   return { malzemeAdi, adet, notMetni, link };
+}
+
+function durumOku(formData: FormData): AlinacakDurumu {
+  const durum = String(formData.get('durum') ?? '');
+  return (ALINACAK_DURUMLAR as readonly string[]).includes(durum) ? (durum as AlinacakDurumu) : 'bekliyor';
 }
 
 export async function alinacakEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
@@ -50,12 +58,19 @@ export async function alinacakGuncelle(_onceki: EylemDurum, formData: FormData):
       adet: alanlar.adet,
       not_metni: alanlar.notMetni,
       link: alanlar.link,
+      durum: durumOku(formData),
     })
     .eq('id', id);
   if (error) return { hata: error.message };
 
   revalidatePath('/envanter/alinacaklar');
   return { bilgi: 'Güncellendi.' };
+}
+
+export async function alinacakDurumDegistir(id: string, durum: AlinacakDurumu): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from('alinacaklar').update({ durum }).eq('id', id);
+  revalidatePath('/envanter/alinacaklar');
 }
 
 export async function alinacakSil(id: string): Promise<void> {

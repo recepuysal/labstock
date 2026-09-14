@@ -14,7 +14,7 @@ export default async function AlinacaklarSayfasi() {
   const supabase = await createClient();
   const { data } = await supabase
     .from('alinacaklar')
-    .select('id, malzeme_adi, adet, not_metni, link')
+    .select('id, malzeme_adi, adet, not_metni, link, durum')
     .eq('user_id', hedef)
     .order('created_at', { ascending: false });
 

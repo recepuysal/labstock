@@ -709,8 +709,12 @@ create table if not exists public.alinacaklar (
   adet        numeric not null default 1,
   not_metni   text,
   link        text,
+  durum       text not null default 'bekliyor',
   created_at  timestamptz not null default now()
 );
+
+-- Var olan kurulumlarda tablo zaten olabilir — durum kolonunu ayrıca ekliyoruz.
+alter table public.alinacaklar add column if not exists durum text not null default 'bekliyor';
 
 create index if not exists alinacaklar_user_idx on public.alinacaklar (user_id, created_at desc);
 
