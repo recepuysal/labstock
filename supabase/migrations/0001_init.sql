@@ -697,3 +697,32 @@ drop trigger if exists feedback_bildir_trigger on public.feedback;
 create trigger feedback_bildir_trigger
   after insert on public.feedback
   for each row execute function public.feedback_bildir();
+
+-- ------------------------------------------------------------- alınacaklar
+-- Ana sayfadan hızlı erişilen basit bir "alışveriş notu" listesi — envanter
+-- kataloğuyla ilişkisi yok, sadece malzeme adı/adet/not/link tutan serbest satırlar.
+
+create table if not exists public.alinacaklar (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  malzeme_adi text not null,
+  adet        numeric not null default 1,
+  not_metni   text,
+  link        text,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists alinacaklar_user_idx on public.alinacaklar (user_id, created_at desc);
+
+alter table public.alinacaklar enable row level security;
+
+drop policy if exists alinacaklar_own on public.alinacaklar;
+create policy alinacaklar_own on public.alinacaklar
+  for all to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+drop policy if exists alinacaklar_gozlemci_read on public.alinacaklar;
+create policy alinacaklar_gozlemci_read on public.alinacaklar
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));

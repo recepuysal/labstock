@@ -222,6 +222,7 @@ Kritik tasarım kararı: **parça tanımı ile stok ayrı**.
 | `tags`, `stock_item_tags` | Kullanıcıya özel serbest etiketler; bir stok kalemine birden fazla etiket iliştirilebilir. |
 | `profiles` | Ad/telefon/şirket bilgisi, profil fotoğrafı, tema tercihi ve gözlemcilik alanları (`davet_kodu`, `gozlemci_of`, `gozlemci_baglandi`, `son_gorulme`). |
 | `feedback` | Ayarlar sayfasındaki geri bildirim formundan gelen mesajlar. |
+| `alinacaklar` | Envanterden bağımsız, hızlı bir alışveriş notu listesi (malzeme adı, adet, not, link). |
 
 Adet doğrudan yazılmaz: `stok_hareket()` RPC'si `stock_items.adet` güncellemesi ile
 hareket kaydını birlikte yapar.
@@ -261,6 +262,8 @@ kendi deposunu salt-okunur izlemesine izin verebilir:
 - Yazdırılabilir QR etiketler (tek parça + toplu konum), USB barkod okuyucu desteği
 - Excel/CSV toplu içe aktarma; Ayarlar'dan tüm envanteri `.xlsx` olarak dışa aktarma
 - Son Aktiviteler: depodaki tüm stok hareketlerinin tek sayfada listesi
+- Alınacaklar: üst bardan hızlı erişilen, envanterden bağımsız basit bir alışveriş
+  notu listesi (malzeme adı, adet, not, link)
 - Ayarlar: koyu/açık tema, etiket (QR) görünüm ayarları, sürüm bilgisi ve güncelleme
   kontrolü, gözlemci davet kodu yönetimi, uygulama içi geri bildirim formu
 - Profil: kişisel/şirket bilgileri, profil fotoğrafı/şirket logosu yükleme, gözlemcilik bağlantısı
