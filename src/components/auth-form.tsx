@@ -8,15 +8,8 @@ import { kodDogrula, kodYenidenGonder, type AuthDurum } from '@/app/auth-actions
 const EPOSTA_ANAHTARI = 'labstock-son-eposta';
 const HATIRLA_ANAHTARI = 'labstock-beni-hatirla';
 
-declare global {
-  interface Window {
-    electronAPI?: {
-      sifreKaydet: (sifre: string) => Promise<boolean>;
-      sifreAl: () => Promise<string | null>;
-      sifreSil: () => Promise<boolean>;
-    };
-  }
-}
+// window.electronAPI tipi guncelleme-bildirimi.tsx'te tanımlı (tek merkezden
+// yönetiliyor — burada tekrar tanımlarsak TS "aynı tipte olmalı" hatası verir).
 
 type Props = {
   mod: 'giris' | 'kayit';

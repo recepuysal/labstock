@@ -16,6 +16,9 @@ declare global {
       guncellemeleriKontrolEt: () => void;
       guncellemeDurumuDinle: (callback: (veri: GuncellemeDurumu) => void) => () => void;
       surumAl: () => Promise<string>;
+      sifreKaydet: (sifre: string) => Promise<boolean>;
+      sifreAl: () => Promise<string | null>;
+      sifreSil: () => Promise<boolean>;
     };
   }
 }
