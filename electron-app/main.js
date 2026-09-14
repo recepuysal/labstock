@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -116,6 +116,42 @@ ipcMain.on('guncelleme-indir', () => autoUpdater.downloadUpdate());
 ipcMain.on('guncelleme-kur', () => autoUpdater.quitAndInstall(true, true));
 ipcMain.on('guncelleme-kontrol-et', () => guncellemeleriKontrolEt());
 ipcMain.handle('surum-al', () => app.getVersion());
+
+// "Beni hatırla" için şifreyi işletim sisteminin kendi kasasıyla (Windows'ta
+// DPAPI) şifreleyip diske yazar — düz metin localStorage'a yazmaktan farklı
+// olarak sadece bu Windows kullanıcı hesabı çözebilir.
+const sifreYolu = path.join(app.getPath('userData'), 'sifre.dat');
+
+ipcMain.handle('sifre-kaydet', (_event, sifre) => {
+  try {
+    if (!safeStorage.isEncryptionAvailable()) return false;
+    fs.writeFileSync(sifreYolu, safeStorage.encryptString(sifre));
+    return true;
+  } catch (err) {
+    logYaz(`[sifre-kaydet-hata] ${err.message}`);
+    return false;
+  }
+});
+
+ipcMain.handle('sifre-al', () => {
+  try {
+    if (!safeStorage.isEncryptionAvailable() || !fs.existsSync(sifreYolu)) return null;
+    return safeStorage.decryptString(fs.readFileSync(sifreYolu));
+  } catch (err) {
+    logYaz(`[sifre-al-hata] ${err.message}`);
+    return null;
+  }
+});
+
+ipcMain.handle('sifre-sil', () => {
+  try {
+    if (fs.existsSync(sifreYolu)) fs.unlinkSync(sifreYolu);
+    return true;
+  } catch (err) {
+    logYaz(`[sifre-sil-hata] ${err.message}`);
+    return false;
+  }
+});
 
 app.whenReady().then(() => {
   sunucuyuBaslat();

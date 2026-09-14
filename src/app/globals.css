@@ -350,21 +350,13 @@ textarea {
     opacity: 0;
     transform: translateY(16px);
   }
-  10% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  85% {
-    opacity: 1;
-    transform: translateY(0);
-  }
   100% {
-    opacity: 0;
-    transform: translateY(16px);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 .alinacak-toast {
-  animation: alinacak-toast 2200ms ease forwards;
+  animation: alinacak-toast 220ms ease forwards;
 }
 
 .filtre {

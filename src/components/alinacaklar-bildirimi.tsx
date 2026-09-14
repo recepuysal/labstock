@@ -45,9 +45,6 @@ export function AlinacaklarBildirimi({
 
           const id = ++sayacRef.current;
           setToastlar((t) => [...t, { id, metin: `${kim} alınacaklara ekledi: ${satir.malzeme_adi}` }]);
-          setTimeout(() => {
-            setToastlar((t) => t.filter((x) => x.id !== id));
-          }, 2200);
         },
       )
       .subscribe();
@@ -78,13 +75,35 @@ export function AlinacaklarBildirimi({
           key={t.id}
           className="kart alinacak-toast"
           style={{
-            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '12px 14px',
             fontSize: 12.5,
             maxWidth: 300,
             boxShadow: '0 8px 24px rgba(0,0,0,0.16)',
+            pointerEvents: 'auto',
           }}
         >
-          {t.metin}
+          <span style={{ flex: 1 }}>{t.metin}</span>
+          <button
+            type="button"
+            onClick={() => setToastlar((cur) => cur.filter((x) => x.id !== t.id))}
+            aria-label="Bildirimi kapat"
+            style={{
+              border: 'none',
+              background: 'none',
+              padding: 0,
+              color: 'var(--muted-2)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              lineHeight: 1,
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       ))}
     </div>

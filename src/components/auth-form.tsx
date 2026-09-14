@@ -8,6 +8,16 @@ import { kodDogrula, kodYenidenGonder, type AuthDurum } from '@/app/auth-actions
 const EPOSTA_ANAHTARI = 'labstock-son-eposta';
 const HATIRLA_ANAHTARI = 'labstock-beni-hatirla';
 
+declare global {
+  interface Window {
+    electronAPI?: {
+      sifreKaydet: (sifre: string) => Promise<boolean>;
+      sifreAl: () => Promise<string | null>;
+      sifreSil: () => Promise<boolean>;
+    };
+  }
+}
+
 type Props = {
   mod: 'giris' | 'kayit';
   eylem: (onceki: AuthDurum, formData: FormData) => Promise<AuthDurum>;
@@ -19,6 +29,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
   const kayit = mod === 'kayit';
 
   const [eposta, setEposta] = useState('');
+  const [sifre, setSifre] = useState('');
   const [hatirla, setHatirla] = useState(true);
 
   const [kodDurum, kodGonder, kodBekliyor] = useActionState<AuthDurum, FormData>(kodDogrula, {});
@@ -35,6 +46,11 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
       if (aktif) {
         const kayitliEposta = localStorage.getItem(EPOSTA_ANAHTARI);
         if (kayitliEposta) setEposta(kayitliEposta);
+        // Şifre sadece masaüstü uygulamasında (Electron), işletim sisteminin
+        // kendi kasasıyla şifrelenmiş halde saklanır — düz metin localStorage'a yazılmaz.
+        window.electronAPI?.sifreAl().then((kayitliSifre) => {
+          if (kayitliSifre) setSifre(kayitliSifre);
+        });
       }
     } catch {}
   }, [kayit]);
@@ -47,13 +63,24 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
     } catch {}
   }
 
+  function sifreDegisti(e: React.ChangeEvent<HTMLInputElement>) {
+    setSifre(e.target.value);
+    if (kayit || !hatirla) return;
+    window.electronAPI?.sifreKaydet(e.target.value);
+  }
+
   function hatirlaDegisti(e: React.ChangeEvent<HTMLInputElement>) {
     const secili = e.target.checked;
     setHatirla(secili);
     try {
       localStorage.setItem(HATIRLA_ANAHTARI, secili ? 'evet' : 'hayir');
-      if (secili) localStorage.setItem(EPOSTA_ANAHTARI, eposta);
-      else localStorage.removeItem(EPOSTA_ANAHTARI);
+      if (secili) {
+        localStorage.setItem(EPOSTA_ANAHTARI, eposta);
+        window.electronAPI?.sifreKaydet(sifre);
+      } else {
+        localStorage.removeItem(EPOSTA_ANAHTARI);
+        window.electronAPI?.sifreSil();
+      }
     } catch {}
   }
 
@@ -255,6 +282,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               minLength={kayit ? 8 : undefined}
               autoComplete={kayit ? 'new-password' : 'current-password'}
               placeholder={kayit ? 'en az 8 karakter' : '••••••••'}
+              {...(kayit ? {} : { value: sifre, onChange: sifreDegisti })}
             />
           </div>
 
