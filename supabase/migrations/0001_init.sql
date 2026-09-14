@@ -624,14 +624,33 @@ create policy feedback_select_own on public.feedback
   for select to authenticated
   using (user_id = (select auth.uid()));
 
--- Yeni geri bildirim geldiğinde labstockassistant@gmail.com'a Resend üzerinden
--- bir bildirim maili atar. API anahtarı GİT'E KOMİT EDİLMEZ — bu dosyayı
--- çalıştırmadan önce (ya da sonra, bir kere) ayrıca şunu çalıştır:
---   alter database postgres set app.resend_api_key = 're_...';
+-- Yeni geri bildirim geldiğinde rcpuysl@icloud.com'a Resend üzerinden
+-- bir bildirim maili atar. API anahtarı GİT'E KOMİT EDİLMEZ; "private" şeması
+-- PostgREST tarafından hiç dışa açılmadığı için burada saklamak güvenli —
+-- sadece SECURITY DEFINER fonksiyonlar (postgres/service_role) okuyabilir.
+-- "alter database ... set" Supabase'in yönetilen Postgres'inde yetki
+-- hatası verdiği için (custom GUC ayarlamak için superuser gerekiyor) bu
+-- tablo tabanlı yöntemi kullanıyoruz. Anahtarı tek seferlik ayarlamak için:
+--   insert into private.ayarlar (anahtar, deger) values ('resend_api_key', 're_...')
+--   on conflict (anahtar) do update set deger = excluded.deger;
 -- Anahtar ayarlanmamışsa tetikleyici sessizce hiçbir şey yapmaz (form yine
 -- de normal çalışır, sadece mail gitmez).
+-- Not: Resend, alan adı doğrulanmadan (onboarding@resend.dev ile) sadece
+-- hesabı açan kişinin kendi adresine gönderime izin veriyor — bu yüzden
+-- labstockassistant@gmail.com değil, Resend hesabının sahibi rcpuysl@icloud.com
+-- hedefleniyor. 3bfab.com resend.com/domains'te doğrulanırsa buradan
+-- labstockassistant@gmail.com'a çevrilebilir.
 
 create extension if not exists pg_net;
+
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
+create table if not exists private.ayarlar (
+  anahtar text primary key,
+  deger   text not null
+);
+revoke all on private.ayarlar from public, anon, authenticated;
 
 create or replace function public.html_kacis(metin text)
 returns text
@@ -649,10 +668,12 @@ security definer
 set search_path = public
 as $$
 declare
-  api_key      text := current_setting('app.resend_api_key', true);
+  api_key      text;
   gonderen     text;
   html_govde   text;
 begin
+  select deger into api_key from private.ayarlar where anahtar = 'resend_api_key';
+
   if api_key is null or api_key = '' then
     return new;
   end if;
@@ -683,7 +704,7 @@ begin
     headers := jsonb_build_object('Authorization', 'Bearer ' || api_key, 'Content-Type', 'application/json'),
     body := jsonb_build_object(
       'from', 'LabStock <onboarding@resend.dev>',
-      'to', jsonb_build_array('labstockassistant@gmail.com'),
+      'to', jsonb_build_array('rcpuysl@icloud.com'),
       'subject', 'Yeni geri bildirim — LabStock',
       'html', html_govde
     )

@@ -192,18 +192,28 @@ otomatik duraklatıldığı için bunu önler.
 ### 5. Geri bildirim maili (isteğe bağlı)
 
 Ayarlar sayfasındaki geri bildirim formu her zaman `feedback` tablosuna yazar;
-ayrıca her yeni kayıtta **labstockassistant@gmail.com**'a güzel bir HTML mail
-gitmesini istersen ([Resend](https://resend.com) ücretsiz planıyla):
+ayrıca her yeni kayıtta güzel bir HTML mail gitmesini istersen ([Resend](https://resend.com)
+ücretsiz planıyla):
 
 1. [resend.com](https://resend.com)'da ücretsiz bir hesap aç, bir **API key**
-   üret (`re_...` ile başlar).
-2. Supabase **SQL Editor**'de (bu komut `0001_init.sql`'in dışında — anahtar
-   git'e komit edilmemesi için ayrı çalıştırılır):
+   üret (`re_...` ile başlar). Alan adı doğrulamadan (`onboarding@resend.dev` ile)
+   Resend sadece **hesabı açan kişinin kendi adresine** gönderime izin veriyor —
+   şu an tetikleyici bu yüzden `labstockassistant@gmail.com` yerine hesabı açan
+   `rcpuysl@icloud.com`'u hedefliyor (`supabase/migrations/0001_init.sql`'deki
+   `feedback_bildir()` fonksiyonundan değiştirilebilir). 3bfab.com resend.com/domains'te
+   doğrulanırsa istenen herhangi bir adrese gönderilebilir.
+2. `supabase/migrations/0001_init.sql`'in tamamını SQL Editor'de çalıştır —
+   `pg_net` tetikleyicisini ve anahtarı tutacak `private.ayarlar` tablosunu
+   kurar (bu şema PostgREST'e hiç açılmaz, sadece sunucu tarafı fonksiyonlar okur).
+3. Anahtarı SQL Editor'de ayrı bir sorgu olarak ekle (bu komut `0001_init.sql`'in
+   dışında — git'e komit edilmesin diye):
    ```sql
-   alter database postgres set app.resend_api_key = 're_senin_anahtarin';
+   insert into private.ayarlar (anahtar, deger) values ('resend_api_key', 're_senin_anahtarin')
+   on conflict (anahtar) do update set deger = excluded.deger;
    ```
-3. `supabase/migrations/0001_init.sql`'in geri kalanı zaten `pg_net` ile
-   çalışan tetikleyiciyi kuruyor — dosyanın tamamını (yeniden) çalıştırman yeterli.
+   (`alter database ... set` ile bir GUC ayarlamayı denedik ama Supabase'in
+   yönetilen Postgres'i buna superuser istiyor — tablo tabanlı bu yöntem
+   herhangi bir ek yetki gerektirmiyor.)
 
 Anahtar ayarlanmamışsa tetikleyici sessizce hiçbir şey yapmaz; form yine de
 normal çalışır, sadece mail gitmez.
