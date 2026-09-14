@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ALINACAK_DURUMLAR, type AlinacakDurumu } from '@/lib/types';
 import type { EylemDurum } from '@/app/envanter/actions';
 
@@ -30,8 +31,15 @@ export async function alinacakEkle(_onceki: EylemDurum, formData: FormData): Pro
   const alanlar = alanlariOku(formData);
   if ('hata' in alanlar) return alanlar;
 
+  // user_id'yi açıkça hedefe yazıyoruz — bir gözlemci izlediği depoya
+  // eklerken varsayılan auth.uid() kendi hesabına düşer, kayıt yanlışlıkla
+  // gözlemcinin kendi listesine gider.
+  const aktif = await aktifGorunumAl();
+  if (!aktif) return { hata: 'Oturum bulunamadı.' };
+
   const supabase = await createClient();
   const { error } = await supabase.from('alinacaklar').insert({
+    user_id: aktif.kullaniciId,
     malzeme_adi: alanlar.malzemeAdi,
     adet: alanlar.adet,
     not_metni: alanlar.notMetni,

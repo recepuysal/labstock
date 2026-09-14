@@ -726,7 +726,15 @@ create policy alinacaklar_own on public.alinacaklar
   using (user_id = (select auth.uid()))
   with check (user_id = (select auth.uid()));
 
+-- Alınacaklar, uygulamadaki genel "gözlemci salt-okunur" kuralının kasıtlı bir
+-- istisnası — burada gözlemci de ekleyip düzenleyip silebilir (paylaşımlı
+-- alışveriş notu mantığı). Kendi listesiyle izlediği listenin karışmaması,
+-- her sorgunun hedef kullaniciId'ye göre açıkça filtrelenmesiyle sağlanıyor
+-- (bkz. src/app/envanter/alinacaklar/page.tsx), RLS bu ikisini birbirinden
+-- ayırmaz — sadece "gözlemcisi olduğun hesabın satırlarına da eriş" der.
 drop policy if exists alinacaklar_gozlemci_read on public.alinacaklar;
-create policy alinacaklar_gozlemci_read on public.alinacaklar
-  for select to authenticated
-  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+drop policy if exists alinacaklar_gozlemci_yazar on public.alinacaklar;
+create policy alinacaklar_gozlemci_yazar on public.alinacaklar
+  for all to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())))
+  with check (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));

@@ -38,18 +38,12 @@ const SUTUN = {
   menu: { width: 22, flexShrink: 0 },
 } as const;
 
-export function AlinacaklarListesi({
-  kayitlar,
-  saltOkunur,
-}: {
-  kayitlar: AlinacakKaydi[];
-  saltOkunur?: boolean;
-}) {
+export function AlinacaklarListesi({ kayitlar }: { kayitlar: AlinacakKaydi[] }) {
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null);
 
   return (
     <div>
-      {!saltOkunur && <EklemeFormu />}
+      <EklemeFormu />
 
       <div className="kart" style={{ marginTop: 16, overflow: 'hidden' }}>
         {kayitlar.length === 0 ? (
@@ -88,7 +82,6 @@ export function AlinacaklarListesi({
                   key={k.id}
                   kayit={k}
                   ilk={i === 0}
-                  saltOkunur={saltOkunur}
                   onDuzenle={() => setDuzenlenenId(k.id)}
                 />
               ),
@@ -220,12 +213,10 @@ function DurumRozeti({ durum, tiklanabilir, onTikla }: { durum: string; tiklanab
 function GosterSatiri({
   kayit,
   ilk,
-  saltOkunur,
   onDuzenle,
 }: {
   kayit: AlinacakKaydi;
   ilk: boolean;
-  saltOkunur?: boolean;
   onDuzenle: () => void;
 }) {
   const [, basla] = useTransition();
@@ -249,7 +240,7 @@ function GosterSatiri({
         </span>
         <DurumRozeti
           durum={kayit.durum}
-          tiklanabilir={!saltOkunur}
+          tiklanabilir
           onTikla={() =>
             basla(async () => await alinacakDurumDegistir(kayit.id, sonrakiDurum(gecerliDurum(kayit.durum))))
           }
@@ -285,13 +276,11 @@ function GosterSatiri({
       </div>
 
       <div style={SUTUN.menu}>
-        {!saltOkunur && (
-          <AlinacakSatirMenu
-            malzemeAdi={kayit.malzeme_adi}
-            onDuzenle={onDuzenle}
-            onSil={() => basla(async () => await alinacakSil(kayit.id))}
-          />
-        )}
+        <AlinacakSatirMenu
+          malzemeAdi={kayit.malzeme_adi}
+          onDuzenle={onDuzenle}
+          onSil={() => basla(async () => await alinacakSil(kayit.id))}
+        />
       </div>
     </div>
   );

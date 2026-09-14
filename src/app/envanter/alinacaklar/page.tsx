@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function AlinacaklarSayfasi() {
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris');
-  const { kullaniciId: hedef, saltOkunur } = aktif;
+  const { kullaniciId: hedef, saltOkunur, izlenenAdi } = aktif;
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -44,12 +44,19 @@ export default async function AlinacaklarSayfasi() {
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
           Alınacaklar
         </h1>
-        <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
+        <p style={{ margin: '0 0 8px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
           Envanterden bağımsız, hızlı bir alışveriş notu — malzeme adı, adet, not ve
           varsa tedarikçi linki.
         </p>
+        <p style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 600 }}>
+          {saltOkunur ? (
+            <span style={{ color: 'var(--copper)' }}>İzlediğin depo: {izlenenAdi || 'bağlı hesap'}</span>
+          ) : (
+            <span style={{ color: 'var(--muted)' }}>Kendi depon</span>
+          )}
+        </p>
 
-        <AlinacaklarListesi kayitlar={kayitlar} saltOkunur={saltOkunur} />
+        <AlinacaklarListesi kayitlar={kayitlar} />
       </div>
     </main>
   );
