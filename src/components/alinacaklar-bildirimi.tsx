@@ -44,7 +44,7 @@ export function AlinacaklarBildirimi({
           }
 
           const id = ++sayacRef.current;
-          setToastlar((t) => [...t, { id, metin: `${kim} alınacaklara ekledi: ${satir.malzeme_adi}` }]);
+          setToastlar((t) => [...t, { id, metin: `${kim}: ${satir.malzeme_adi}` }]);
         },
       )
       .subscribe();
@@ -79,28 +79,48 @@ export function AlinacaklarBildirimi({
             alignItems: 'flex-start',
             gap: 10,
             padding: '12px 14px',
-            fontSize: 12.5,
-            maxWidth: 300,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.16)',
+            width: 300,
+            boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
             pointerEvents: 'auto',
           }}
         >
-          <span style={{ flex: 1 }}>{t.metin}</span>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 99,
+              background: 'var(--copper-soft)',
+              color: 'var(--copper)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
+            <div
+              className="mn"
+              style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--copper)' }}
+            >
+              ALINACAKLARA EKLENDİ
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4 }}>{t.metin}</p>
+          </div>
+
           <button
             type="button"
             onClick={() => setToastlar((cur) => cur.filter((x) => x.id !== t.id))}
             aria-label="Bildirimi kapat"
-            style={{
-              border: 'none',
-              background: 'none',
-              padding: 0,
-              color: 'var(--muted-2)',
-              cursor: 'pointer',
-              flexShrink: 0,
-              lineHeight: 1,
-            }}
+            className="bildirim-kapat"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>

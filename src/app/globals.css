@@ -372,7 +372,7 @@ textarea {
 .guncelleme-karti {
   animation: bildirim-gir 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-.guncelleme-kapat {
+.bildirim-kapat {
   border: none;
   background: none;
   color: var(--muted-2);
@@ -385,7 +385,7 @@ textarea {
   border-radius: 99px;
   flex-shrink: 0;
 }
-.guncelleme-kapat:hover {
+.bildirim-kapat:hover {
   background: var(--surface-2);
   color: var(--ink-2);
 }
