@@ -9,6 +9,7 @@ import { LcscCekFormu } from '@/components/lcsc-cek-formu';
 import { EtiketlerKarti } from '@/components/etiketler-karti';
 import { GeriButonu } from '@/components/geri-butonu';
 import { RohsRozet } from '@/components/rohs-rozet';
+import { KopyalaButonu } from '@/components/kopyala-butonu';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
   DURUM_ETIKET,
@@ -171,6 +172,7 @@ export default async function ParcaDetaySayfasi({
               <h1 className="mn" style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>
                 {s.mpn}
               </h1>
+              <KopyalaButonu metin={s.mpn} baslik="Malzeme adını kopyala" boyut={15} />
               {s.kategori && <span className="rozet rozet-notr">{s.kategori}</span>}
               {s.kilif && (
                 <span className="rozet rozet-notr mn">

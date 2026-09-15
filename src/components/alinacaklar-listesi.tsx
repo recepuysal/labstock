@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 import { alinacakDurumDegistir, alinacakEkle, alinacakGuncelle, alinacakSil } from '@/app/envanter/alinacaklar/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
 import { AlinacakSatirMenu } from '@/components/alinacak-satir-menu';
+import { KopyalaButonu } from '@/components/kopyala-butonu';
 import {
   ALINACAK_DURUMLAR,
   ALINACAK_DURUM_ETIKET,
@@ -141,49 +142,6 @@ function EklemeFormu() {
   );
 }
 
-function KopyalaButonu({ metin, baslik = 'Bağlantıyı kopyala' }: { metin: string; baslik?: string }) {
-  const [kopyalandi, setKopyalandi] = useState(false);
-
-  async function kopyala() {
-    try {
-      await navigator.clipboard.writeText(metin);
-      setKopyalandi(true);
-      setTimeout(() => setKopyalandi(false), 1500);
-    } catch {
-      // pano erişimi yoksa sessizce geç
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={kopyala}
-      title={kopyalandi ? 'Kopyalandı' : baslik}
-      style={{
-        border: 'none',
-        background: 'none',
-        padding: 2,
-        display: 'flex',
-        alignItems: 'center',
-        flexShrink: 0,
-        color: kopyalandi ? 'var(--ok)' : 'var(--muted-2)',
-        cursor: 'pointer',
-      }}
-    >
-      {kopyalandi ? (
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-      ) : (
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" />
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
 function DurumRozeti({ durum, tiklanabilir, onTikla }: { durum: string; tiklanabilir?: boolean; onTikla?: () => void }) {
   const gecerli = gecerliDurum(durum);
   const sinif = `rozet ${ALINACAK_DURUM_ROZET[gecerli]}`;
@@ -269,7 +227,7 @@ function GosterSatiri({
             >
               {kayit.link.replace(/^https?:\/\//, '')}
             </a>
-            <KopyalaButonu metin={kayit.link} />
+            <KopyalaButonu metin={kayit.link} baslik="Bağlantıyı kopyala" />
           </>
         ) : (
           <span style={{ color: 'var(--muted-2)' }}>—</span>
