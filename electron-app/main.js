@@ -93,13 +93,38 @@ function guncellemeleriKontrolEt() {
   autoUpdater.checkForUpdates().catch((err) => logYaz(`[guncelleme-hata] ${err.message}`));
 }
 
+// electron-updater surum notlarini GitHub'in releases.atom feed'inden okuyor -
+// bu feed'de govde markdown'dan HTML'e cevrilmis halde geliyor (ornegin
+// "__NEXT_DATA__" gibi cift alt cizgiler kalin yazi olarak yorumlanip
+// <strong>NEXT_DATA</strong>'ya donusuyor). Arayuzumuz duz metin gosterdigi
+// icin etiketleri gercek satir/paragraf araligina cevirip temizliyoruz.
+function htmlDuzMetneCevir(html) {
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 // GitHub release'inin gövdesi (releaseNotes) electron-updater'a string ya da
 // {version, note}[] olarak gelebilir - ikisini de duz metne cevirir.
 function notlariMetneCevir(releaseNotes) {
   if (!releaseNotes) return null;
-  if (typeof releaseNotes === 'string') return releaseNotes;
+  if (typeof releaseNotes === 'string') return htmlDuzMetneCevir(releaseNotes) || null;
   if (Array.isArray(releaseNotes)) {
-    return releaseNotes.map((n) => n?.note).filter(Boolean).join('\n\n') || null;
+    const parcalar = releaseNotes.map((n) => htmlDuzMetneCevir(n?.note ?? '')).filter(Boolean);
+    return parcalar.length > 0 ? parcalar.join('\n\n') : null;
   }
   return null;
 }
