@@ -38,6 +38,19 @@ jobs:
           npm ci
           npx electron-builder --win --publish never
 
+      - name: Sürüm notlarını hazırla
+        shell: bash
+        run: |
+          # Uygulama içindeki güncelleme bildirimi bunu okuyor: ilk satır kısa
+          # açıklama, bir boş satırdan sonraki kısım "Genişlet" ile açılan
+          # ayrıntı (bkz. src/components/guncelleme-bildirimi.tsx). Commit
+          # mesajı zaten bu şekilde yazılıyor - sadece Co-Authored-By
+          # satırını ve başlıktaki (vX.Y.Z) ekini temizliyoruz.
+          git log -1 --format=%B \
+            | grep -v '^Co-Authored-By:' \
+            | awk 'NR==1{gsub(/ *\(v[0-9]+\.[0-9]+\.[0-9]+\)[[:space:]]*$/,"")} {print}' \
+            > release-notes.txt
+
       - name: Sürüme ekle
         uses: softprops/action-gh-release@v2
         with:
@@ -47,6 +60,7 @@ jobs:
             electron-app/dist/latest.yml
           tag_name: "${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}"
           name: "${{ github.ref_type == 'tag' && github.ref_name || format('Test derleme #{0}', github.run_number) }}"
+          body_path: release-notes.txt
           prerelease: ${{ github.ref_type != 'tag' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -141,7 +141,7 @@ function EklemeFormu() {
   );
 }
 
-function KopyalaButonu({ metin }: { metin: string }) {
+function KopyalaButonu({ metin, baslik = 'Bağlantıyı kopyala' }: { metin: string; baslik?: string }) {
   const [kopyalandi, setKopyalandi] = useState(false);
 
   async function kopyala() {
@@ -158,7 +158,7 @@ function KopyalaButonu({ metin }: { metin: string }) {
     <button
       type="button"
       onClick={kopyala}
-      title={kopyalandi ? 'Kopyalandı' : 'Bağlantıyı kopyala'}
+      title={kopyalandi ? 'Kopyalandı' : baslik}
       style={{
         border: 'none',
         background: 'none',
@@ -238,6 +238,7 @@ function GosterSatiri({
         >
           {kayit.malzeme_adi}
         </span>
+        <KopyalaButonu metin={kayit.malzeme_adi} baslik="Malzeme adını kopyala" />
         <DurumRozeti
           durum={kayit.durum}
           tiklanabilir

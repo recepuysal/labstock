@@ -93,9 +93,20 @@ function guncellemeleriKontrolEt() {
   autoUpdater.checkForUpdates().catch((err) => logYaz(`[guncelleme-hata] ${err.message}`));
 }
 
+// GitHub release'inin gövdesi (releaseNotes) electron-updater'a string ya da
+// {version, note}[] olarak gelebilir - ikisini de duz metne cevirir.
+function notlariMetneCevir(releaseNotes) {
+  if (!releaseNotes) return null;
+  if (typeof releaseNotes === 'string') return releaseNotes;
+  if (Array.isArray(releaseNotes)) {
+    return releaseNotes.map((n) => n?.note).filter(Boolean).join('\n\n') || null;
+  }
+  return null;
+}
+
 autoUpdater.on('update-available', (bilgi) => {
   logYaz(`[guncelleme] bulundu: ${bilgi.version}`);
-  renderereGonder({ tip: 'mevcut', versiyon: bilgi.version });
+  renderereGonder({ tip: 'mevcut', versiyon: bilgi.version, notlar: notlariMetneCevir(bilgi.releaseNotes) });
 });
 
 autoUpdater.on('download-progress', (ilerleme) => {
@@ -104,7 +115,7 @@ autoUpdater.on('download-progress', (ilerleme) => {
 
 autoUpdater.on('update-downloaded', (bilgi) => {
   logYaz(`[guncelleme] indirildi: ${bilgi.version}`);
-  renderereGonder({ tip: 'hazir', versiyon: bilgi.version });
+  renderereGonder({ tip: 'hazir', versiyon: bilgi.version, notlar: notlariMetneCevir(bilgi.releaseNotes) });
 });
 
 autoUpdater.on('error', (err) => {
