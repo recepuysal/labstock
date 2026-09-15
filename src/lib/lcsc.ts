@@ -61,6 +61,16 @@ const KATEGORI_ANAHTAR: [string, string][] = [
   ['lora', 'RF / Kablosuz'],
   ['wireless', 'RF / Kablosuz'],
   ['antenna', 'RF / Kablosuz'],
+
+  // koruma — "circuit"/"ic" gibi genel entegre anahtarlarından önce durmalı:
+  // LCSC'nin kendi kategori adı "Circuit Protection/Fuses" gibi metinler
+  // içeriyor, yoksa aşağıdaki 'circuit' her şeyi Entegre'ye yazardı.
+  ['varistor', 'Koruma'],
+  ['fuse', 'Koruma'],
+  ['tvs', 'Koruma'],
+  ['esd', 'Koruma'],
+  ['protection', 'Koruma'],
+
   ['amplifier', 'Entegre'],
   ['logic', 'Entegre'],
   ['circuit', 'Entegre'],
@@ -98,12 +108,6 @@ const KATEGORI_ANAHTAR: [string, string][] = [
 
   ['filter', 'Filtre'],
 
-  ['varistor', 'Koruma'],
-  ['fuse', 'Koruma'],
-  ['tvs', 'Koruma'],
-  ['esd', 'Koruma'],
-  ['protection', 'Koruma'],
-
   ['actuator', 'Motor / Fan / Aktüatör'],
   ['buzzer', 'Motor / Fan / Aktüatör'],
   ['speaker', 'Motor / Fan / Aktüatör'],
@@ -138,6 +142,7 @@ export type LcscVerisi = {
   parametreler: Record<string, string>;
   fiyat: number | null;
   paraBirimi: string;
+  rohs: boolean | null;
 };
 
 type LdProduct = {
@@ -150,6 +155,20 @@ type LdProduct = {
   subjectOf?: { url?: string };
   offers?: { price?: number; priceCurrency?: string };
 };
+
+// RoHS bilgisi schema.org JSON-LD bloğunda yok - sayfanın Next.js hydration
+// verisinde (__NEXT_DATA__ > props.pageProps.webData.isRohsCert) geliyor.
+function rohsBilgisiCikar(html: string): boolean | null {
+  try {
+    const esleme = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+    if (!esleme) return null;
+    const veri = JSON.parse(esleme[1]);
+    const deger = veri?.props?.pageProps?.webData?.isRohsCert;
+    return typeof deger === 'boolean' ? deger : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function lcscKoduGetir(kod: string): Promise<LcscVerisi> {
   const temizKod = kod.trim().toUpperCase();
@@ -196,5 +215,6 @@ export async function lcscKoduGetir(kod: string): Promise<LcscVerisi> {
     parametreler,
     fiyat: typeof urun.offers?.price === 'number' ? urun.offers.price : null,
     paraBirimi: urun.offers?.priceCurrency ?? 'USD',
+    rohs: rohsBilgisiCikar(html),
   };
 }

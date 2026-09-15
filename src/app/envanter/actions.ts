@@ -438,7 +438,7 @@ export async function projedenCikar(bomId: string, donus: string): Promise<Eylem
   return {};
 }
 
-/** LCSC ürün sayfasından üretici/açıklama/kategori/kılıf/datasheet/resim/parametreleri çekip kaydeder. */
+/** LCSC ürün sayfasından üretici/açıklama/kategori/kılıf/datasheet/resim/parametreleri/RoHS bilgisini çekip kaydeder. */
 export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const stokId = String(formData.get('stok_id') ?? '');
   const partId = String(formData.get('part_id') ?? '');
@@ -463,6 +463,7 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   if (veri.datasheetUrl) partGuncelleme.datasheet_url = veri.datasheetUrl;
   if (veri.resimUrl) partGuncelleme.resim_url = veri.resimUrl;
   if (Object.keys(veri.parametreler).length > 0) partGuncelleme.parametreler = veri.parametreler;
+  if (veri.rohs !== null) partGuncelleme.rohs = veri.rohs;
 
   if (Object.keys(partGuncelleme).length > 0) {
     const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);

@@ -22,7 +22,7 @@ export default async function AlinacaklarSayfasi() {
 
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <Link
           href="/envanter"
           className="btn"
