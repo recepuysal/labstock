@@ -8,16 +8,14 @@ export type GuncellemeDurumu =
   | { tip: 'hazir'; versiyon: string; notlar?: string | null }
   | { tip: 'hata'; mesaj: string };
 
-// Sürüm notu metni "kısa açıklama\n\nayrıntılar" biçiminde gelir (CI, tag'lenen
-// commit mesajının ilk satırını kısa, gerisini ayrıntı olarak yazar — bkz.
-// .github/workflows/build-desktop.yml). İlk boş satıra kadar olan kısım kısa
-// açıklama, geri kalanı "Genişlet" ile açılan ayrıntı.
-function notlariAyir(notlar: string | null | undefined): { kisa: string | null; detay: string | null } {
+// Sürüm notu metninin ilk satırı/paragrafı kısa açıklamadır (CI, tag'lenen
+// commit mesajının ilk satırını yazar — bkz. .github/workflows/build-desktop.yml).
+// Geri kalan ayrıntı gösterilmiyor.
+function kisaAciklamaCikar(notlar: string | null | undefined): string | null {
   const temiz = notlar?.trim();
-  if (!temiz) return { kisa: null, detay: null };
+  if (!temiz) return null;
   const bosSatir = temiz.search(/\r?\n\s*\r?\n/);
-  if (bosSatir === -1) return { kisa: temiz, detay: null };
-  return { kisa: temiz.slice(0, bosSatir).trim() || null, detay: temiz.slice(bosSatir).trim() || null };
+  return (bosSatir === -1 ? temiz : temiz.slice(0, bosSatir)).trim() || null;
 }
 
 declare global {
@@ -38,7 +36,6 @@ declare global {
 export function GuncellemeBildirimi() {
   const [durum, setDurum] = useState<GuncellemeDurumu | null>(null);
   const [kapandi, setKapandi] = useState(false);
-  const [genisletildi, setGenisletildi] = useState(false);
 
   useEffect(() => {
     const api = window.electronAPI;
@@ -49,7 +46,6 @@ export function GuncellemeBildirimi() {
         return;
       }
       setKapandi(false);
-      setGenisletildi(false);
       setDurum(veri);
     });
   }, []);
@@ -57,7 +53,7 @@ export function GuncellemeBildirimi() {
   if (!durum || kapandi) return null;
 
   const hazirMi = durum.tip === 'hazir';
-  const { kisa, detay } = notlariAyir(durum.tip === 'mevcut' || durum.tip === 'hazir' ? durum.notlar : null);
+  const kisa = kisaAciklamaCikar(durum.tip === 'mevcut' || durum.tip === 'hazir' ? durum.notlar : null);
 
   return (
     <div
@@ -135,45 +131,6 @@ export function GuncellemeBildirimi() {
           </button>
         )}
       </div>
-
-      {detay && (
-        <div style={{ marginTop: 8, paddingLeft: 38 }}>
-          <button
-            type="button"
-            onClick={() => setGenisletildi((g) => !g)}
-            className="mn"
-            style={{
-              border: 'none',
-              background: 'none',
-              padding: 0,
-              fontSize: 11.5,
-              fontWeight: 600,
-              color: 'var(--copper)',
-              cursor: 'pointer',
-            }}
-          >
-            {genisletildi ? '− Daralt' : '+ Genişlet'}
-          </button>
-          {genisletildi && (
-            <div
-              style={{
-                marginTop: 6,
-                padding: '8px 10px',
-                background: 'var(--surface-2)',
-                borderRadius: 'var(--r)',
-                maxHeight: 160,
-                overflowY: 'auto',
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: 'var(--ink-2)',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {detay}
-            </div>
-          )}
-        </div>
-      )}
 
       {durum.tip === 'mevcut' && (
         <button
