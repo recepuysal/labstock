@@ -14,7 +14,12 @@ export function AramaKutusu() {
   const pathname = usePathname();
   const girdi = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setDeger(q), [q]);
+  // deger'i q'dan sürekli senkronize ETMEYİZ (yalnızca yukarıdaki useState(q)
+  // ile ilk yüklemede alınır): hızlı yazarken art arda giden router.replace
+  // çağrıları farklı sürelerde tamamlanabiliyor - eski (daha geç dönen) bir
+  // çağrının q'su, kullanıcının o sırada yazmış olduğu daha yeni metni geri
+  // alıp yazının "gidip gelmesine" yol açıyordu. Kutuyu her zaman kullanıcının
+  // yazdığı değer sürer, URL sadece arkadan takip eder.
 
   // ⌘K / Ctrl+K → aramaya odaklan. (Komut paletinin ilk adımı.)
   useEffect(() => {

@@ -61,3 +61,25 @@ export async function aktifGorunumAl(): Promise<AktifGorunum | null> {
     izlenenResim,
   };
 }
+
+export type AlinacaklarBildirimVerisi = {
+  hedef: string;
+  izlenenAdi: string | null;
+  izleyenler: { id: string; ad: string }[];
+};
+
+/** Kök layout'ta global "alınacaklara eklendi" bildirimini beslemek için gereken veri —
+ * uygulamanın her yerinde çalışsın diye tek başına (envanter/layout.tsx'ten bağımsız). */
+export async function alinacaklarBildirimVerisiAl(): Promise<AlinacaklarBildirimVerisi | null> {
+  const gorunum = await aktifGorunumAl();
+  if (!gorunum) return null;
+
+  let izleyenler: { id: string; ad: string }[] = [];
+  if (!gorunum.saltOkunur) {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc('gozlemcilerimi_listele');
+    izleyenler = ((data ?? []) as { id: string; ad: string }[]).map((i) => ({ id: i.id, ad: i.ad }));
+  }
+
+  return { hedef: gorunum.kullaniciId, izlenenAdi: gorunum.izlenenAdi, izleyenler };
+}
