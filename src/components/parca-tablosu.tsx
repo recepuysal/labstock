@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { AdetButonlari } from './adet-butonlari';
 import { SatirMenu } from './satir-menu';
+import { RohsRozet } from './rohs-rozet';
 import { DURUM_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
 
 const SUTUNLAR = '30px minmax(0,1fr) 122px 88px 96px 82px 150px 60px 30px';
@@ -97,9 +98,7 @@ export function ParcaTablosu({
           <div style={{ fontSize: 12, color: 'var(--ink-2)' }}>{s.kategori ?? '—'}</div>
           <div className="mn" style={{ fontSize: 11.5, color: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 5 }}>
             {s.kilif ?? '—'}
-            {s.rohs === true && (
-              <span title="RoHS uyumlu" style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--ok-dot)', flexShrink: 0 }} />
-            )}
+            {s.rohs === true && <RohsRozet boyut={13} />}
             {s.rohs === false && (
               <span title="RoHS değil" style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--crit-dot)', flexShrink: 0 }} />
             )}

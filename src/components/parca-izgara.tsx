@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { AdetButonlari } from './adet-butonlari';
 import { SatirMenu } from './satir-menu';
+import { RohsRozet } from './rohs-rozet';
 import { DURUM_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
 
 export function ParcaIzgara({
@@ -106,6 +107,9 @@ export function ParcaIzgara({
             {s.rohs === true && (
               <span
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
                   fontSize: 10.5,
                   color: 'var(--ok)',
                   background: 'var(--ok-bg)',
@@ -113,6 +117,7 @@ export function ParcaIzgara({
                   padding: '2px 6px',
                 }}
               >
+                <RohsRozet boyut={11} renk="var(--ok)" />
                 RoHS
               </span>
             )}

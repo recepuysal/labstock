@@ -8,6 +8,7 @@ import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
 import { EtiketlerKarti } from '@/components/etiketler-karti';
 import { GeriButonu } from '@/components/geri-butonu';
+import { RohsRozet } from '@/components/rohs-rozet';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
   DURUM_ETIKET,
@@ -176,7 +177,12 @@ export default async function ParcaDetaySayfasi({
                   {s.kilif}
                 </span>
               )}
-              {s.rohs === true && <span className="rozet rozet-yesil">RoHS uyumlu</span>}
+              {s.rohs === true && (
+                <span className="rozet rozet-yesil">
+                  <RohsRozet boyut={12} renk="var(--ok)" />
+                  RoHS uyumlu
+                </span>
+              )}
               {s.rohs === false && (
                 <span className="rozet" style={{ background: 'var(--crit-bg)', color: 'var(--crit)' }}>
                   RoHS değil
