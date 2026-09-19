@@ -208,13 +208,12 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  // 1) Ortak katalogda parça var mı? Yoksa ekle.
-  const { data: mevcut, error: aramaHatasi } = await supabase
-    .from('parts')
-    .select('id')
-    .ilike('mpn', mpn)
-    .limit(1)
-    .maybeSingle();
+  // 1) Ortak katalogda parça var mı? (mpn, üretici) çifti unique index'teki
+  // gibi eşleşiyor olmalı — yoksa üretici farklı bir "XL6009" ile aynı
+  // parça sanılıp yanlış eşleşir.
+  let aramaSorgu = supabase.from('parts').select('id').ilike('mpn', mpn);
+  aramaSorgu = uretici ? aramaSorgu.ilike('uretici', uretici) : aramaSorgu.is('uretici', null);
+  const { data: mevcut, error: aramaHatasi } = await aramaSorgu.limit(1).maybeSingle();
 
   if (aramaHatasi) return { hata: aramaHatasi.message };
 
@@ -237,7 +236,12 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
       .select('id')
       .single();
 
-    if (ekleHatasi) return { hata: ekleHatasi.message };
+    if (ekleHatasi) {
+      if (ekleHatasi.code === '23505') {
+        return { hata: `"${mpn}"${uretici ? ` / ${uretici}` : ''} zaten katalogda kayıtlı.` };
+      }
+      return { hata: ekleHatasi.message };
+    }
     partId = yeni.id;
   }
 
@@ -372,7 +376,12 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
 
   const { error: parcaHatasi } = await supabase.from('parts').update(parcaGuncelleme).eq('id', partId);
 
-  if (parcaHatasi) return { hata: parcaHatasi.message };
+  if (parcaHatasi) {
+    if (parcaHatasi.code === '23505') {
+      return { hata: `"${mpn}"${uretici ? ` / ${uretici}` : ''} zaten katalogda başka bir parça olarak kayıtlı.` };
+    }
+    return { hata: parcaHatasi.message };
+  }
 
   const { error: stokHatasi } = await supabase
     .from('stock_items')
