@@ -4,39 +4,54 @@
 // sayfanın metni doğrudan modele "şu şemaya göre çıkar" diye veriliyor, bu
 // yüzden prensipte herhangi bir satıcı sitesiyle çalışabilir.
 //
-// API: Gemini "Interactions" uç noktası, response_format.schema ile
-// yapılandırılmış (structured) JSON çıktısı istiyoruz.
-// https://ai.google.dev/gemini-api/docs/interactions/structured-output
+// API: klasik "generateContent" uç noktası + generationConfig.responseSchema
+// ile yapılandırılmış (structured) JSON çıktısı. Google'ın çok daha yeni
+// "Interactions" uç noktasını (v1beta/interactions) değil bunu kullanıyoruz —
+// yanıt şekli daha uzun süredir sabit ve iyi belgelenmiş.
+// https://ai.google.dev/gemini-api/docs/structured-output
 
 import type { ModulVerisi } from './direnc';
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
-// Sırayla denenir: ilki yoğunluktan (503) ya da kotadan (429) dönerse
-// bir sonrakine geçilir — "gemini-3.8-flash is currently experiencing
-// high demand" gibi geçici durumlarda isteği tamamen düşürmemek için.
-const GEMINI_MODELLER = ['gemini-3.8-flash', 'gemini-2.5-flash'];
+const GEMINI_ENDPOINT = (model: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+// Sırayla denenir: biri yoğunluktan (503), kotadan (429) ya da artık
+// kullanılamayan/bulunamayan bir modelden dönerse bir sonrakine geçilir.
+// Google'ın eski nesil modelleri yeni hesaplara kapatması gibi durumlarda
+// (ör. gemini-2.5-flash) listeyi güncel tutmak yeterli oluyor.
+const GEMINI_MODELLER = ['gemini-3.6-flash', 'gemini-3.8-flash'];
 const AZAMI_SAYFA_METNI = 30000;
 
+// Gemini'nin structured-output şeması OpenAPI'nin bir alt kümesi — tip adları
+// büyük harfle (STRING/OBJECT/ARRAY) yazılır. "parametreler"i açık uçlu bir
+// obje (rastgele anahtar adları) yerine {etiket, deger} dizisi olarak
+// istiyoruz; rastgele anahtarlı objeler her şema varyantında güvenilir
+// desteklenmiyor, dizi + sabit alanlar her yerde çalışır.
 const URUN_SEMASI = {
-  type: 'object',
+  type: 'OBJECT',
   properties: {
-    isim: { type: 'string', description: 'Ürünün tam adı/başlığı.' },
-    uretici: { type: ['string', 'null'], description: 'Üretici/marka adı; bulunamazsa null.' },
+    isim: { type: 'STRING', description: 'Ürünün tam adı/başlığı.' },
+    uretici: { type: 'STRING', description: 'Üretici/marka adı; bulunamazsa boş metin.' },
     aciklama: {
-      type: 'string',
+      type: 'STRING',
       description: 'Ürünle ilgili kısa, tek cümlelik Türkçe bir özet (teknik özellikleri tekrar etme, onlar ayrı alanda).',
     },
     parametreler: {
-      type: 'object',
-      description:
-        'Teknik özellikler, "Etiket": "Değer" çiftleri (ör. "Çalışma Gerilimi": "5V", "Boyut": "43mm x 21mm"). Bulunamazsa boş obje ({}).',
-      additionalProperties: { type: 'string' },
+      type: 'ARRAY',
+      description: 'Teknik özellikler. Bulunamazsa boş dizi ([]).',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          etiket: { type: 'STRING', description: 'Ör. "Çalışma Gerilimi", "Boyut".' },
+          deger: { type: 'STRING', description: 'Ör. "5V", "43mm x 21mm".' },
+        },
+        required: ['etiket', 'deger'],
+      },
     },
-    fiyat: { type: ['number', 'null'], description: 'Sayısal fiyat (ondalık nokta ile); bulunamazsa null.' },
-    paraBirimi: { type: 'string', description: 'Fiyatın para birimi kodu: TRY, USD ya da EUR. Bulunamazsa TRY.' },
+    fiyat: { type: 'NUMBER', description: 'Sayısal fiyat (ondalık nokta ile); bulunamazsa 0.' },
+    paraBirimi: { type: 'STRING', description: 'Fiyatın para birimi kodu: TRY, USD ya da EUR. Bulunamazsa TRY.' },
     resimUrl: {
-      type: ['string', 'null'],
-      description: 'Ürünün ana fotoğrafının URL\'si (mutlak ya da göreli olabilir); bulunamazsa null.',
+      type: 'STRING',
+      description: "Ürünün ana fotoğrafının URL'si (mutlak ya da göreli olabilir); bulunamazsa boş metin.",
     },
   },
   required: ['isim', 'aciklama', 'parametreler', 'paraBirimi'],
@@ -63,44 +78,21 @@ function htmlMetneDonustur(html: string): string {
     .slice(0, AZAMI_SAYFA_METNI);
 }
 
-function gemininiIstekGovdesi(model: string, input: string, semaIsteniyor: boolean) {
+function gemininiIstekGovdesi(input: string, semaIsteniyor: boolean) {
   return {
-    model,
-    input,
+    contents: [{ parts: [{ text: input }] }],
     ...(semaIsteniyor
-      ? { response_format: { type: 'text', mime_type: 'application/json', schema: URUN_SEMASI } }
+      ? { generationConfig: { responseMimeType: 'application/json', responseSchema: URUN_SEMASI } }
       : {}),
   };
 }
 
-async function gemininiCagir(apiKey: string, govde: unknown): Promise<Response> {
-  return fetch(GEMINI_ENDPOINT, {
+async function gemininiCagir(apiKey: string, model: string, govde: unknown): Promise<Response> {
+  return fetch(GEMINI_ENDPOINT(model), {
     method: 'POST',
     headers: { 'x-goog-api-key': apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify(govde),
   });
-}
-
-/** 503 (model o an aşırı yüklü/yoğun) ya da 429 (kota) — bir sonraki modeli
- * denemeye değer, geçici durumlar. */
-function yenidenDenenebilirMi(durum: number): boolean {
-  return durum === 503 || durum === 429;
-}
-
-/** GEMINI_MODELLER listesini sırayla dener; sadece yenidenDenenebilirMi()
- * true olan hatalarda bir sonrakine geçer, başka türlü hemen döner. */
-async function gemininiModelSirasiylaCagir(
-  apiKey: string,
-  input: string,
-  semaIsteniyor: boolean,
-): Promise<Response> {
-  let sonYanit: Response | null = null;
-  for (const model of GEMINI_MODELLER) {
-    const yanit = await gemininiCagir(apiKey, gemininiIstekGovdesi(model, input, semaIsteniyor));
-    if (yanit.ok || !yenidenDenenebilirMi(yanit.status)) return yanit;
-    sonYanit = yanit;
-  }
-  return sonYanit!;
 }
 
 async function gemininiHataMesaji(yanit: Response): Promise<string> {
@@ -117,12 +109,65 @@ async function gemininiHataMesaji(yanit: Response): Promise<string> {
   return `Yapay zeka isteği başarısız (HTTP ${yanit.status}).`;
 }
 
+/** 503 (model o an aşırı yüklü/yoğun), 429 (kota) ya da 404/mesajında "artık
+ * kullanılamıyor/bulunamadı" geçen bir model hatası — bir sonraki modeli
+ * denemeye değer, kalıcı olmayan durumlar. */
+function yenidenDenenebilirMi(durum: number, mesaj: string): boolean {
+  if (durum === 503 || durum === 429 || durum === 404) return true;
+  return /no longer available|not found|is not supported|deprecated|not enabled/i.test(mesaj);
+}
+
+type GeminiSonuc = { basarili: true; govde: unknown } | { basarili: false; hata: string };
+
+/** GEMINI_MODELLER listesini sırayla dener; sadece yenidenDenenebilirMi()
+ * true olan hatalarda bir sonrakine geçer, başka türlü hemen döner. */
+async function gemininiModelSirasiylaCagir(apiKey: string, input: string, semaIsteniyor: boolean): Promise<GeminiSonuc> {
+  let sonHata = 'Yapay zeka isteğine yanıt alınamadı.';
+  for (const model of GEMINI_MODELLER) {
+    const yanit = await gemininiCagir(apiKey, model, gemininiIstekGovdesi(input, semaIsteniyor));
+    if (yanit.ok) return { basarili: true, govde: await yanit.json() };
+
+    const mesaj = await gemininiHataMesaji(yanit);
+    sonHata = mesaj;
+    if (!yenidenDenenebilirMi(yanit.status, mesaj)) return { basarili: false, hata: mesaj };
+  }
+  return { basarili: false, hata: sonHata };
+}
+
+/** generateContent yanıtından üretilen metni çıkarır — asıl beklenen yol
+ * candidates[0].content.parts[0].text; olası varyantlar için birkaç yedek
+ * yol daha denenir, hiçbiri tutmazsa ham gövdenin bir kısmı hataya eklenir
+ * (teşhis için). */
+function outputMetniCikar(govde: unknown): string {
+  type SanalGovde = {
+    candidates?: { content?: { parts?: { text?: unknown }[] } }[];
+    interaction?: { outputText?: unknown };
+    output_text?: unknown;
+    outputText?: unknown;
+    text?: unknown;
+  };
+  const g = govde as SanalGovde;
+
+  const yollar: unknown[] = [
+    g.candidates?.[0]?.content?.parts?.[0]?.text,
+    g.interaction?.outputText,
+    g.output_text,
+    g.outputText,
+    g.text,
+  ];
+  for (const aday of yollar) {
+    if (typeof aday === 'string') return aday;
+  }
+
+  throw new Error(`Yapay zekadan beklenmeyen bir yanıt geldi: ${JSON.stringify(govde).slice(0, 400)}`);
+}
+
 /** Ayarlar'da "Kaydet" denince anahtarın gerçekten çalışıp çalışmadığını
  * küçük, ucuz bir istekle doğrular. */
 export async function geminiApiAnahtariniDogrula(apiKey: string): Promise<boolean> {
   try {
-    const yanit = await gemininiModelSirasiylaCagir(apiKey, 'Sadece "tamam" yaz.', false);
-    return yanit.ok;
+    const sonuc = await gemininiModelSirasiylaCagir(apiKey, 'Sadece "tamam" yaz.', false);
+    return sonuc.basarili;
   } catch {
     return false;
   }
@@ -136,16 +181,13 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
     `Aşağıda bir e-ticaret sitesindeki ürün sayfasının (${sayfaUrl}) metni var. ` +
     'Bu genelde bir elektronik/hobi/robotik malzemesi (sensör, geliştirme kartı, modül, komponent vb.). ' +
     'Sayfadan ürün bilgilerini çıkarıp istenen şemaya uygun JSON döndür. ' +
-    "Emin olmadığın ya da sayfada bulunmayan alanları null/boş bırak, asla uydurma.\n\n" +
+    "Emin olmadığın ya da sayfada bulunmayan alanları boş bırak, asla uydurma.\n\n" +
     `SAYFA METNİ:\n${metin}`;
 
-  const yanit = await gemininiModelSirasiylaCagir(apiKey, yonerge, true);
-  if (!yanit.ok) throw new Error(await gemininiHataMesaji(yanit));
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, yonerge, true);
+  if (!sonuc.basarili) throw new Error(sonuc.hata);
 
-  const govde = await yanit.json();
-  const ham = govde?.interaction?.outputText;
-  if (typeof ham !== 'string') throw new Error('Yapay zekadan beklenmeyen bir yanıt geldi.');
-
+  const ham = outputMetniCikar(sonuc.govde);
   let ayristirilmis: Record<string, unknown>;
   try {
     ayristirilmis = JSON.parse(ham);
@@ -158,10 +200,11 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
 
   const parametreler: Record<string, string> = {};
   const hamParametreler = ayristirilmis.parametreler;
-  if (hamParametreler && typeof hamParametreler === 'object') {
-    for (const [anahtar, deger] of Object.entries(hamParametreler as Record<string, unknown>)) {
-      if (typeof deger === 'string' && deger.trim()) parametreler[anahtar] = deger.trim();
-      else if (typeof deger === 'number') parametreler[anahtar] = String(deger);
+  if (Array.isArray(hamParametreler)) {
+    for (const satir of hamParametreler as Record<string, unknown>[]) {
+      const etiket = typeof satir?.etiket === 'string' ? satir.etiket.trim() : '';
+      const deger = typeof satir?.deger === 'string' ? satir.deger.trim() : '';
+      if (etiket && deger) parametreler[etiket] = deger;
     }
   }
 
@@ -174,7 +217,7 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
     }
   }
 
-  const fiyat = typeof ayristirilmis.fiyat === 'number' && Number.isFinite(ayristirilmis.fiyat) ? ayristirilmis.fiyat : null;
+  const fiyat = typeof ayristirilmis.fiyat === 'number' && ayristirilmis.fiyat > 0 ? ayristirilmis.fiyat : null;
 
   return {
     isim,
