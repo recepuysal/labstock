@@ -7,6 +7,7 @@ import { DisaAktarButonu } from '@/components/disa-aktar-butonu';
 import { GozlemciErisimi } from '@/components/gozlemci-erisimi';
 import { EtiketAyarlariFormu } from '@/components/etiket-ayarlari-formu';
 import { GeriBildirimFormu } from '@/components/geri-bildirim-formu';
+import { GeminiAyarlariFormu } from '@/components/gemini-ayarlari-formu';
 import { etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 
 export const dynamic = 'force-dynamic';
@@ -21,9 +22,10 @@ export default async function AyarlarSayfasi() {
 
   const { data: profil } = await supabase
     .from('profiles')
-    .select('davet_kodu')
+    .select('davet_kodu, gemini_api_key')
     .eq('id', user.id)
     .maybeSingle();
+  const geminiAnahtari = (profil?.gemini_api_key as string | null) ?? null;
 
   const { data: gozlemciVerisi } = await supabase.rpc('gozlemcilerimi_listele');
   const gozlemciler = (gozlemciVerisi ?? []) as {
@@ -80,6 +82,11 @@ export default async function AyarlarSayfasi() {
         <EtiketAyarlariFormu baslangic={etiketAyarlari} />
 
         <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />
+
+        <GeminiAyarlariFormu
+          anahtarVarMi={!!geminiAnahtari}
+          sonDortHane={geminiAnahtari ? geminiAnahtari.slice(-4) : null}
+        />
 
         <DisaAktarButonu />
 

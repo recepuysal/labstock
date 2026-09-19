@@ -10,6 +10,8 @@ import { direncUrldenCek } from '@/lib/direnc';
 import { robotistanUrldenCek } from '@/lib/robotistan';
 import { motorobitUrldenCek } from '@/lib/motorobit';
 import type { ModulVerisi } from '@/lib/direnc';
+import { geminiIleUrunCek } from '@/lib/gemini';
+import { TARAYICI_USER_AGENT } from '@/lib/urun-ld-json';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 
 export type EylemDurum = { hata?: string; bilgi?: string };
@@ -504,7 +506,8 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
 }
 
 /** Bir ürün linkinin hangi tedarikçiye ait olduğunu host adına göre belirler. */
-function tedarikciTespitEt(url: string): { ad: string; getir: (url: string) => Promise<ModulVerisi> } | null {
+/** Bilinen (JSON-LD tabanlı, ücretsiz ve hızlı) site tedarikçileri. */
+function bilinenTedarikciTespitEt(url: string): { ad: string; getir: (url: string) => Promise<ModulVerisi> } | null {
   let host: string;
   try {
     host = new URL(url).hostname;
@@ -517,23 +520,74 @@ function tedarikciTespitEt(url: string): { ad: string; getir: (url: string) => P
   return null;
 }
 
+const OZEL_AG_DESENI = /^(localhost|127\.|0\.0\.0\.0|169\.254\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|\[?::1\]?)/i;
+
+/** Yapay zeka yolunda (bilinmeyen siteler) sunucunun kendi ağına/localhost'a
+ * istek atmasını önlemek için basit bir güvenlik kontrolü. */
+function guvenliDisUrlMi(url: URL): boolean {
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+  return !OZEL_AG_DESENI.test(url.hostname);
+}
+
 export type LinkOnizilemesi = { hata?: string; veri?: ModulVerisi; tedarikciAdi?: string };
 
-/** Malzeme formunda "Linkten çek" butonu için: Direnç.net/Robotistan ürün
- * linkini okuyup verisini döner — kaydetmez, formu doldurup kullanıcıya
- * gözden geçirme fırsatı vermek içindir (bkz. ParcaFormu). */
+/** Malzeme formunda "Linkten çek" butonu için: önce bilinen sitelerin
+ * (Direnç.net/Robotistan/Motorobit) hızlı JSON-LD okuyucusunu dener; site
+ * tanınmıyorsa ve kullanıcı Ayarlar'dan bir Gemini API anahtarı eklemişse
+ * sayfayı yapay zekaya okutup aynı şekilde doldurur. Kaydetmez — formu
+ * doldurup kullanıcıya gözden geçirme fırsatı vermek içindir (bkz. ParcaFormu). */
 export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
   const temizUrl = url.trim();
   if (!temizUrl) return { hata: 'Bağlantı gerekli.' };
 
-  const tedarikci = tedarikciTespitEt(temizUrl);
-  if (!tedarikci) return { hata: 'Sadece direnc.net / robotistan.com bağlantıları desteklenir.' };
+  const bilinen = bilinenTedarikciTespitEt(temizUrl);
+  if (bilinen) {
+    try {
+      const veri = await bilinen.getir(temizUrl);
+      return { veri, tedarikciAdi: bilinen.ad };
+    } catch (err) {
+      console.error('linkOnizle:', err);
+      return { hata: err instanceof Error ? err.message : 'Çekilemedi.' };
+    }
+  }
+
+  let ayrikUrl: URL;
+  try {
+    ayrikUrl = new URL(temizUrl);
+  } catch {
+    return { hata: 'Geçersiz bağlantı.' };
+  }
+  if (!guvenliDisUrlMi(ayrikUrl)) return { hata: 'Geçersiz bağlantı.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { data: profil } = await supabase
+    .from('profiles')
+    .select('gemini_api_key')
+    .eq('id', user.id)
+    .maybeSingle();
+  const apiAnahtari = profil?.gemini_api_key as string | null | undefined;
+
+  if (!apiAnahtari) {
+    return {
+      hata:
+        'Bu site için hazır destek yok. Ayarlar sayfasından ücretsiz bir Gemini API anahtarı eklersen artık her siteden çekebilirsin.',
+    };
+  }
 
   try {
-    const veri = await tedarikci.getir(temizUrl);
-    return { veri, tedarikciAdi: tedarikci.ad };
+    const sayfaYaniti = await fetch(ayrikUrl.toString(), { headers: { 'User-Agent': TARAYICI_USER_AGENT } });
+    if (!sayfaYaniti.ok) return { hata: `Sayfa alınamadı (HTTP ${sayfaYaniti.status}).` };
+    const html = await sayfaYaniti.text();
+
+    const veri = await geminiIleUrunCek(apiAnahtari, ayrikUrl.toString(), html);
+    return { veri, tedarikciAdi: ayrikUrl.hostname.replace(/^www\./, '') };
   } catch (err) {
-    console.error('linkOnizle:', err);
+    console.error('linkOnizle (yapay zeka):', err);
     return { hata: err instanceof Error ? err.message : 'Çekilemedi.' };
   }
 }

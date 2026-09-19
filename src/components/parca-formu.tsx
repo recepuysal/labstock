@@ -240,7 +240,9 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
         )}
         {cekDurumu === 'bos' && (
           <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-            Direnç.net / Robotistan / Motorobit ürün linki yapıştırıp "Linkten çek" ile aşağıdaki alanları otomatik doldurabilirsin.
+            Direnç.net / Robotistan / Motorobit ürün linki yapıştırıp "Linkten çek" ile aşağıdaki alanları otomatik
+            doldurabilirsin. Ayarlar'dan ücretsiz bir Gemini API anahtarı eklersen bu, herhangi bir satıcının ürün
+            linkinde de çalışır.
           </p>
         )}
       </div>

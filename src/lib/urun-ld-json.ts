@@ -3,6 +3,9 @@
 // bir sayfa isteği — sitenin zaten herkese açık yayınladığı yapılandırılmış
 // veriyi okuyoruz (bkz. lcsc.ts, aynı yöntemin ilk kullanıldığı yer).
 
+export const TARAYICI_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
+
 export type LdProduct = {
   '@type'?: string;
   name?: string;
@@ -19,12 +22,7 @@ export type LdProduct = {
 /** Sayfadaki <script type="application/ld+json"> bloklarını gezip ilk "Product"
  * düğümünü döner (blok düz bir obje ya da "@graph" listesi içinde olabilir). */
 export async function ldJsonUrunGetir(url: string): Promise<LdProduct | null> {
-  const yanit = await fetch(url, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-    },
-  });
+  const yanit = await fetch(url, { headers: { 'User-Agent': TARAYICI_USER_AGENT } });
   if (!yanit.ok) throw new Error(`Sayfa alınamadı (HTTP ${yanit.status}).`);
   const html = await yanit.text();
 

@@ -8,6 +8,7 @@ import type { EylemDurum } from '@/app/envanter/actions';
 import type { EnvanterSatiri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
+import { geminiApiAnahtariniDogrula } from '@/lib/gemini';
 
 export async function geriBildirimGonder(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const mesaj = String(formData.get('mesaj') ?? '').trim();
@@ -268,4 +269,42 @@ export async function gozlemciyiCikar(gozlemciId: string): Promise<EylemDurum> {
 
   revalidatePath('/ayarlar');
   return { bilgi: 'Çıkarıldı.' };
+}
+
+/** Girilen Gemini API anahtarını küçük bir istekle doğrulayıp kaydeder —
+ * "Linkten çek" artık desteklenmeyen sitelerde bu anahtarla yapay zekaya
+ * düşer (bkz. lib/gemini.ts, envanter/actions.ts linkOnizle). */
+export async function geminiAnahtariKaydet(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const anahtar = String(formData.get('api_anahtari') ?? '').trim();
+  if (!anahtar) return { hata: 'Bir API anahtarı gir.' };
+
+  const gecerli = await geminiApiAnahtariniDogrula(anahtar);
+  if (!gecerli) return { hata: 'Anahtar doğrulanamadı — kopyaladığından emin olup tekrar dener misin?' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { error } = await supabase.from('profiles').upsert({ id: user.id, gemini_api_key: anahtar }, { onConflict: 'id' });
+  if (error) return { hata: error.message };
+
+  revalidatePath('/ayarlar');
+  return { bilgi: 'Anahtar doğrulandı ve kaydedildi.' };
+}
+
+/** Kayıtlı Gemini API anahtarını kaldırır. */
+export async function geminiAnahtariniKaldir(): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { error } = await supabase.from('profiles').update({ gemini_api_key: null }).eq('id', user.id);
+  if (error) return { hata: error.message };
+
+  revalidatePath('/ayarlar');
+  return { bilgi: 'Kaldırıldı.' };
 }
