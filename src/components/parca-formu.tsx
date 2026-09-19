@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { parcaEkle, parcaGuncelle, type EylemDurum } from '@/app/envanter/actions';
+import { parcaEkle, parcaGuncelle, linkOnizle, type EylemDurum } from '@/app/envanter/actions';
 import { parametrelerToMetin } from '@/lib/types';
 
 // LCSC'nin kendi katalog kategorilerine yakın, daha ayrıntılı bir liste —
@@ -68,6 +68,21 @@ type Props = {
   donus?: string;
 };
 
+// linkOnizle()'dan dönen veriyle formu doldurmak için — kaydetmeden önce
+// kullanıcıya gözden geçirme fırsatı verir (bkz. linktenCekTikla).
+type LinkDolgu = {
+  mpn?: string;
+  uretici?: string | null;
+  aciklama?: string | null;
+  kategori?: string | null;
+  parametreler?: Record<string, string>;
+  tedarikci?: string | null;
+  tedarikci_kodu?: string | null;
+  alis_fiyati?: number | null;
+  para_birimi?: string;
+  resim_url?: string | null;
+};
+
 export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) {
   const duzenle = mod === 'duzenle';
   const eylem = duzenle ? parcaGuncelle : parcaEkle;
@@ -75,6 +90,12 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
   const router = useRouter();
   const [onizleme, setOnizleme] = useState<string | null>(null);
   const resimGirdi = useRef<HTMLInputElement>(null);
+  const linkGirdi = useRef<HTMLInputElement>(null);
+
+  const [dolgu, setDolgu] = useState<LinkDolgu | null>(null);
+  const [surum, setSurum] = useState(0);
+  const [cekDurumu, setCekDurumu] = useState<'bos' | 'cekiliyor' | 'basarili' | 'basarisiz'>('bos');
+  const [cekHatasi, setCekHatasi] = useState<string | null>(null);
 
   useEffect(() => {
     if (durum.bilgi) {
@@ -89,7 +110,37 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
     setOnizleme(URL.createObjectURL(dosya));
   }
 
-  const gosterilecekResim = onizleme ?? baslangic?.resim_url ?? null;
+  async function linktenCekTikla() {
+    const url = linkGirdi.current?.value.trim();
+    if (!url) return;
+    setCekDurumu('cekiliyor');
+    setCekHatasi(null);
+
+    const sonuc = await linkOnizle(url);
+    if (!sonuc.veri) {
+      setCekDurumu('basarisiz');
+      setCekHatasi(sonuc.hata ?? 'Çekilemedi.');
+      return;
+    }
+
+    const { veri, tedarikciAdi } = sonuc;
+    setDolgu({
+      mpn: veri.isim ?? undefined,
+      uretici: veri.uretici,
+      aciklama: veri.aciklama,
+      kategori: veri.kategori,
+      parametreler: veri.parametreler,
+      tedarikci: tedarikciAdi,
+      tedarikci_kodu: veri.tedarikciKodu,
+      alis_fiyati: veri.fiyat,
+      para_birimi: veri.paraBirimi,
+      resim_url: veri.resimUrl,
+    });
+    setSurum((s) => s + 1);
+    setCekDurumu('basarili');
+  }
+
+  const gosterilecekResim = onizleme ?? dolgu?.resim_url ?? baslangic?.resim_url ?? null;
 
   return (
     <form action={gonder} className="kart" style={{ padding: 22 }}>
@@ -153,17 +204,54 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
         </div>
       </div>
 
+      {dolgu?.resim_url && <input type="hidden" name="otomatik_resim_url" value={dolgu.resim_url} />}
+
+      <div style={{ marginBottom: 16 }}>
+        <label className="etiket" htmlFor="datasheet_url">
+          Ürün linki / Datasheet
+        </label>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            ref={linkGirdi}
+            className="alan mn"
+            id="datasheet_url"
+            name="datasheet_url"
+            type="url"
+            defaultValue={baslangic?.datasheet_url ?? undefined}
+            placeholder="https://www.direnc.net/... ya da https://www.robotistan.com/..."
+            style={{ flex: 1 }}
+          />
+          <button type="button" className="btn" onClick={linktenCekTikla} disabled={cekDurumu === 'cekiliyor'}>
+            {cekDurumu === 'cekiliyor' ? 'Çekiliyor…' : 'Linkten çek'}
+          </button>
+        </div>
+        {cekDurumu === 'basarili' && (
+          <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--ok)' }}>
+            Çekildi — aşağıdaki alanları kontrol edip kaydedebilirsin.
+          </p>
+        )}
+        {cekDurumu === 'basarisiz' && (
+          <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--crit)' }}>{cekHatasi}</p>
+        )}
+        {cekDurumu === 'bos' && (
+          <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
+            Direnç.net / Robotistan ürün linki yapıştırıp "Linkten çek" ile aşağıdaki alanları otomatik doldurabilirsin.
+          </p>
+        )}
+      </div>
+
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="mpn">
           MPN — parça numarası *
         </label>
         <input
+          key={`mpn-${surum}`}
           className="alan mn"
           id="mpn"
           name="mpn"
           required
-          autoFocus
-          defaultValue={baslangic?.mpn}
+          autoFocus={!dolgu}
+          defaultValue={dolgu?.mpn ?? baslangic?.mpn}
           placeholder="RC0805FR-0710KL"
         />
       </div>
@@ -174,10 +262,11 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             Üretici
           </label>
           <input
+            key={`uretici-${surum}`}
             className="alan"
             id="uretici"
             name="uretici"
-            defaultValue={baslangic?.uretici ?? undefined}
+            defaultValue={dolgu?.uretici ?? baslangic?.uretici ?? undefined}
             placeholder="Yageo"
           />
         </div>
@@ -200,10 +289,11 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
           Açıklama
         </label>
         <input
+          key={`aciklama-${surum}`}
           className="alan"
           id="aciklama"
           name="aciklama"
-          defaultValue={baslangic?.aciklama ?? undefined}
+          defaultValue={dolgu?.aciklama ?? baslangic?.aciklama ?? undefined}
           placeholder="Direnç 10 kΩ ±1% 1/8 W"
         />
       </div>
@@ -214,10 +304,11 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             Kategori
           </label>
           <select
+            key={`kategori-${surum}`}
             className="alan"
             id="kategori"
             name="kategori"
-            defaultValue={baslangic?.kategori ?? ''}
+            defaultValue={dolgu?.kategori ?? baslangic?.kategori ?? ''}
           >
             <option value="">seçilmedi</option>
             {KATEGORILER.map((k) => (
@@ -315,10 +406,11 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             Tedarikçi
           </label>
           <input
+            key={`tedarikci-${surum}`}
             className="alan"
             id="tedarikci"
             name="tedarikci"
-            defaultValue={baslangic?.tedarikci ?? undefined}
+            defaultValue={dolgu?.tedarikci ?? baslangic?.tedarikci ?? undefined}
             placeholder="LCSC"
           />
         </div>
@@ -327,10 +419,11 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             Tedarikçi kodu
           </label>
           <input
+            key={`tedarikci_kodu-${surum}`}
             className="alan mn"
             id="tedarikci_kodu"
             name="tedarikci_kodu"
-            defaultValue={baslangic?.tedarikci_kodu ?? undefined}
+            defaultValue={dolgu?.tedarikci_kodu ?? baslangic?.tedarikci_kodu ?? undefined}
             placeholder="C17414"
           />
         </div>
@@ -342,13 +435,14 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             Son alım fiyatı
           </label>
           <input
+            key={`alis_fiyati-${surum}`}
             className="alan mn"
             id="alis_fiyati"
             name="alis_fiyati"
             type="number"
             min={0}
             step="any"
-            defaultValue={baslangic?.alis_fiyati ?? undefined}
+            defaultValue={dolgu?.alis_fiyati ?? baslangic?.alis_fiyati ?? undefined}
             placeholder="17.10"
           />
         </div>
@@ -357,10 +451,11 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             Birim
           </label>
           <select
+            key={`para_birimi-${surum}`}
             className="alan mn"
             id="para_birimi"
             name="para_birimi"
-            defaultValue={baslangic?.para_birimi ?? 'TRY'}
+            defaultValue={dolgu?.para_birimi ?? baslangic?.para_birimi ?? 'TRY'}
           >
             <option value="TRY">TRY</option>
             <option value="USD">USD</option>
@@ -369,31 +464,18 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
         </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label className="etiket" htmlFor="datasheet_url">
-          Datasheet URL
-        </label>
-        <input
-          className="alan mn"
-          id="datasheet_url"
-          name="datasheet_url"
-          type="url"
-          defaultValue={baslangic?.datasheet_url ?? undefined}
-          placeholder="https://..."
-        />
-      </div>
-
       <div style={{ marginBottom: 22 }}>
         <label className="etiket" htmlFor="parametreler">
           Parametreler
         </label>
         <textarea
+          key={`parametreler-${surum}`}
           className="alan mn"
           id="parametreler"
           name="parametreler"
           rows={4}
           style={{ height: 'auto', padding: '9px 11px', resize: 'vertical' }}
-          defaultValue={parametrelerToMetin(baslangic?.parametreler)}
+          defaultValue={parametrelerToMetin(dolgu?.parametreler ?? baslangic?.parametreler)}
           placeholder={'Çekirdek: ARM Cortex-M3\nFrekans: 72 MHz\nFlash: 64 KB'}
         />
         <p style={{ margin: '4px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>

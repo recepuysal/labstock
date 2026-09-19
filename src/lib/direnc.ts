@@ -6,6 +6,7 @@ import { ldJsonUrunGetir } from './urun-ld-json';
 import { urunAciklamasiniAyristir } from './urun-parametre-cikar';
 
 export type ModulVerisi = {
+  isim: string | null;
   uretici: string | null;
   aciklama: string | null;
   kategori: string | null;
@@ -43,6 +44,7 @@ export async function direncUrldenCek(url: string): Promise<ModulVerisi> {
     : { aciklama: null, parametreler: {} };
 
   return {
+    isim: urun.name ?? null,
     uretici: urun.brand?.name ?? null,
     aciklama,
     kategori: 'Modül',

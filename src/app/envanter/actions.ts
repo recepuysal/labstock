@@ -192,6 +192,7 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   const paraBirimi = String(formData.get('para_birimi') ?? 'TRY').trim() || 'TRY';
   const datasheetUrl = String(formData.get('datasheet_url') ?? '').trim() || null;
   const parametreler = metinToParametreler(String(formData.get('parametreler') ?? ''));
+  const otomatikResimUrl = String(formData.get('otomatik_resim_url') ?? '').trim() || null;
   const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'));
   if (resimHatasi) return { hata: resimHatasi };
 
@@ -230,6 +231,7 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
         kilif,
         datasheet_url: datasheetUrl,
         parametreler,
+        resim_url: otomatikResimUrl,
         olusturan: user.id,
       })
       .select('id')
@@ -245,6 +247,9 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
     const { url, hata } = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi);
     if (hata) return { hata };
     await supabase.from('parts').update({ resim_url: url }).eq('id', partId);
+  } else if (otomatikResimUrl && mevcut?.id) {
+    // Parça zaten vardı — yukarıdaki insert bu durumda çalışmadığı için resmi ayrıca yaz.
+    await supabase.from('parts').update({ resim_url: otomatikResimUrl }).eq('id', partId);
   }
 
   // 2) Bu parça bu konumda zaten var mı? (kendi stoğunla sınırlı — izlediğin
@@ -325,6 +330,7 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   const paraBirimi = String(formData.get('para_birimi') ?? 'TRY').trim() || 'TRY';
   const datasheetUrl = String(formData.get('datasheet_url') ?? '').trim() || null;
   const parametreler = metinToParametreler(String(formData.get('parametreler') ?? ''));
+  const otomatikResimUrl = String(formData.get('otomatik_resim_url') ?? '').trim() || null;
   const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'));
   if (resimHatasi) return { hata: resimHatasi };
 
@@ -344,6 +350,8 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
     const sonuc = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi);
     if (sonuc.hata) return { hata: sonuc.hata };
     resimUrl = sonuc.url;
+  } else if (otomatikResimUrl) {
+    resimUrl = otomatikResimUrl;
   }
 
   // Katalog alanları (mpn/üretici/açıklama/kategori/kılıf/datasheet/parametreler/resim) sadece
@@ -498,55 +506,25 @@ function tedarikciTespitEt(url: string): { ad: string; getir: (url: string) => P
   return null;
 }
 
-/** Direnç.net / Robotistan ürün linkinden üretici/açıklama/resim/fiyatı çekip kaydeder.
- * Kullanıcıya sadece başarılı/başarısız gösterilir; gerçek hata sunucu loguna yazılır. */
-export async function linktenCek(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
-  const stokId = String(formData.get('stok_id') ?? '');
-  const partId = String(formData.get('part_id') ?? '');
-  const url = String(formData.get('urun_url') ?? '').trim();
-  if (!stokId || !partId || !url) return { hata: 'Başarısız.' };
+export type LinkOnizilemesi = { hata?: string; veri?: ModulVerisi; tedarikciAdi?: string };
 
-  const tedarikci = tedarikciTespitEt(url);
-  if (!tedarikci) return { hata: 'Başarısız.' };
+/** Malzeme formunda "Linkten çek" butonu için: Direnç.net/Robotistan ürün
+ * linkini okuyup verisini döner — kaydetmez, formu doldurup kullanıcıya
+ * gözden geçirme fırsatı vermek içindir (bkz. ParcaFormu). */
+export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
+  const temizUrl = url.trim();
+  if (!temizUrl) return { hata: 'Bağlantı gerekli.' };
 
-  let veri: ModulVerisi;
+  const tedarikci = tedarikciTespitEt(temizUrl);
+  if (!tedarikci) return { hata: 'Sadece direnc.net / robotistan.com bağlantıları desteklenir.' };
+
   try {
-    veri = await tedarikci.getir(url);
+    const veri = await tedarikci.getir(temizUrl);
+    return { veri, tedarikciAdi: tedarikci.ad };
   } catch (err) {
-    console.error('linktenCek:', err);
-    return { hata: 'Başarısız.' };
+    console.error('linkOnizle:', err);
+    return { hata: err instanceof Error ? err.message : 'Çekilemedi.' };
   }
-
-  const supabase = await createClient();
-
-  const partGuncelleme: Record<string, unknown> = {};
-  if (veri.uretici) partGuncelleme.uretici = veri.uretici;
-  if (veri.aciklama) partGuncelleme.aciklama = veri.aciklama;
-  if (veri.kategori) partGuncelleme.kategori = veri.kategori;
-  if (veri.resimUrl) partGuncelleme.resim_url = veri.resimUrl;
-  if (Object.keys(veri.parametreler).length > 0) partGuncelleme.parametreler = veri.parametreler;
-
-  if (Object.keys(partGuncelleme).length > 0) {
-    const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);
-    if (error) {
-      console.error('linktenCek:', error);
-      return { hata: 'Başarısız.' };
-    }
-  }
-
-  const stokGuncelleme: Record<string, unknown> = { tedarikci: tedarikci.ad, tedarikci_kodu: veri.tedarikciKodu };
-  if (veri.fiyat != null) {
-    stokGuncelleme.alis_fiyati = veri.fiyat;
-    stokGuncelleme.para_birimi = veri.paraBirimi;
-  }
-  const { error: stokHatasi } = await supabase.from('stock_items').update(stokGuncelleme).eq('id', stokId);
-  if (stokHatasi) {
-    console.error('linktenCek:', stokHatasi);
-    return { hata: 'Başarısız.' };
-  }
-
-  revalidatePath(`/envanter/${stokId}`);
-  return { bilgi: 'Başarılı.' };
 }
 
 /** Bir stok kalemine etiket ekler; etiket kullanıcıda yoksa önce oluşturur. */

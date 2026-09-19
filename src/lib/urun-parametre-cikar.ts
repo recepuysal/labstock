@@ -1,10 +1,9 @@
 // Direnc.net/Robotistan gibi sitelerin JSON-LD "description" alanı, sayfadaki
-// teknik özellik tablosunun düz metne çevrilmiş hali — satır sonları kayboluyor,
-// "Etiket: Değer" dizisi tek bir metin akışında birleşiyor. Bu, o akıştan
-// LCSC'deki additionalProperty'ye benzer bir parametreler tablosu çıkarır ve
-// tanıtım/link kuyruğunu (ör. "Faydalı Linkler ...") atar. Güvenilir şekilde
-// ayrıştırılamayan (aşırı uzun ya da hiç bulunamayan) durumlarda metni olduğu
-// gibi açıklamada bırakır — hiçbir zaman bilgi kaybına yol açmaz.
+// tüm tanıtım metni + teknik özellik tablosunun düz metne çevrilmiş hali —
+// satır sonları kayboluyor, "Etiket: Değer" dizisi tek bir metin akışında
+// birleşiyor. Bu, o akıştan LCSC'deki additionalProperty'ye benzer bir
+// parametreler tablosu çıkarır; açıklama olarak da uzun tanıtım metni değil,
+// ürünle ilgili kısa tek cümlelik bir özet döner.
 
 export type AciklamaAyristirma = {
   aciklama: string;
@@ -12,6 +11,19 @@ export type AciklamaAyristirma = {
 };
 
 const AZAMI_DEGER_UZUNLUGU = 60;
+const AZAMI_ACIKLAMA_UZUNLUGU = 220;
+
+/** Metnin ilk cümlesini döner (ilk ". "/"! "/"? " ya da metin sonu) — ondalık
+ * sayılardaki nokta ("3.5V") bir boşlukla takip edilmediği için bölünmez. Çok
+ * uzunsa kelime sınırında kısaltıp "…" ekler. */
+function ilkCumle(metin: string): string {
+  const esleme = metin.match(/^(.*?[.!?])(?=\s|$)/s);
+  let cumle = (esleme ? esleme[1] : metin).trim();
+  if (cumle.length > AZAMI_ACIKLAMA_UZUNLUGU) {
+    cumle = `${cumle.slice(0, AZAMI_ACIKLAMA_UZUNLUGU).replace(/\s+\S*$/, '')}…`;
+  }
+  return cumle;
+}
 
 // Sayı hemen ardından gelen bu birim kelimeleri ("18 Watt", "50 mA") bir
 // sonraki etiketin başlangıcıymış gibi yanlış algılanmasın diye dışlanır.
@@ -59,19 +71,15 @@ export function urunAciklamasiniAyristir(
       ozellikBasligi = aday;
     }
   }
-  if (baslangic < 0) return { aciklama: metin.trim(), parametreler: {} };
+  const onTam = baslangic >= 0 ? metin.slice(0, baslangic).trim() : metin.trim();
+  const aciklama = ilkCumle(onTam);
+  if (baslangic < 0) return { aciklama, parametreler: {} };
 
-  const on = metin.slice(0, baslangic).trim();
   let blok = metin.slice(baslangic + ozellikBasligi.length);
-
   for (const kuyruk of kuyrukBasliklari) {
     const kuyrukIndex = blok.indexOf(kuyruk);
     if (kuyrukIndex >= 0) blok = blok.slice(0, kuyrukIndex);
   }
 
-  const parametreler = etiketDegerCikar(blok);
-  if (Object.keys(parametreler).length === 0) {
-    return { aciklama: `${on} ${blok}`.trim(), parametreler: {} };
-  }
-  return { aciklama: on || metin.trim(), parametreler };
+  return { aciklama, parametreler: etiketDegerCikar(blok) };
 }

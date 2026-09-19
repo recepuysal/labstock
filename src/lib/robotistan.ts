@@ -34,6 +34,7 @@ export async function robotistanUrldenCek(url: string): Promise<ModulVerisi> {
     : { aciklama: null, parametreler: {} };
 
   return {
+    isim: urun.name ?? null,
     uretici: urun.brand?.name ?? null,
     aciklama,
     kategori: 'Modül',
