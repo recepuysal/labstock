@@ -8,6 +8,7 @@ import { metinToParametreler } from '@/lib/types';
 import { lcscKoduGetir } from '@/lib/lcsc';
 import { direncUrldenCek } from '@/lib/direnc';
 import { robotistanUrldenCek } from '@/lib/robotistan';
+import { motorobitUrldenCek } from '@/lib/motorobit';
 import type { ModulVerisi } from '@/lib/direnc';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 
@@ -512,6 +513,7 @@ function tedarikciTespitEt(url: string): { ad: string; getir: (url: string) => P
   }
   if (host === 'direnc.net' || host === 'www.direnc.net') return { ad: 'Direnç.net', getir: direncUrldenCek };
   if (host === 'robotistan.com' || host === 'www.robotistan.com') return { ad: 'Robotistan', getir: robotistanUrldenCek };
+  if (host === 'motorobit.com' || host === 'www.motorobit.com') return { ad: 'Motorobit', getir: motorobitUrldenCek };
   return null;
 }
 

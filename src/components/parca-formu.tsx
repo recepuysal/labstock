@@ -218,7 +218,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
             name="datasheet_url"
             type="url"
             defaultValue={baslangic?.datasheet_url ?? undefined}
-            placeholder="https://www.direnc.net/... ya da https://www.robotistan.com/..."
+            placeholder="https://www.direnc.net/... , robotistan.com/... ya da motorobit.com/..."
             style={{ flex: 1 }}
           />
           <button type="button" className="btn" onClick={linktenCekTikla} disabled={cekDurumu === 'cekiliyor'}>
@@ -235,7 +235,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
         )}
         {cekDurumu === 'bos' && (
           <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-            Direnç.net / Robotistan ürün linki yapıştırıp "Linkten çek" ile aşağıdaki alanları otomatik doldurabilirsin.
+            Direnç.net / Robotistan / Motorobit ürün linki yapıştırıp "Linkten çek" ile aşağıdaki alanları otomatik doldurabilirsin.
           </p>
         )}
       </div>
