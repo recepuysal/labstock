@@ -11,7 +11,10 @@
 import type { ModulVerisi } from './direnc';
 
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
-const GEMINI_MODEL = 'gemini-3.8-flash';
+// Sırayla denenir: ilki yoğunluktan (503) ya da kotadan (429) dönerse
+// bir sonrakine geçilir — "gemini-3.8-flash is currently experiencing
+// high demand" gibi geçici durumlarda isteği tamamen düşürmemek için.
+const GEMINI_MODELLER = ['gemini-3.8-flash', 'gemini-2.5-flash'];
 const AZAMI_SAYFA_METNI = 30000;
 
 const URUN_SEMASI = {
@@ -60,9 +63,9 @@ function htmlMetneDonustur(html: string): string {
     .slice(0, AZAMI_SAYFA_METNI);
 }
 
-function gemininiIstekGovdesi(input: string, semaIsteniyor: boolean) {
+function gemininiIstekGovdesi(model: string, input: string, semaIsteniyor: boolean) {
   return {
-    model: GEMINI_MODEL,
+    model,
     input,
     ...(semaIsteniyor
       ? { response_format: { type: 'text', mime_type: 'application/json', schema: URUN_SEMASI } }
@@ -76,6 +79,28 @@ async function gemininiCagir(apiKey: string, govde: unknown): Promise<Response> 
     headers: { 'x-goog-api-key': apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify(govde),
   });
+}
+
+/** 503 (model o an aşırı yüklü/yoğun) ya da 429 (kota) — bir sonraki modeli
+ * denemeye değer, geçici durumlar. */
+function yenidenDenenebilirMi(durum: number): boolean {
+  return durum === 503 || durum === 429;
+}
+
+/** GEMINI_MODELLER listesini sırayla dener; sadece yenidenDenenebilirMi()
+ * true olan hatalarda bir sonrakine geçer, başka türlü hemen döner. */
+async function gemininiModelSirasiylaCagir(
+  apiKey: string,
+  input: string,
+  semaIsteniyor: boolean,
+): Promise<Response> {
+  let sonYanit: Response | null = null;
+  for (const model of GEMINI_MODELLER) {
+    const yanit = await gemininiCagir(apiKey, gemininiIstekGovdesi(model, input, semaIsteniyor));
+    if (yanit.ok || !yenidenDenenebilirMi(yanit.status)) return yanit;
+    sonYanit = yanit;
+  }
+  return sonYanit!;
 }
 
 async function gemininiHataMesaji(yanit: Response): Promise<string> {
@@ -96,7 +121,7 @@ async function gemininiHataMesaji(yanit: Response): Promise<string> {
  * küçük, ucuz bir istekle doğrular. */
 export async function geminiApiAnahtariniDogrula(apiKey: string): Promise<boolean> {
   try {
-    const yanit = await gemininiCagir(apiKey, gemininiIstekGovdesi('Sadece "tamam" yaz.', false));
+    const yanit = await gemininiModelSirasiylaCagir(apiKey, 'Sadece "tamam" yaz.', false);
     return yanit.ok;
   } catch {
     return false;
@@ -114,7 +139,7 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
     "Emin olmadığın ya da sayfada bulunmayan alanları null/boş bırak, asla uydurma.\n\n" +
     `SAYFA METNİ:\n${metin}`;
 
-  const yanit = await gemininiCagir(apiKey, gemininiIstekGovdesi(yonerge, true));
+  const yanit = await gemininiModelSirasiylaCagir(apiKey, yonerge, true);
   if (!yanit.ok) throw new Error(await gemininiHataMesaji(yanit));
 
   const govde = await yanit.json();
