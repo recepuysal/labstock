@@ -49,13 +49,36 @@ const URUN_SEMASI = {
     },
     fiyat: { type: 'NUMBER', description: 'Sayısal fiyat (ondalık nokta ile); bulunamazsa 0.' },
     paraBirimi: { type: 'STRING', description: 'Fiyatın para birimi kodu: TRY, USD ya da EUR. Bulunamazsa TRY.' },
-    resimUrl: {
-      type: 'STRING',
-      description: "Ürünün ana fotoğrafının URL'si (mutlak ya da göreli olabilir); bulunamazsa boş metin.",
-    },
   },
   required: ['isim', 'aciklama', 'parametreler', 'paraBirimi'],
 };
+// resimUrl şemada yok — htmlMetneDonustur() tüm etiketleri sildiği için model
+// zaten hiçbir <img>/meta URL'sini göremiyor, tahmin ettirmenin anlamı yok.
+// Onun yerine ürün fotoğrafı aşağıda ogGoruntusuBul() ile ham HTML'den
+// (og:image/twitter:image meta etiketi — hemen hemen her e-ticaret
+// sitesinde sosyal paylaşım önizlemesi için zaten var) doğrudan okunuyor.
+
+/** <meta property="..." content="..."> (öznitelik sırası fark etmeksizin)
+ * içeriğini bulur. */
+function metaIcerikBul(html: string, ozellikAdi: string, ozellikDegeri: string): string | null {
+  const ozellikDeseni = new RegExp(`${ozellikAdi}\\s*=\\s*["']${ozellikDegeri}["']`, 'i');
+  for (const esleme of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const etiket = esleme[0];
+    if (!ozellikDeseni.test(etiket)) continue;
+    const icerik = etiket.match(/content\s*=\s*["']([^"']*)["']/i);
+    if (icerik?.[1]) return icerik[1];
+  }
+  return null;
+}
+
+function ogGoruntusuBul(html: string): string | null {
+  return (
+    metaIcerikBul(html, 'property', 'og:image') ??
+    metaIcerikBul(html, 'name', 'og:image') ??
+    metaIcerikBul(html, 'name', 'twitter:image') ??
+    metaIcerikBul(html, 'property', 'twitter:image')
+  );
+}
 
 /** Basit HTML → düz metin: script/style/yorum bloklarını ve etiketleri atar,
  * yaygın HTML varlıklarını çözer, boşlukları sadeleştirir. Mükemmel değil ama
@@ -209,9 +232,10 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
   }
 
   let resimUrl: string | null = null;
-  if (typeof ayristirilmis.resimUrl === 'string' && ayristirilmis.resimUrl.trim()) {
+  const ogGoruntu = ogGoruntusuBul(html);
+  if (ogGoruntu) {
     try {
-      resimUrl = new URL(ayristirilmis.resimUrl.trim(), sayfaUrl).toString();
+      resimUrl = new URL(ogGoruntu, sayfaUrl).toString();
     } catch {
       resimUrl = null;
     }
