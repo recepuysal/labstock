@@ -176,7 +176,12 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
         >
           {gosterilecekResim ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={gosterilecekResim} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img
+              src={gosterilecekResim}
+              alt=""
+              referrerPolicy="no-referrer"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           ) : (
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <rect x="3" y="3" width="18" height="18" rx="2" />

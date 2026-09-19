@@ -384,6 +384,7 @@ export default async function ParcaDetaySayfasi({
                   <img
                     src={s.resim_url}
                     alt={s.mpn}
+                    referrerPolicy="no-referrer"
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
                 ) : (
