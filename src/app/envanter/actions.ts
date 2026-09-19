@@ -6,6 +6,9 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { metinToParametreler } from '@/lib/types';
 import { lcscKoduGetir } from '@/lib/lcsc';
+import { direncUrldenCek } from '@/lib/direnc';
+import { robotistanUrldenCek } from '@/lib/robotistan';
+import type { ModulVerisi } from '@/lib/direnc';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 
 export type EylemDurum = { hata?: string; bilgi?: string };
@@ -480,6 +483,69 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
 
   revalidatePath(`/envanter/${stokId}`);
   return {};
+}
+
+/** Bir ürün linkinin hangi tedarikçiye ait olduğunu host adına göre belirler. */
+function tedarikciTespitEt(url: string): { ad: string; getir: (url: string) => Promise<ModulVerisi> } | null {
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return null;
+  }
+  if (host === 'direnc.net' || host === 'www.direnc.net') return { ad: 'Direnç.net', getir: direncUrldenCek };
+  if (host === 'robotistan.com' || host === 'www.robotistan.com') return { ad: 'Robotistan', getir: robotistanUrldenCek };
+  return null;
+}
+
+/** Direnç.net / Robotistan ürün linkinden üretici/açıklama/resim/fiyatı çekip kaydeder.
+ * Kullanıcıya sadece başarılı/başarısız gösterilir; gerçek hata sunucu loguna yazılır. */
+export async function linktenCek(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const stokId = String(formData.get('stok_id') ?? '');
+  const partId = String(formData.get('part_id') ?? '');
+  const url = String(formData.get('urun_url') ?? '').trim();
+  if (!stokId || !partId || !url) return { hata: 'Başarısız.' };
+
+  const tedarikci = tedarikciTespitEt(url);
+  if (!tedarikci) return { hata: 'Başarısız.' };
+
+  let veri: ModulVerisi;
+  try {
+    veri = await tedarikci.getir(url);
+  } catch (err) {
+    console.error('linktenCek:', err);
+    return { hata: 'Başarısız.' };
+  }
+
+  const supabase = await createClient();
+
+  const partGuncelleme: Record<string, unknown> = {};
+  if (veri.uretici) partGuncelleme.uretici = veri.uretici;
+  if (veri.aciklama) partGuncelleme.aciklama = veri.aciklama;
+  if (veri.kategori) partGuncelleme.kategori = veri.kategori;
+  if (veri.resimUrl) partGuncelleme.resim_url = veri.resimUrl;
+
+  if (Object.keys(partGuncelleme).length > 0) {
+    const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);
+    if (error) {
+      console.error('linktenCek:', error);
+      return { hata: 'Başarısız.' };
+    }
+  }
+
+  const stokGuncelleme: Record<string, unknown> = { tedarikci: tedarikci.ad, tedarikci_kodu: veri.tedarikciKodu };
+  if (veri.fiyat != null) {
+    stokGuncelleme.alis_fiyati = veri.fiyat;
+    stokGuncelleme.para_birimi = veri.paraBirimi;
+  }
+  const { error: stokHatasi } = await supabase.from('stock_items').update(stokGuncelleme).eq('id', stokId);
+  if (stokHatasi) {
+    console.error('linktenCek:', stokHatasi);
+    return { hata: 'Başarısız.' };
+  }
+
+  revalidatePath(`/envanter/${stokId}`);
+  return { bilgi: 'Başarılı.' };
 }
 
 /** Bir stok kalemine etiket ekler; etiket kullanıcıda yoksa önce oluşturur. */

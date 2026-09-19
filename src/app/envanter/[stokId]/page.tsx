@@ -6,6 +6,7 @@ import { HareketHizli } from '@/components/hareket-hizli';
 import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
+import { ModulCekFormu } from '@/components/modul-cek-formu';
 import { EtiketlerKarti } from '@/components/etiketler-karti';
 import { GeriButonu } from '@/components/geri-butonu';
 import { RohsRozet } from '@/components/rohs-rozet';
@@ -233,6 +234,7 @@ export default async function ParcaDetaySayfasi({
                 mevcutKod={s.tedarikci_kodu}
                 saltOkunur={saltOkunur}
               />
+              <ModulCekFormu stokId={s.stok_id} partId={s.part_id} saltOkunur={saltOkunur} />
               <SatirMenu stokId={s.stok_id} mpn={s.mpn} saltOkunur={saltOkunur} />
             </div>
 
