@@ -524,6 +524,7 @@ export async function linktenCek(_onceki: EylemDurum, formData: FormData): Promi
   if (veri.aciklama) partGuncelleme.aciklama = veri.aciklama;
   if (veri.kategori) partGuncelleme.kategori = veri.kategori;
   if (veri.resimUrl) partGuncelleme.resim_url = veri.resimUrl;
+  if (Object.keys(veri.parametreler).length > 0) partGuncelleme.parametreler = veri.parametreler;
 
   if (Object.keys(partGuncelleme).length > 0) {
     const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);

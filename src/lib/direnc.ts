@@ -3,6 +3,7 @@
 // ürün bağlantısı girdi olarak alınır (bkz. lib/urun-ld-json.ts).
 
 import { ldJsonUrunGetir } from './urun-ld-json';
+import { urunAciklamasiniAyristir } from './urun-parametre-cikar';
 
 export type ModulVerisi = {
   uretici: string | null;
@@ -12,6 +13,7 @@ export type ModulVerisi = {
   fiyat: number | null;
   paraBirimi: string;
   tedarikciKodu: string | null;
+  parametreler: Record<string, string>;
 };
 
 const IZINLI_HOSTLAR = new Set(['direnc.net', 'www.direnc.net']);
@@ -36,14 +38,18 @@ export async function direncUrldenCek(url: string): Promise<ModulVerisi> {
 
   const resimler = Array.isArray(urun.image) ? urun.image : urun.image ? [urun.image] : [];
   const fiyatSayi = urun.offers?.price != null ? Number(urun.offers.price) : null;
+  const { aciklama, parametreler } = urun.description
+    ? urunAciklamasiniAyristir(urun.description, 'Teknik Özellikleri', ['Faydalı Linkler'])
+    : { aciklama: null, parametreler: {} };
 
   return {
     uretici: urun.brand?.name ?? null,
-    aciklama: urun.description ?? null,
+    aciklama,
     kategori: 'Modül',
     resimUrl: resimler[0] ?? null,
     fiyat: fiyatSayi != null && Number.isFinite(fiyatSayi) ? fiyatSayi : null,
     paraBirimi: urun.offers?.priceCurrency ?? 'TRY',
     tedarikciKodu: urun.sku ?? null,
+    parametreler,
   };
 }

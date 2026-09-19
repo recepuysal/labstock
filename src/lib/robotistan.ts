@@ -2,6 +2,7 @@
 // bkz. lib/direnc.ts — aynı yöntem, farklı site.
 
 import { ldJsonUrunGetir } from './urun-ld-json';
+import { urunAciklamasiniAyristir } from './urun-parametre-cikar';
 import type { ModulVerisi } from './direnc';
 
 export type { ModulVerisi };
@@ -28,14 +29,18 @@ export async function robotistanUrldenCek(url: string): Promise<ModulVerisi> {
 
   const resimler = Array.isArray(urun.image) ? urun.image : urun.image ? [urun.image] : [];
   const fiyatSayi = urun.offers?.price != null ? Number(urun.offers.price) : null;
+  const { aciklama, parametreler } = urun.description
+    ? urunAciklamasiniAyristir(urun.description, ['Features:', 'Specifications:', 'Technical Specifications:'])
+    : { aciklama: null, parametreler: {} };
 
   return {
     uretici: urun.brand?.name ?? null,
-    aciklama: urun.description ?? null,
+    aciklama,
     kategori: 'Modül',
     resimUrl: resimler[0] ?? null,
     fiyat: fiyatSayi != null && Number.isFinite(fiyatSayi) ? fiyatSayi : null,
     paraBirimi: urun.offers?.priceCurrency ?? 'TRY',
     tedarikciKodu: urun.sku ?? null,
+    parametreler,
   };
 }
