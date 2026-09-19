@@ -14,12 +14,19 @@ import type { ModulVerisi } from './direnc';
 
 const GEMINI_ENDPOINT = (model: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-// Sırayla denenir: biri yoğunluktan (503), kotadan (429) ya da artık
-// kullanılamayan/bulunamayan bir modelden dönerse bir sonrakine geçilir.
-// Google'ın eski nesil modelleri yeni hesaplara kapatması gibi durumlarda
-// (ör. gemini-2.5-flash) listeyi güncel tutmak yeterli oluyor.
-const GEMINI_MODELLER = ['gemini-3.6-flash', 'gemini-3.8-flash'];
+// Sırayla denenir: biri kalıcı olmayan bir hatadan (bkz. yenidenDenenebilirMi)
+// dönerse bir sonrakine geçilir. gemini-3.8-flash ücretsiz kotası günde
+// sadece 20 istekle sınırlı ve zaten yoğun çıktı (429/503) - listeden
+// çıkarıldı. Google'ın kendi hata mesajının önerdiği gemini-3.6-flash tek
+// model; 503'te (geçici yoğunluk) aynı model kısa aralıklarla tekrar denenir.
+const GEMINI_MODELLER = ['gemini-3.6-flash'];
+const AZAMI_503_DENEME = 2;
+const DENEME_GECIKMESI_MS = [2000, 4000];
 const AZAMI_SAYFA_METNI = 30000;
+
+function gecikme(ms: number): Promise<void> {
+  return new Promise((cozul) => setTimeout(cozul, ms));
+}
 
 // Gemini'nin structured-output şeması OpenAPI'nin bir alt kümesi — tip adları
 // büyük harfle (STRING/OBJECT/ARRAY) yazılır. "parametreler"i açık uçlu bir
@@ -142,17 +149,27 @@ function yenidenDenenebilirMi(durum: number, mesaj: string): boolean {
 
 type GeminiSonuc = { basarili: true; govde: unknown } | { basarili: false; hata: string };
 
-/** GEMINI_MODELLER listesini sırayla dener; sadece yenidenDenenebilirMi()
- * true olan hatalarda bir sonrakine geçer, başka türlü hemen döner. */
+/** GEMINI_MODELLER listesini sırayla dener; 503'te (geçici yoğunluk) aynı
+ * modeli kısa aralıklarla birkaç kez daha dener, başka bir
+ * yenidenDenenebilirMi() hatasında listede varsa bir sonraki modele geçer,
+ * kalıcı bir hatada (ör. geçersiz anahtar) hemen döner. */
 async function gemininiModelSirasiylaCagir(apiKey: string, input: string, semaIsteniyor: boolean): Promise<GeminiSonuc> {
   let sonHata = 'Yapay zeka isteğine yanıt alınamadı.';
   for (const model of GEMINI_MODELLER) {
-    const yanit = await gemininiCagir(apiKey, model, gemininiIstekGovdesi(input, semaIsteniyor));
-    if (yanit.ok) return { basarili: true, govde: await yanit.json() };
+    for (let deneme = 0; ; deneme++) {
+      const yanit = await gemininiCagir(apiKey, model, gemininiIstekGovdesi(input, semaIsteniyor));
+      if (yanit.ok) return { basarili: true, govde: await yanit.json() };
 
-    const mesaj = await gemininiHataMesaji(yanit);
-    sonHata = mesaj;
-    if (!yenidenDenenebilirMi(yanit.status, mesaj)) return { basarili: false, hata: mesaj };
+      const mesaj = await gemininiHataMesaji(yanit);
+      sonHata = mesaj;
+
+      if (yanit.status === 503 && deneme < AZAMI_503_DENEME) {
+        await gecikme(DENEME_GECIKMESI_MS[deneme]);
+        continue;
+      }
+      if (!yenidenDenenebilirMi(yanit.status, mesaj)) return { basarili: false, hata: mesaj };
+      break;
+    }
   }
   return { basarili: false, hata: sonHata };
 }
