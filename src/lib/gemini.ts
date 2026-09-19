@@ -20,8 +20,8 @@ const GEMINI_ENDPOINT = (model: string) =>
 // çıkarıldı. Google'ın kendi hata mesajının önerdiği gemini-3.6-flash tek
 // model; 503'te (geçici yoğunluk) aynı model kısa aralıklarla tekrar denenir.
 const GEMINI_MODELLER = ['gemini-3.6-flash'];
-const AZAMI_503_DENEME = 2;
-const DENEME_GECIKMESI_MS = [2000, 4000];
+const AZAMI_503_DENEME = 3;
+const DENEME_GECIKMESI_MS = [2000, 5000, 9000];
 const AZAMI_SAYFA_METNI = 30000;
 
 function gecikme(ms: number): Promise<void> {
