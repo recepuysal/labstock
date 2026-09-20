@@ -55,6 +55,16 @@ dediğinde üretici/açıklama/kategori/görsel otomatik doldurulur.
   <img src="docs/screenshots/parca-detay.png" alt="Parça detay sayfası" width="820">
 </p>
 
+**Linkten otomatik malzeme ekleme**
+Malzeme ekleme/düzenleme formunda bir ürün linki yapıştırıp "Linkten çek"
+dediğinde isim, üretici, kısa açıklama, teknik özellikler, fiyat ve görsel
+otomatik doldurulur — kaydetmeden önce gözden geçirip düzeltebilirsin.
+Direnç.net, Robotistan ve Motorobit için yerleşik (ücretsiz, hızlı) destek var;
+Ayarlar'dan kendi ücretsiz [Google Gemini API anahtarını](https://aistudio.google.com/apikey)
+eklersen bu, **herhangi bir satıcı sitesinde** de çalışır — sayfa yapay zekaya
+okutulup aynı şemaya döktürülür. Anahtar sadece sende kalır, kimseyle
+paylaşılmaz; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
+
 **Yazdırılabilir QR etiketler**
 Her parça ve konum için tamamen çevrimdışı üretilen QR etiketler — yazdır, kes,
 çekmeceye yapıştır. Bir USB barkod okuyucuyla (ya da arama kutusuna elle
@@ -134,6 +144,10 @@ isteyenler için.
 2. **SQL Editor**'ü aç, `supabase/migrations/0001_init.sql` dosyasının tamamını
    yapıştır ve çalıştır. (Şema, RLS politikaları, `stok_hareket()`/gözlemci
    RPC'leri, `envanter` view'ı ve `handle_new_user()` tetikleyicisi bir kerede kurulur.)
+   Ardından `0002_gemini_api_key.sql`'i de aynı şekilde çalıştır — Ayarlar'daki
+   Gemini API anahtarı alanı için `profiles.gemini_api_key` sütununu ekler.
+   (Bu proje migration'ları CLI ile otomatik push etmiyor, her ikisi de elle
+   SQL Editor'de çalıştırılır.)
 3. **Authentication → Sign In / Providers → Email**: geliştirme sırasında
    "Confirm email" kapalıysa (varsayılan) kayıt olur olmaz giriş yapabilirsin —
    e-posta doğrulama akışını denemek istersen adım 4'e bak.
@@ -269,6 +283,9 @@ kendi deposunu salt-okunur izlemesine izin verebilir:
 - Parça listesi: arama, kategori/kılıf/durum/etiket filtreleri, sıralama, liste/ızgara görünümü
 - Parça detay sayfası: parametreler, hareket geçmişi, konum haritası, tedarik bilgisi,
   kullanıldığı projeler, serbest etiketler, RoHS rozeti, parça görseli
+- Linkten otomatik malzeme ekleme: Direnç.net/Robotistan/Motorobit için yerleşik
+  destek, Ayarlar'dan eklenen ücretsiz bir Gemini API anahtarıyla herhangi bir
+  satıcı sitesi
 - Yazdırılabilir QR etiketler (tek parça + toplu konum), USB barkod okuyucu desteği
 - Excel/CSV toplu içe aktarma; Ayarlar'dan tüm envanteri `.xlsx` olarak dışa aktarma
 - Son Aktiviteler: depodaki tüm stok hareketlerinin tek sayfada listesi
