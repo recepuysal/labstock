@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 import { TemaAnahtari } from '@/components/tema-anahtari';
 import { Hakkinda } from '@/components/hakkinda';
 import { DisaAktarButonu } from '@/components/disa-aktar-butonu';
@@ -36,6 +37,8 @@ export default async function AyarlarSayfasi() {
   }[];
 
   const etiketAyarlari = await etiketAyarlariniAl();
+  const aktif = await aktifGorunumAl();
+  const saltOkunur = aktif?.saltOkunur ?? false;
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
@@ -87,6 +90,27 @@ export default async function AyarlarSayfasi() {
           anahtarVarMi={!!geminiAnahtari}
           sonDortHane={geminiAnahtari ? geminiAnahtari.slice(-4) : null}
         />
+
+        <div className="kart" style={{ padding: 20, marginTop: 16 }}>
+          <div
+            className="mn"
+            style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}
+          >
+            İÇE AKTARMA
+          </div>
+          <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
+            Elindeki envanteri bir Excel/CSV dosyasından toplu olarak içe aktar.
+          </p>
+          {saltOkunur ? (
+            <span className="btn" aria-disabled="true" style={{ height: 32, fontSize: 12.5, opacity: 0.45, cursor: 'default' }}>
+              Excel içe aktar
+            </span>
+          ) : (
+            <Link href="/envanter/ice-aktar" className="btn" style={{ height: 32, fontSize: 12.5 }}>
+              Excel içe aktar
+            </Link>
+          )}
+        </div>
 
         <DisaAktarButonu />
 
