@@ -65,6 +65,14 @@ eklersen bu, **herhangi bir satıcı sitesinde** de çalışır — sayfa yapay 
 okutulup aynı şemaya döktürülür. Anahtar sadece sende kalır, kimseyle
 paylaşılmaz; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
 
+**Sohbet asistanı**
+Üst bardaki **Sohbet**'ten, deponla ilgili doğal dilde soru sorabilirsin —
+"12V'u 5V'a düşüren bir şeyim var mı?" gibi. Asistan sadece senin gerçek
+envanterine bakarak cevap verir: bir şey varsa nerede olduğunu söyler, yoksa
+işlevsel olarak yerine geçebilecek başka bir parça stoktaysa onu önerir. Aynı
+Ayarlar'daki Gemini API anahtarını kullanır; sohbet geçmişi kaydedilmez, sayfa
+yenilenince sıfırlanır.
+
 **Yazdırılabilir QR etiketler**
 Her parça ve konum için tamamen çevrimdışı üretilen QR etiketler — yazdır, kes,
 çekmeceye yapıştır. Bir USB barkod okuyucuyla (ya da arama kutusuna elle
@@ -286,6 +294,8 @@ kendi deposunu salt-okunur izlemesine izin verebilir:
 - Linkten otomatik malzeme ekleme: Direnç.net/Robotistan/Motorobit için yerleşik
   destek, Ayarlar'dan eklenen ücretsiz bir Gemini API anahtarıyla herhangi bir
   satıcı sitesi
+- Sohbet asistanı: gerçek envanterine dayanarak doğal dilde soru cevaplar,
+  yoksa alternatif önerir (aynı Gemini API anahtarını kullanır)
 - Yazdırılabilir QR etiketler (tek parça + toplu konum), USB barkod okuyucu desteği
 - Excel/CSV toplu içe aktarma; Ayarlar'dan tüm envanteri `.xlsx` olarak dışa aktarma
 - Son Aktiviteler: depodaki tüm stok hareketlerinin tek sayfada listesi
