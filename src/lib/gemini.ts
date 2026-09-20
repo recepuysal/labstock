@@ -108,7 +108,13 @@ function htmlMetneDonustur(html: string): string {
     .slice(0, AZAMI_SAYFA_METNI);
 }
 
-function gemininiIstekGovdesi(input: string, semaIsteniyor: boolean) {
+type GeminiIstek = {
+  contents: { role?: 'user' | 'model'; parts: { text: string }[] }[];
+  systemInstruction?: { parts: { text: string }[] };
+  generationConfig?: Record<string, unknown>;
+};
+
+function tekMesajIstek(input: string, semaIsteniyor: boolean): GeminiIstek {
   return {
     contents: [{ parts: [{ text: input }] }],
     ...(semaIsteniyor
@@ -153,11 +159,11 @@ type GeminiSonuc = { basarili: true; govde: unknown } | { basarili: false; hata:
  * modeli kısa aralıklarla birkaç kez daha dener, başka bir
  * yenidenDenenebilirMi() hatasında listede varsa bir sonraki modele geçer,
  * kalıcı bir hatada (ör. geçersiz anahtar) hemen döner. */
-async function gemininiModelSirasiylaCagir(apiKey: string, input: string, semaIsteniyor: boolean): Promise<GeminiSonuc> {
+async function gemininiModelSirasiylaCagir(apiKey: string, govde: GeminiIstek): Promise<GeminiSonuc> {
   let sonHata = 'Yapay zeka isteğine yanıt alınamadı.';
   for (const model of GEMINI_MODELLER) {
     for (let deneme = 0; ; deneme++) {
-      const yanit = await gemininiCagir(apiKey, model, gemininiIstekGovdesi(input, semaIsteniyor));
+      const yanit = await gemininiCagir(apiKey, model, govde);
       if (yanit.ok) return { basarili: true, govde: await yanit.json() };
 
       const mesaj = await gemininiHataMesaji(yanit);
@@ -206,7 +212,7 @@ function outputMetniCikar(govde: unknown): string {
  * küçük, ucuz bir istekle doğrular. */
 export async function geminiApiAnahtariniDogrula(apiKey: string): Promise<boolean> {
   try {
-    const sonuc = await gemininiModelSirasiylaCagir(apiKey, 'Sadece "tamam" yaz.', false);
+    const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek('Sadece "tamam" yaz.', false));
     return sonuc.basarili;
   } catch {
     return false;
@@ -224,7 +230,7 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
     "Emin olmadığın ya da sayfada bulunmayan alanları boş bırak, asla uydurma.\n\n" +
     `SAYFA METNİ:\n${metin}`;
 
-  const sonuc = await gemininiModelSirasiylaCagir(apiKey, yonerge, true);
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek(yonerge, true));
   if (!sonuc.basarili) throw new Error(sonuc.hata);
 
   const ham = outputMetniCikar(sonuc.govde);
@@ -275,4 +281,28 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
     tedarikciKodu: null,
     parametreler,
   };
+}
+
+export type SohbetMesaji = { rol: 'kullanici' | 'asistan'; icerik: string };
+
+/** Envanter asistanı sohbeti — sistemYonergesi'nde (bkz. envanter/sohbet/actions.ts)
+ * o anki gerçek envanter verisi verilir, model SADECE ona dayanarak cevap
+ * verir. mesajlar en son kullanıcı mesajıyla biter; tüm geçmiş her seferinde
+ * yeniden gönderilir (ayrı bir sohbet oturumu/DB kaydı tutmuyoruz). */
+export async function geminiSohbetCevapla(
+  apiKey: string,
+  sistemYonergesi: string,
+  mesajlar: SohbetMesaji[],
+): Promise<string> {
+  const govde: GeminiIstek = {
+    systemInstruction: { parts: [{ text: sistemYonergesi }] },
+    contents: mesajlar.map((m) => ({
+      role: m.rol === 'kullanici' ? 'user' : 'model',
+      parts: [{ text: m.icerik }],
+    })),
+  };
+
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, govde);
+  if (!sonuc.basarili) throw new Error(sonuc.hata);
+  return outputMetniCikar(sonuc.govde).trim();
 }
