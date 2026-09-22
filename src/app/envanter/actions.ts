@@ -10,7 +10,7 @@ import { direncUrldenCek } from '@/lib/direnc';
 import { robotistanUrldenCek } from '@/lib/robotistan';
 import { motorobitUrldenCek } from '@/lib/motorobit';
 import type { ModulVerisi } from '@/lib/direnc';
-import { geminiIleUrunCek } from '@/lib/gemini';
+import { geminiIleUrunCek, geminiIleAciklamaCevir } from '@/lib/gemini';
 import { TARAYICI_USER_AGENT } from '@/lib/urun-ld-json';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 
@@ -477,6 +477,31 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   }
 
   const supabase = await createClient();
+
+  // LCSC'nin açıklaması genelde İngilizce/Çince karışık ve kötü yazılmış -
+  // kullanıcının bir Gemini API anahtarı varsa daha kısa, doğal bir Türkçe
+  // açıklamayla değiştir. Çeviri başarısız olursa (anahtar geçersiz, kota
+  // dolu vb.) ham LCSC açıklamasıyla devam edilir; bu adım engelleyici değil.
+  if (veri.aciklama) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profil } = await supabase
+        .from('profiles')
+        .select('gemini_api_key')
+        .eq('id', user.id)
+        .maybeSingle();
+      const apiAnahtari = profil?.gemini_api_key as string | null | undefined;
+      if (apiAnahtari) {
+        try {
+          veri.aciklama = await geminiIleAciklamaCevir(apiAnahtari, veri.aciklama, kod);
+        } catch (err) {
+          console.error('lcscdenCek: aciklama cevirisi basarisiz:', err);
+        }
+      }
+    }
+  }
 
   const partGuncelleme: Record<string, unknown> = {};
   if (veri.uretici) partGuncelleme.uretici = veri.uretici;

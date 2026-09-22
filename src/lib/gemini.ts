@@ -283,6 +283,24 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
   };
 }
 
+/** LCSC gibi tedarikçi sitelerinden gelen ham açıklamayı (genelde İngilizce/
+ * Çince karışık, makine çevirisi kalitesinde) kısa ve doğal bir Türkçe
+ * açıklamaya çevirir/düzenler. Yapılandırılmış şemaya gerek yok, düz metin
+ * yanıtı yeterli. */
+export async function geminiIleAciklamaCevir(apiKey: string, hamAciklama: string, baglam?: string): Promise<string> {
+  const yonerge =
+    'Aşağıda bir elektronik parçanın tedarikçi sitesinden alınmış ham açıklaması var ' +
+    '(genelde İngilizce/Çince karışık, kötü yazılmış ya da makine çevirisi kalitesinde). ' +
+    (baglam ? `Parça: ${baglam}. ` : '') +
+    'Bunu kısa (1-2 cümle), doğal ve teknik olarak doğru bir TÜRKÇE açıklamaya çevir/düzenle. ' +
+    'Sadece açıklama metnini yaz - tırnak işareti, "Açıklama:" gibi bir etiket ya da başka hiçbir ek metin kullanma.\n\n' +
+    `HAM AÇIKLAMA:\n${hamAciklama}`;
+
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek(yonerge, false));
+  if (!sonuc.basarili) throw new Error(sonuc.hata);
+  return outputMetniCikar(sonuc.govde).trim();
+}
+
 export type SohbetMesaji = { rol: 'kullanici' | 'asistan'; icerik: string };
 
 /** Envanter asistanı sohbeti — sistemYonergesi'nde (bkz. envanter/sohbet/actions.ts)

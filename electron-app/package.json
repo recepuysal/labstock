@@ -1,6 +1,6 @@
 {
   "name": "labstock-desktop",
-  "version": "1.13.2",
+  "version": "1.13.3",
   "private": true,
   "main": "main.js",
   "devDependencies": {
