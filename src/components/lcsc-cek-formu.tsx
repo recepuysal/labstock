@@ -61,6 +61,7 @@ export function LcscCekFormu({
             Vazgeç
           </button>
           {durum.hata && <span style={{ fontSize: 11.5, color: 'var(--crit)' }}>{durum.hata}</span>}
+          {durum.bilgi && <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{durum.bilgi}</span>}
         </form>
       )}
     </div>

@@ -481,7 +481,11 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   // LCSC'nin açıklaması genelde İngilizce/Çince karışık ve kötü yazılmış -
   // kullanıcının bir Gemini API anahtarı varsa daha kısa, doğal bir Türkçe
   // açıklamayla değiştir. Çeviri başarısız olursa (anahtar geçersiz, kota
-  // dolu vb.) ham LCSC açıklamasıyla devam edilir; bu adım engelleyici değil.
+  // dolu vb.) ham LCSC açıklamasıyla devam edilir - bu adım LCSC çekmeyi
+  // engellemez - ama kullanıcı fark etsin diye sebep aşağıda "bilgi" olarak
+  // döndürülür (önceden sessizce yutuluyordu, kota dolunca kimse fark etmeden
+  // çeviri durmuş oluyordu).
+  let cevirUyarisi: string | undefined;
   if (veri.aciklama) {
     const {
       data: { user },
@@ -497,7 +501,9 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
         try {
           veri.aciklama = await geminiIleAciklamaCevir(apiAnahtari, veri.aciklama, kod);
         } catch (err) {
+          const mesaj = err instanceof Error ? err.message : 'bilinmeyen hata';
           console.error('lcscdenCek: aciklama cevirisi basarisiz:', err);
+          cevirUyarisi = `LCSC verileri çekildi, ancak açıklama Türkçeye çevrilemedi: ${mesaj}`;
         }
       }
     }
@@ -534,7 +540,7 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   if (stokHatasi) return { hata: stokHatasi.message };
 
   revalidatePath(`/envanter/${stokId}`);
-  return {};
+  return cevirUyarisi ? { bilgi: cevirUyarisi } : {};
 }
 
 /** Bir ürün linkinin hangi tedarikçiye ait olduğunu host adına göre belirler. */
