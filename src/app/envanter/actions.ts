@@ -490,7 +490,14 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
 
   if (Object.keys(partGuncelleme).length > 0) {
     const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);
-    if (error) return { hata: error.message };
+    if (error) {
+      if (error.code === '23505') {
+        return {
+          hata: `LCSC'den gelen üretici ("${veri.uretici}") bu MPN için katalogda başka bir parçada zaten kayıtlı. O parçayla birleştirmek için önce onu düzenleyip kaydı temizlemen gerekiyor.`,
+        };
+      }
+      return { hata: error.message };
+    }
   }
 
   const stokGuncelleme: Record<string, unknown> = { tedarikci: 'LCSC', tedarikci_kodu: kod };
