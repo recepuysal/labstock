@@ -287,9 +287,15 @@ export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Pr
 
   const ad = String(formData.get('ad') ?? '').trim() || null;
 
-  const gecerli =
+  const dogrulama =
     saglayici === 'gemini' ? await geminiApiAnahtariniDogrula(anahtar) : await claudeApiAnahtariniDogrula(anahtar);
-  if (!gecerli) return { hata: 'Anahtar doğrulanamadı — kopyaladığından emin olup tekrar dener misin?' };
+  if (!dogrulama.gecerli) {
+    return {
+      hata: dogrulama.hata
+        ? `Anahtar doğrulanamadı: ${dogrulama.hata}`
+        : 'Anahtar doğrulanamadı — kopyaladığından emin olup tekrar dener misin?',
+    };
+  }
 
   const supabase = await createClient();
   const {

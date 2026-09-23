@@ -171,17 +171,23 @@ function araçGirdisiniCikar(govde: unknown): Record<string, unknown> {
 }
 
 /** Ayarlar'da "Kaydet" denince anahtarın gerçekten çalışıp çalışmadığını
- * küçük, ucuz bir istekle doğrular (bkz. lib/gemini.ts — aynı amaç). */
-export async function claudeApiAnahtariniDogrula(apiKey: string): Promise<boolean> {
+ * küçük, ucuz bir istekle doğrular (bkz. lib/gemini.ts — aynı amaç). Gerçek
+ * hata mesajını da döner — "anahtar doğrulanamadı" gibi genel bir mesaj
+ * arkasında sebep (geçersiz anahtar/model/kota) gizlenip kullanıcı ne
+ * yapacağını bilemesin diye. */
+export async function claudeApiAnahtariniDogrula(apiKey: string): Promise<{ gecerli: boolean; hata?: string }> {
   try {
     const sonuc = await claudeCagirYenidenDeneyerek(apiKey, {
       model: CLAUDE_MODEL,
       max_tokens: 8,
       messages: [{ role: 'user', content: 'Sadece "tamam" yaz.' }],
     });
-    return sonuc.basarili;
-  } catch {
-    return false;
+    if (sonuc.basarili) return { gecerli: true };
+    console.error('claudeApiAnahtariniDogrula:', sonuc.hata);
+    return { gecerli: false, hata: sonuc.hata };
+  } catch (err) {
+    console.error('claudeApiAnahtariniDogrula:', err);
+    return { gecerli: false, hata: err instanceof Error ? err.message : 'bilinmeyen hata' };
   }
 }
 

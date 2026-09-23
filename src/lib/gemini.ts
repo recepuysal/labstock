@@ -209,13 +209,18 @@ function outputMetniCikar(govde: unknown): string {
 }
 
 /** Ayarlar'da "Kaydet" denince anahtarın gerçekten çalışıp çalışmadığını
- * küçük, ucuz bir istekle doğrular. */
-export async function geminiApiAnahtariniDogrula(apiKey: string): Promise<boolean> {
+ * küçük, ucuz bir istekle doğrular. Gerçek hata mesajını da döner — "anahtar
+ * doğrulanamadı" gibi genel bir mesaj arkasında sebep (geçersiz anahtar/
+ * model/kota) gizlenip kullanıcı ne yapacağını bilemesin diye. */
+export async function geminiApiAnahtariniDogrula(apiKey: string): Promise<{ gecerli: boolean; hata?: string }> {
   try {
     const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek('Sadece "tamam" yaz.', false));
-    return sonuc.basarili;
-  } catch {
-    return false;
+    if (sonuc.basarili) return { gecerli: true };
+    console.error('geminiApiAnahtariniDogrula:', sonuc.hata);
+    return { gecerli: false, hata: sonuc.hata };
+  } catch (err) {
+    console.error('geminiApiAnahtariniDogrula:', err);
+    return { gecerli: false, hata: err instanceof Error ? err.message : 'bilinmeyen hata' };
   }
 }
 
