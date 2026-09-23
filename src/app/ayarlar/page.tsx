@@ -9,6 +9,7 @@ import { GozlemciErisimi } from '@/components/gozlemci-erisimi';
 import { EtiketAyarlariFormu } from '@/components/etiket-ayarlari-formu';
 import { GeriBildirimFormu } from '@/components/geri-bildirim-formu';
 import { AiAnahtarlariKarti, type AiAnahtarSatiri } from '@/components/ai-anahtarlari-karti';
+import { HaftalikYedekFormu } from '@/components/haftalik-yedek-formu';
 import { etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
 
@@ -22,7 +23,11 @@ export default async function AyarlarSayfasi() {
 
   if (!user) redirect('/giris');
 
-  const { data: profil } = await supabase.from('profiles').select('davet_kodu').eq('id', user.id).maybeSingle();
+  const { data: profil } = await supabase
+    .from('profiles')
+    .select('davet_kodu, haftalik_yedek_aktif, yedek_eposta_adresi')
+    .eq('id', user.id)
+    .maybeSingle();
 
   const aiAnahtarlari: AiAnahtarSatiri[] = (await aiAnahtarlariGetir(supabase, user.id)).map((a) => ({
     id: a.id,
@@ -90,6 +95,12 @@ export default async function AyarlarSayfasi() {
         <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />
 
         <AiAnahtarlariKarti anahtarlar={aiAnahtarlari} />
+
+        <HaftalikYedekFormu
+          baslangicAktif={(profil?.haftalik_yedek_aktif as boolean | null) ?? false}
+          baslangicEposta={(profil?.yedek_eposta_adresi as string | null) ?? null}
+          girisEpostasi={user.email ?? null}
+        />
 
         <div className="kart" style={{ padding: 20, marginTop: 16 }}>
           <div

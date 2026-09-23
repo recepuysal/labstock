@@ -366,3 +366,29 @@ export async function aiAnahtarSiradaTasi(id: string, yon: 'yukari' | 'asagi'): 
   revalidatePath('/ayarlar');
   return {};
 }
+
+/** Haftalık envanter yedeği e-postası tercihini kaydeder — her Pazartesi
+ * gönderilen özet + CSV yedeği için (bkz. supabase/migrations/0004,
+ * haftalik_envanter_yedegi_gonder() / pg_cron). E-posta adresi boş
+ * bırakılırsa hesabın giriş e-postası kullanılır; bazı kurumsal domainlere
+ * (Resend'de alan adı doğrulanmadığı sürece) gönderim başarısız olabildiği
+ * için burada bir alternatif adres girilebiliyor. */
+export async function haftalikYedekAyarlariniKaydet(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const aktif = formData.get('aktif') === 'on';
+  const eposta = String(formData.get('eposta') ?? '').trim() || null;
+  if (eposta && !eposta.includes('@')) return { hata: 'Geçerli bir e-posta adresi gir.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ id: user.id, haftalik_yedek_aktif: aktif, yedek_eposta_adresi: eposta }, { onConflict: 'id' });
+  if (error) return { hata: error.message };
+
+  revalidatePath('/ayarlar');
+  return { bilgi: 'Kaydedildi.' };
+}
