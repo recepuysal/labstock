@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { SatirMenu } from '@/components/satir-menu';
 import { HareketHizli } from '@/components/hareket-hizli';
+import { KonumDegistirFormu } from '@/components/konum-degistir-formu';
 import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
@@ -12,7 +13,9 @@ import { RohsRozet } from '@/components/rohs-rozet';
 import { KopyalaButonu } from '@/components/kopyala-butonu';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
+  agacKur,
   DURUM_ETIKET,
+  konumSecenekleri,
   paraFormatla,
   sayi,
   SEBEP_ETIKET,
@@ -84,6 +87,7 @@ export default async function ParcaDetaySayfasi({
     .select('id, parent_id, ad, kod, tip, aciklama, sira')
     .eq('user_id', hedef);
   const konumlar = (konumVerisi ?? []) as Konum[];
+  const konumSecenekListesi = konumSecenekleri(agacKur(konumlar));
 
   const { data: stokLokasyonVerisi } = await supabase
     .from('stock_items')
@@ -200,15 +204,12 @@ export default async function ParcaDetaySayfasi({
 
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16 }}>
               <HareketHizli stokId={s.stok_id} adet={s.adet} saltOkunur={saltOkunur} />
-              {saltOkunur ? (
-                <span className="btn" aria-disabled="true" style={{ opacity: 0.45, cursor: 'default' }}>
-                  Konum değiştir
-                </span>
-              ) : (
-                <Link href={`/envanter/${s.stok_id}/duzenle?donus=${encodeURIComponent(donus)}`} className="btn">
-                  Konum değiştir
-                </Link>
-              )}
+              <KonumDegistirFormu
+                stokId={s.stok_id}
+                konumId={s.konum_id}
+                konumlar={konumSecenekListesi}
+                saltOkunur={saltOkunur}
+              />
               <Link href={`/envanter/${s.stok_id}/etiket`} className="btn">
                 Etiket yazdır
               </Link>

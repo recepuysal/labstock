@@ -403,7 +403,14 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
     })
     .eq('id', stokId);
 
-  if (stokHatasi) return { hata: stokHatasi.message };
+  if (stokHatasi) {
+    if (stokHatasi.code === '23505') {
+      return {
+        hata: 'Bu parça seçtiğin konumda zaten kayıtlı görünüyor — orada bu parçanın başka bir stok satırı var.',
+      };
+    }
+    return { hata: stokHatasi.message };
+  }
 
   const donus = String(formData.get('donus') ?? '') || '/envanter';
   revalidatePath('/envanter');
@@ -679,4 +686,26 @@ export async function etiketSil(stokId: string, tagId: string): Promise<EylemDur
 
   revalidatePath(`/envanter/${stokId}`);
   return {};
+}
+
+/** Parça sayfasından tek tıkla konum değiştirme — tüm düzenleme formuna
+ * girmeden, sadece stock_items.location_id'yi günceller. "konumsuz" seçilirse
+ * (boş string) null'a çeker. stock_items_uniq (user_id, part_id, location_id)
+ * benzersizlik kısıtı yüzünden, aynı parça hedef konumda zaten varsa Postgres
+ * ham bir "duplicate key" hatası döner — bunu kullanıcının anlayacağı bir
+ * mesaja çeviriyoruz (bkz. lcscdenCek'teki aynı yaklaşım). */
+export async function konumDegistir(stokId: string, konumId: string | null): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const { error } = await supabase.from('stock_items').update({ location_id: konumId }).eq('id', stokId);
+
+  if (error) {
+    if (error.code === '23505') {
+      return { hata: 'Bu parça seçtiğin konumda zaten kayıtlı görünüyor — orada bu parçanın başka bir stok satırı var.' };
+    }
+    return { hata: error.message };
+  }
+
+  revalidatePath(`/envanter/${stokId}`);
+  revalidatePath('/envanter');
+  return { bilgi: 'Konum güncellendi.' };
 }
