@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
-import { geminiSohbetCevapla, type SohbetMesaji } from '@/lib/gemini';
+import { aiSohbetCevapla, type SohbetMesaji } from '@/lib/ai';
+import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
 
 export type { SohbetMesaji };
 export type SohbetSonucu = { hata?: string; cevap?: string };
@@ -67,15 +68,10 @@ export async function sohbetSor(mesajlar: SohbetMesaji[]): Promise<SohbetSonucu>
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  const { data: profil } = await supabase
-    .from('profiles')
-    .select('gemini_api_key')
-    .eq('id', user.id)
-    .maybeSingle();
-  const apiAnahtari = profil?.gemini_api_key as string | null | undefined;
-  if (!apiAnahtari) {
+  const anahtarlar = await aiAnahtarlariGetir(supabase, user.id);
+  if (anahtarlar.length === 0) {
     return {
-      hata: 'Sohbet için önce Ayarlar sayfasından ücretsiz bir Gemini API anahtarı ekle.',
+      hata: 'Sohbet için önce Ayarlar sayfasından ücretsiz bir Gemini ya da Claude API anahtarı ekle.',
     };
   }
 
@@ -98,7 +94,7 @@ export async function sohbetSor(mesajlar: SohbetMesaji[]): Promise<SohbetSonucu>
   const sistemYonergesi = sistemYonergesiOlustur(envanterMetniOlustur(satirlar), satirlar.length, kirpildiMi);
 
   try {
-    const cevap = await geminiSohbetCevapla(apiAnahtari, sistemYonergesi, mesajlar);
+    const cevap = await aiSohbetCevapla(anahtarlar, sistemYonergesi, mesajlar);
     return { cevap };
   } catch (err) {
     console.error('sohbetSor:', err);

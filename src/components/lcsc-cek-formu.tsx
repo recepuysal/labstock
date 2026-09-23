@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { lcscdenCek } from '@/app/envanter/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
 
@@ -17,6 +17,21 @@ export function LcscCekFormu({
 }) {
   const [acik, setAcik] = useState(false);
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(lcscdenCek, {});
+  const ilkYuklemeRef = useRef(true);
+
+  // Tamamen sorunsuz bir çekmeden sonra (ne hata ne de çeviri uyarısı varsa)
+  // popup'ı otomatik kapat — önceden sadece "Vazgeç" ile kapanıyordu. Bir
+  // uyarı varsa (ör. LCSC verileri çekildi ama Türkçe çeviri başarısız oldu)
+  // kullanıcı görüp kendi kapatsın diye açık bırakılıyor. useActionState'in
+  // ilk (mount anındaki) durumunu atlamak için ilkYuklemeRef kullanılıyor,
+  // yoksa popup daha hiç açılmadan kapanmış görünürdü.
+  useEffect(() => {
+    if (ilkYuklemeRef.current) {
+      ilkYuklemeRef.current = false;
+      return;
+    }
+    if (!durum.hata && !durum.bilgi) setAcik(false);
+  }, [durum]);
 
   return (
     <div style={{ position: 'relative', display: 'inline-flex' }}>

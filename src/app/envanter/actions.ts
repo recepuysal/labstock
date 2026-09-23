@@ -10,11 +10,12 @@ import { direncUrldenCek } from '@/lib/direnc';
 import { robotistanUrldenCek } from '@/lib/robotistan';
 import { motorobitUrldenCek } from '@/lib/motorobit';
 import type { ModulVerisi } from '@/lib/direnc';
-import { geminiIleUrunCek, geminiIleAciklamaCevir } from '@/lib/gemini';
+import { aiIleUrunCek, aiIleAciklamaCevir } from '@/lib/ai';
+import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
 import { TARAYICI_USER_AGENT } from '@/lib/urun-ld-json';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 
-export type EylemDurum = { hata?: string; bilgi?: string };
+export type EylemDurum = { hata?: string; bilgi?: string; stokId?: string };
 
 /** Kendi deponla izlediğin (varsa) depo arasında geçiş yapar. */
 export async function gorunumuDegistir(hedef: 'kendi' | 'gozlemci'): Promise<void> {
@@ -272,7 +273,10 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   const { data: stok, error: stokHatasi } = await sorgu.maybeSingle();
   if (stokHatasi) return { hata: stokHatasi.message };
 
+  let stokId: string;
+
   if (stok) {
+    stokId = stok.id;
     if (adet > 0) {
       const { error } = await supabase.rpc('stok_hareket', {
         p_stok_id: stok.id,
@@ -300,6 +304,7 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
       .single();
 
     if (error) return { hata: error.message };
+    stokId = yeniStok.id;
 
     if (adet > 0) {
       const { error: hareketHatasi } = await supabase.rpc('stok_hareket', {
@@ -313,7 +318,7 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   }
 
   revalidatePath('/envanter');
-  return { bilgi: 'Eklendi.' };
+  return { bilgi: 'Eklendi.', stokId };
 }
 
 export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
@@ -479,9 +484,10 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   const supabase = await createClient();
 
   // LCSC'nin açıklaması genelde İngilizce/Çince karışık ve kötü yazılmış -
-  // kullanıcının bir Gemini API anahtarı varsa daha kısa, doğal bir Türkçe
-  // açıklamayla değiştir. Çeviri başarısız olursa (anahtar geçersiz, kota
-  // dolu vb.) ham LCSC açıklamasıyla devam edilir - bu adım LCSC çekmeyi
+  // kullanıcının bir AI API anahtarı (Gemini/Claude) varsa daha kısa, doğal
+  // bir Türkçe açıklamayla değiştir; birden fazla anahtarı varsa sırayla
+  // dener (bkz. lib/ai.ts). Çeviri başarısız olursa (tüm anahtarlar
+  // tükendi) ham LCSC açıklamasıyla devam edilir - bu adım LCSC çekmeyi
   // engellemez - ama kullanıcı fark etsin diye sebep aşağıda "bilgi" olarak
   // döndürülür (önceden sessizce yutuluyordu, kota dolunca kimse fark etmeden
   // çeviri durmuş oluyordu).
@@ -491,15 +497,10 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const { data: profil } = await supabase
-        .from('profiles')
-        .select('gemini_api_key')
-        .eq('id', user.id)
-        .maybeSingle();
-      const apiAnahtari = profil?.gemini_api_key as string | null | undefined;
-      if (apiAnahtari) {
+      const anahtarlar = await aiAnahtarlariGetir(supabase, user.id);
+      if (anahtarlar.length > 0) {
         try {
-          veri.aciklama = await geminiIleAciklamaCevir(apiAnahtari, veri.aciklama, kod);
+          veri.aciklama = await aiIleAciklamaCevir(anahtarlar, veri.aciklama, kod);
         } catch (err) {
           const mesaj = err instanceof Error ? err.message : 'bilinmeyen hata';
           console.error('lcscdenCek: aciklama cevirisi basarisiz:', err);
@@ -603,17 +604,12 @@ export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  const { data: profil } = await supabase
-    .from('profiles')
-    .select('gemini_api_key')
-    .eq('id', user.id)
-    .maybeSingle();
-  const apiAnahtari = profil?.gemini_api_key as string | null | undefined;
+  const anahtarlar = await aiAnahtarlariGetir(supabase, user.id);
 
-  if (!apiAnahtari) {
+  if (anahtarlar.length === 0) {
     return {
       hata:
-        'Bu site için hazır destek yok. Ayarlar sayfasından ücretsiz bir Gemini API anahtarı eklersen artık her siteden çekebilirsin.',
+        'Bu site için hazır destek yok. Ayarlar sayfasından ücretsiz bir Gemini ya da Claude API anahtarı eklersen artık her siteden çekebilirsin.',
     };
   }
 
@@ -622,7 +618,7 @@ export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
     if (!sayfaYaniti.ok) return { hata: `Sayfa alınamadı (HTTP ${sayfaYaniti.status}).` };
     const html = await sayfaYaniti.text();
 
-    const veri = await geminiIleUrunCek(apiAnahtari, ayrikUrl.toString(), html);
+    const veri = await aiIleUrunCek(anahtarlar, ayrikUrl.toString(), html);
     return { veri, tedarikciAdi: ayrikUrl.hostname.replace(/^www\./, '') };
   } catch (err) {
     console.error('linkOnizle (yapay zeka):', err);

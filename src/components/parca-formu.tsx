@@ -99,10 +99,13 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
 
   useEffect(() => {
     if (durum.bilgi) {
-      router.push(donus || '/envanter');
+      // Yeni eklenen bir parça ise (mod="ekle") ve kaydetme sonrası kendi
+      // stok kaydının id'si döndüyse, listeye değil doğrudan o parçanın
+      // sayfasına git — kullanıcı ekledikten hemen sonra kaydını görsün.
+      router.push(!duzenle && durum.stokId ? `/envanter/${durum.stokId}` : donus || '/envanter');
       router.refresh();
     }
-  }, [durum.bilgi, donus, router]);
+  }, [durum.bilgi, durum.stokId, donus, duzenle, router]);
 
   function resimSecildi(e: React.ChangeEvent<HTMLInputElement>) {
     const dosya = e.target.files?.[0];

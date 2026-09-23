@@ -9,6 +9,8 @@ import type { EnvanterSatiri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
 import { geminiApiAnahtariniDogrula } from '@/lib/gemini';
+import { claudeApiAnahtariniDogrula } from '@/lib/claude';
+import type { AiSaglayici } from '@/lib/ai-anahtarlari';
 
 export async function geriBildirimGonder(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const mesaj = String(formData.get('mesaj') ?? '').trim();
@@ -271,14 +273,22 @@ export async function gozlemciyiCikar(gozlemciId: string): Promise<EylemDurum> {
   return { bilgi: 'Çıkarıldı.' };
 }
 
-/** Girilen Gemini API anahtarını küçük bir istekle doğrulayıp kaydeder —
- * "Linkten çek" artık desteklenmeyen sitelerde bu anahtarla yapay zekaya
- * düşer (bkz. lib/gemini.ts, envanter/actions.ts linkOnizle). */
-export async function geminiAnahtariKaydet(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+/** Girilen Gemini/Claude API anahtarını küçük bir istekle doğrulayıp listeye
+ * ekler (en sona, yeni sira = mevcut en yüksek + 1) — "Linkten çek", LCSC
+ * açıklama çevirisi ve sohbet asistanı bu listeyi sırayla dener, biri
+ * çalışmazsa (kota, geçersiz anahtar vb.) otomatik sıradakine geçer (bkz.
+ * lib/ai.ts). Birden fazla hesaptan anahtar eklenebilir. */
+export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const saglayici = String(formData.get('saglayici') ?? '') as AiSaglayici;
+  if (saglayici !== 'gemini' && saglayici !== 'claude') return { hata: 'Geçersiz sağlayıcı.' };
+
   const anahtar = String(formData.get('api_anahtari') ?? '').trim();
   if (!anahtar) return { hata: 'Bir API anahtarı gir.' };
 
-  const gecerli = await geminiApiAnahtariniDogrula(anahtar);
+  const ad = String(formData.get('ad') ?? '').trim() || null;
+
+  const gecerli =
+    saglayici === 'gemini' ? await geminiApiAnahtariniDogrula(anahtar) : await claudeApiAnahtariniDogrula(anahtar);
   if (!gecerli) return { hata: 'Anahtar doğrulanamadı — kopyaladığından emin olup tekrar dener misin?' };
 
   const supabase = await createClient();
@@ -287,24 +297,66 @@ export async function geminiAnahtariKaydet(_onceki: EylemDurum, formData: FormDa
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  const { error } = await supabase.from('profiles').upsert({ id: user.id, gemini_api_key: anahtar }, { onConflict: 'id' });
+  const { data: enSonSira } = await supabase
+    .from('ai_anahtarlari')
+    .select('sira')
+    .eq('user_id', user.id)
+    .order('sira', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const yeniSira = ((enSonSira?.sira as number | undefined) ?? -1) + 1;
+
+  const { error } = await supabase
+    .from('ai_anahtarlari')
+    .insert({ user_id: user.id, saglayici, ad, anahtar, sira: yeniSira });
   if (error) return { hata: error.message };
 
   revalidatePath('/ayarlar');
   return { bilgi: 'Anahtar doğrulandı ve kaydedildi.' };
 }
 
-/** Kayıtlı Gemini API anahtarını kaldırır. */
-export async function geminiAnahtariniKaldir(): Promise<EylemDurum> {
+/** Kayıtlı bir AI anahtarını kaldırır. */
+export async function aiAnahtarSil(id: string): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const { error } = await supabase.from('ai_anahtarlari').delete().eq('id', id);
+  if (error) return { hata: error.message };
+
+  revalidatePath('/ayarlar');
+  return { bilgi: 'Kaldırıldı.' };
+}
+
+/** Bir anahtarı deneme sırasında bir üste/alta taşır (komşusuyla sira'yı takas eder). */
+export async function aiAnahtarSiradaTasi(id: string, yon: 'yukari' | 'asagi'): Promise<EylemDurum> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  const { error } = await supabase.from('profiles').update({ gemini_api_key: null }).eq('id', user.id);
+  const { data: liste, error } = await supabase
+    .from('ai_anahtarlari')
+    .select('id, sira')
+    .eq('user_id', user.id)
+    .order('sira', { ascending: true });
   if (error) return { hata: error.message };
 
+  const siraliListe = (liste ?? []) as { id: string; sira: number }[];
+  const index = siraliListe.findIndex((a) => a.id === id);
+  if (index === -1) return { hata: 'Anahtar bulunamadı.' };
+
+  const komsuIndex = yon === 'yukari' ? index - 1 : index + 1;
+  if (komsuIndex < 0 || komsuIndex >= siraliListe.length) return {};
+
+  const buAnahtar = siraliListe[index];
+  const komsu = siraliListe[komsuIndex];
+
+  const [{ error: hata1 }, { error: hata2 }] = await Promise.all([
+    supabase.from('ai_anahtarlari').update({ sira: komsu.sira }).eq('id', buAnahtar.id),
+    supabase.from('ai_anahtarlari').update({ sira: buAnahtar.sira }).eq('id', komsu.id),
+  ]);
+  if (hata1) return { hata: hata1.message };
+  if (hata2) return { hata: hata2.message };
+
   revalidatePath('/ayarlar');
-  return { bilgi: 'Kaldırıldı.' };
+  return {};
 }
