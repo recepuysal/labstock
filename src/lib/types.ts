@@ -174,6 +174,7 @@ export const SEBEP_ETIKET: Record<string, string> = {
   manuel: 'Manuel',
   giris: 'Giriş',
   ice_aktarma: 'İçe aktarma',
+  sayim: 'Sayım',
 };
 
 /** Her konumun kendisi + tüm alt ağacındaki stok kalemi sayısı (doğrudan

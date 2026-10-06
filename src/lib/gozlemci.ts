@@ -66,6 +66,8 @@ export type AlinacaklarBildirimVerisi = {
   hedef: string;
   izlenenAdi: string | null;
   izleyenler: { id: string; ad: string }[];
+  /** İzleme modunda yazma kapalı — kamera sayımı köprüsü de bu durumda çalışmaz. */
+  saltOkunur: boolean;
 };
 
 /** Kök layout'ta global "alınacaklara eklendi" bildirimini beslemek için gereken veri —
@@ -81,5 +83,5 @@ export async function alinacaklarBildirimVerisiAl(): Promise<AlinacaklarBildirim
     izleyenler = ((data ?? []) as { id: string; ad: string }[]).map((i) => ({ id: i.id, ad: i.ad }));
   }
 
-  return { hedef: gorunum.kullaniciId, izlenenAdi: gorunum.izlenenAdi, izleyenler };
+  return { hedef: gorunum.kullaniciId, izlenenAdi: gorunum.izlenenAdi, izleyenler, saltOkunur: gorunum.saltOkunur };
 }

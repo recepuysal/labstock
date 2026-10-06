@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { GuncellemeBildirimi } from '@/components/guncelleme-bildirimi';
 import { AlinacaklarBildirimi } from '@/components/alinacaklar-bildirimi';
+import { KameraSayimKoprusu } from '@/components/kamera-sayim-koprusu';
 import { alinacaklarBildirimVerisiAl } from '@/lib/gozlemci';
 
 export const dynamic = 'force-dynamic';
@@ -45,6 +46,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             izleyenler={bildirimVerisi.izleyenler}
           />
         )}
+        {/* Telefon kamerasıyla sayım (görüntü işleme servisi açıksa); izleme modunda yazma kapalı */}
+        {bildirimVerisi && !bildirimVerisi.saltOkunur && <KameraSayimKoprusu />}
       </body>
     </html>
   );
