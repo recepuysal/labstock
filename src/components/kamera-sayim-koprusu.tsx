@@ -103,7 +103,7 @@ export function KameraSayimKoprusu() {
         title={bagli ? 'Telefon kamerası görüntü işleme servisine bağlı' : 'Görüntü işleme servisi çalışıyor, telefon bağlı değil'}
         style={{
           position: 'fixed',
-          right: 16,
+          left: 16,
           bottom: 16,
           zIndex: 1999,
           display: 'flex',
@@ -138,7 +138,7 @@ export function KameraSayimKoprusu() {
       style={{
         position: 'fixed',
         right: 16,
-        bottom: durum ? 60 : 16,
+        bottom: 16,
         zIndex: 2000,
         display: 'flex',
         flexDirection: 'column-reverse',
