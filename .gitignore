@@ -12,3 +12,7 @@ Thumbs.db
 supabase/.temp/
 electron-app/standalone/
 electron-app/dist/
+
+# Kamera sayımı kütüphaneleri (scripts/kamera-dosyalari.js kopyalar)
+/public/kamera/opencv.js
+/public/kamera/jsQR.js

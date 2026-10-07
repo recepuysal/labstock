@@ -29,6 +29,8 @@ declare global {
       sifreKaydet: (sifre: string) => Promise<boolean>;
       sifreAl: () => Promise<string | null>;
       sifreSil: () => Promise<boolean>;
+      /** Telefon kamerası (1.17+); eski masaüstü sürümlerinde yok. */
+      kamera?: import('@/lib/kamera').KameraAPI;
     };
   }
 }

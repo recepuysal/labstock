@@ -82,6 +82,16 @@ yapıştırarak) taratınca doğrudan ilgili parçaya/konuma atlar.
   <img src="docs/screenshots/etiket-qr.png" alt="Yazdırılabilir QR etiketler" width="700">
 </p>
 
+**Telefon kamerasıyla sayım ve etiketten giriş** (masaüstü uygulaması)
+Sol alttaki **Telefon kamerası**'nı açıp ekrandaki QR'ı telefonla okut — uygulama kurmadan,
+aynı Wi-Fi üzerinden telefonun kamerası LabStock'a bağlanır. Parçanın ya da çekmecenin QR
+etiketini göster (etiket yoksa adıyla ara), parçaları masaya dök: kamera sayar, "LabStock'a
+yaz" deyince adet sayılan değere ayarlanır ve hareket geçmişine "Sayım" olarak düşer. LCSC
+poşetinin QR'ını okutunca adet stoğa eklenir (aynı etiket iki kez işlenmez); parça yoksa
+LCSC'den doldurulmuş yeni parça formu açılır. Daha doğru sayım için yanına bir madeni para
+koyup ölçek al, parçanın boyutunu bir kez öğret. Görüntü işleme tamamen bilgisayarında yapılır;
+sunucu sadece sen açınca çalışır ve QR'daki eşleşme anahtarı olmayan cihaz bağlanamaz.
+
 **Excel ile toplu aktarım**
 Elindeki envanteri tek bir `.xlsx`/`.csv` dosyasıyla içe aktar; tüm depoyu
 istediğin an `.xlsx` olarak dışa aktar.

@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/kamera-dosyalari.js && next dev",
+    "build": "node scripts/kamera-dosyalari.js && next build",
     "start": "next start",
-    "build:desktop": "node scripts/stop-desktop-server.js && next build && node scripts/copy-static-for-desktop.js"
+    "build:desktop": "node scripts/stop-desktop-server.js && node scripts/kamera-dosyalari.js && next build && node scripts/copy-static-for-desktop.js",
+    "kamera-dosyalari": "node scripts/kamera-dosyalari.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -18,10 +19,12 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
+    "@techstark/opencv-js": "^5.0.0-release.1",
     "@types/node": "^22.18.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "jsqr": "^1.4.0",
     "typescript": "^5.9.0"
   }
 }

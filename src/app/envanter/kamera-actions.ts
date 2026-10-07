@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 /* Kamera sayımı (telefon kamerası + bilgisayardaki görüntü işleme servisi) için sunucu eylemleri.
- * Köprü bileşeni (kamera-sayim-koprusu.tsx) servisten gelen istekleri bunlarla yanıtlar.
+ * Masaüstü uygulamasındaki kamera istasyonu (kamera-istasyonu.tsx) telefondan gelen istekleri bunlarla yanıtlar.
  * Sadece giriş yapan kullanıcının KENDİ deposu üzerinde çalışır; yazma yetkisi yine RLS'de. */
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -132,6 +132,110 @@ export async function kameraParcaAra(sorgu: string): Promise<KameraArama | Kamer
       konum: konumMetni(s.konum_kodu, s.konum_adi),
     })),
   };
+}
+
+export type KameraEtiketBilgisi = {
+  ok: true;
+  /** Bu tedarikçi koduna / MPN'e sahip kendi stok kalemlerin. */
+  bulunanlar: { stokId: string; mpn: string; adet: number; konum: string | null }[];
+  /** Aynı etiket daha önce işlendiyse ne zaman. */
+  dahaOnce: string | null;
+};
+
+const ETIKET_IZI = /^[A-Za-z0-9:_-]{4,80}$/;
+const izAciklamasi = (iz: string) => `etiket:${iz}`;
+
+/** Tedarikçi poşet etiketi (ör. LCSC QR'ı) okununca: parça depoda var mı, etiket daha önce işlendi mi. */
+export async function kameraTedarikciEtiketi(
+  tedarikciKodu: string,
+  mpn: string,
+  iz: string,
+): Promise<KameraEtiketBilgisi | KameraHata> {
+  const kod = typeof tedarikciKodu === 'string' ? tedarikciKodu.replace(/[^A-Za-z0-9-]/g, '').slice(0, 40) : '';
+  const mpnTemiz = typeof mpn === 'string' ? mpn.replace(/[,()%*\\]/g, '').trim().slice(0, 80) : '';
+  if (!kod && !mpnTemiz) return { ok: false, hata: 'Etikette parça kodu yok' };
+  if (typeof iz !== 'string' || !ETIKET_IZI.test(iz)) return { ok: false, hata: 'Geçersiz etiket' };
+  const { supabase, user } = await kullanici();
+  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+
+  const kosullar = [kod && `tedarikci_kodu.ilike.${kod}`, mpnTemiz && `mpn.ilike.${mpnTemiz}`].filter(Boolean).join(',');
+  const { data, error } = await supabase
+    .from('envanter')
+    .select('stok_id, mpn, adet, konum_kodu, konum_adi')
+    .eq('user_id', user.id)
+    .or(kosullar)
+    .limit(10);
+  if (error) return { ok: false, hata: error.message };
+
+  const { data: once } = await supabase
+    .from('stock_movements')
+    .select('created_at')
+    .eq('user_id', user.id)
+    .ilike('aciklama', `%${izAciklamasi(iz)}%`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    ok: true,
+    bulunanlar: (data ?? []).map((s) => ({
+      stokId: s.stok_id,
+      mpn: s.mpn,
+      adet: Number(s.adet),
+      konum: konumMetni(s.konum_kodu, s.konum_adi),
+    })),
+    dahaOnce: once?.created_at ?? null,
+  };
+}
+
+export type KameraGirisSonucu = { ok: true; mpn: string; eski: number; yeni: number };
+
+/** Tedarikçi etiketindeki adedi stoğa EKLER ("Giriş" hareketi). Etiketin izi açıklamaya yazılır;
+ * aynı etiket ikinci kez gelirse `zorla` verilmedikçe eklenmez (iki kez okutma stoğu şişirmesin). */
+export async function kameraStokGiris(
+  stokId: string,
+  adet: number,
+  iz: string,
+  kaynak: string,
+  zorla = false,
+): Promise<KameraGirisSonucu | KameraHata> {
+  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: 'Geçersiz parça' };
+  if (!Number.isInteger(adet) || adet <= 0 || adet > MAKS_ADET) return { ok: false, hata: 'Geçersiz adet' };
+  if (typeof iz !== 'string' || !ETIKET_IZI.test(iz)) return { ok: false, hata: 'Geçersiz etiket' };
+  const kaynakTemiz = typeof kaynak === 'string' ? kaynak.replace(/[^\p{L}\p{N} ._×-]/gu, '').slice(0, 60) : '';
+  const { supabase, user } = await kullanici();
+  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+
+  if (!zorla) {
+    const { data: once } = await supabase
+      .from('stock_movements')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .ilike('aciklama', `%${izAciklamasi(iz)}%`)
+      .limit(1)
+      .maybeSingle();
+    if (once) return { ok: false, hata: 'Bu etiket daha önce işlenmiş' };
+  }
+
+  const { data: kalem, error } = await supabase
+    .from('envanter')
+    .select('mpn, adet')
+    .eq('stok_id', stokId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (error) return { ok: false, hata: error.message };
+  if (!kalem) return { ok: false, hata: 'Bu parça senin deponda yok' };
+
+  const { data: yeni, error: rpcHata } = await supabase.rpc('stok_hareket', {
+    p_stok_id: stokId,
+    p_delta: adet,
+    p_sebep: 'giris',
+    p_aciklama: `${kaynakTemiz || 'Tedarikçi etiketi'} · ${izAciklamasi(iz)}`,
+  });
+  if (rpcHata) return { ok: false, hata: rpcHata.message };
+
+  revalidatePath('/envanter');
+  return { ok: true, mpn: kalem.mpn, eski: Number(kalem.adet), yeni: Number(yeni ?? Number(kalem.adet) + adet) };
 }
 
 /** Kamera ile sayılan adedi stoğa İŞLER: adedi `sayilan`a ayarlar, farkı "Sayım" hareketi olarak kaydeder.

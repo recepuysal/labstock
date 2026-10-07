@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LabStock">
+<title>LabStock Kamera</title>
+<style>
+ :root{
+  --zemin:#000; --yuzey:rgba(28,28,30,.82); --yuzey2:#2c2c2e; --secili:#636366;
+  --yazi:#f5f5f7; --soluk:#a1a1a6; --cizgi:rgba(255,255,255,.08);
+  --kirmizi:#ff3b30; --yesil:#30d158; --sari:#ffd60a; --mavi:#0a84ff;
+  --ust:env(safe-area-inset-top,0px); --alt:env(safe-area-inset-bottom,0px);
+ }
+ *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+ html,body{margin:0;height:100%;background:var(--zemin);color:var(--yazi);
+  font:15px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;overflow:hidden;
+  -webkit-user-select:none;user-select:none}
+ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+ .gizli{display:none!important}
+
+ /* ---- Sahne: önizleme ve üzerindeki katmanlar */
+ #uygulama{position:fixed;inset:0;display:flex;flex-direction:column}   /* 100dvh ana ekran uygulamasında kısa kalıyor */
+ #sahne{position:relative;flex:1;min-height:0;overflow:hidden;background:#000;display:flex;flex-direction:column}
+ #ekran{position:relative;flex:1;min-height:0;overflow:hidden}   /* görüntü alanı: kamera karesi tamamı, kırpılmadan */
+ #v{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;transition:opacity .25s}
+ #v.ayna{transform:scaleX(-1)}             /* ön kamerada önizleme ayna gibi; PC'ye giden görüntü değişmez */
+ #sahne.kapali #v{opacity:0}
+
+ .ust{order:-1;position:relative;z-index:3;flex:none;display:flex;align-items:center;gap:8px;
+  padding:calc(var(--ust) + 10px) 14px 10px;background:#000}
+ .bosluk{flex:1}
+ .hap{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:15px;
+  background:var(--yuzey);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  font-size:13px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+ .nokta{width:8px;height:8px;border-radius:50%;background:var(--soluk)}
+ .hap.bagli .nokta{background:var(--yesil)}
+ .hap.kopuk .nokta{background:var(--kirmizi);animation:nabiz 1.2s infinite}
+ .hap.canli{background:var(--kirmizi);color:#fff}
+ .hap.canli .nokta{background:#fff;animation:nabiz 1.6s infinite}
+ @keyframes nabiz{50%{opacity:.25}}
+ .ikon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:var(--yuzey);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+ .ikon svg{width:20px;height:20px}
+
+ /* Canlı istatistikler */
+ #istat{flex:none;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px 12px 0;background:#000}
+ .cip{height:26px;padding:0 10px;border-radius:13px;display:inline-flex;align-items:center;gap:5px;
+  background:var(--yuzey2);
+  font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--yazi)}
+ .cip b{font-weight:700}
+ .cip .k{color:var(--soluk);font-weight:500}
+ .iyi b{color:var(--yesil)} .orta b{color:var(--sari)} .kotu b{color:var(--kirmizi)}
+
+ /* Yayın kapalıyken ortadaki bilgi */
+ #bos{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:24px;text-align:center;color:var(--soluk)}
+ #bos svg{width:54px;height:54px;opacity:.55}
+ #bos h1{margin:6px 0 0;font-size:21px;font-weight:700;color:var(--yazi)}
+ #bos p{margin:0;max-width:280px}
+ #bos .adres{margin-top:6px;font:12px ui-monospace,Menlo,monospace;color:#6e6e73}
+ #sahne:not(.kapali) #bos{display:none}
+
+ /* Bildirim */
+ #bildirim{position:absolute;left:50%;top:calc(var(--ust) + 60px);z-index:4;max-width:calc(100% - 32px);
+  transform:translate(-50%,-8px);opacity:0;transition:.25s;pointer-events:none;
+  padding:9px 14px;border-radius:12px;background:rgba(44,44,46,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  font-size:14px;font-weight:500;text-align:center}
+ #bildirim.goster{opacity:1;transform:translate(-50%,0)}
+
+ /* ---- Alt kontrol çubuğu */
+ .alt{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:14px 28px calc(var(--alt) + 14px);background:#000}
+ .alt>:first-child{justify-self:start} .alt>:last-child{justify-self:end}
+ .yan{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--yuzey2);cursor:pointer;
+  transition:transform .15s, opacity .2s}
+ .yan:active{transform:scale(.92)}
+ .yan svg{width:24px;height:24px}
+ .yan[aria-disabled=true]{opacity:.35;pointer-events:none}
+ .yan.donuyor svg{animation:don .45s ease}
+ @keyframes don{to{transform:rotate(180deg)}}
+
+ #kayit{width:76px;height:76px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center;transition:transform .15s}
+ #kayit:active{transform:scale(.94)}
+ #kayit span{width:60px;height:60px;border-radius:30px;background:var(--kirmizi);transition:all .25s cubic-bezier(.3,.7,.4,1)}
+ #kayit.canli span{width:30px;height:30px;border-radius:7px}
+
+ /* ---- Ayarlar paneli */
+ #perde{position:fixed;inset:0;z-index:9;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s}
+ #perde.acik{opacity:1;pointer-events:auto}
+ #panel,.panel-alt{position:fixed;left:0;right:0;bottom:0;z-index:10;max-height:85dvh;overflow:auto;
+  padding:8px 18px calc(var(--alt) + 22px);border-radius:16px 16px 0 0;background:#1c1c1e;
+  transform:translateY(105%);transition:transform .3s cubic-bezier(.3,.7,.4,1)}
+ #panel.acik,.panel-alt.acik{transform:none}
+ .tutamak{width:38px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 10px}
+ .panel-bas{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+ .panel-bas h2{margin:0;font-size:19px;font-weight:700}
+ .tamam{color:var(--mavi);font-weight:600;font-size:16px;padding:6px 2px}
+ .grup{padding:12px 0;border-bottom:1px solid var(--cizgi)}
+ .grup:last-of-type{border-bottom:0}
+ .grup label{display:flex;justify-content:space-between;font-size:13px;color:var(--soluk);margin:0 2px 8px}
+ .grup label i{font-style:normal;color:#6e6e73}
+ .seg{display:flex;gap:2px;padding:2px;border-radius:10px;background:var(--yuzey2)}
+ .seg button{flex:1;height:34px;border-radius:8px;font-size:14px;font-weight:600;color:#d1d1d6;transition:background .2s}
+ .seg button.on{background:var(--secili);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+ .bilgi{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--yuzey2);font-size:13px;color:var(--soluk)}
+ .bilgi div{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+ .bilgi span:last-child{color:var(--yazi);text-align:right;font-variant-numeric:tabular-nums;word-break:break-all}
+
+
+ /* ---- Mod seçici (Kamera / Sayım) */
+ .mod{display:flex;padding:2px;border-radius:16px;background:var(--yuzey);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+ .mod button{height:28px;padding:0 13px;border-radius:14px;font-size:13px;font-weight:600;color:#d1d1d6}
+ .mod button.on{background:#fff;color:#000}
+
+ /* ---- Sayım */
+ #sayimResim{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none}
+ body.sayim #sayimResim.var{display:block}
+ body.sayim #istat{display:none!important}
+ #sayimKart{flex:none;display:none;margin:8px 10px 0;padding:12px 14px;border-radius:18px;background:#1c1c1e}
+ body.sayim #sayimKart{display:block;margin-bottom:calc(var(--alt) + 8px)}
+ body.sayim .alt{display:none}
+ body.sayim #bos{display:none}
+ .sk-ust{display:flex;align-items:center;gap:10px;min-height:40px}
+ .sk-parca{flex:1;min-width:0}
+ .sk-mpn{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .sk-alt{font-size:12.5px;color:var(--soluk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .sk-ipucu{display:flex;align-items:center;gap:10px;color:var(--soluk);font-size:14px}
+ .sk-ipucu svg{width:30px;height:30px;flex:none;opacity:.8}
+ .sk-x{width:30px;height:30px;border-radius:50%;background:var(--yuzey2);display:grid;place-items:center;flex:none}
+ .sk-x svg{width:14px;height:14px}
+ .ls{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--soluk);flex:none}
+ .ls .nokta{width:7px;height:7px}
+ .ls.bagli .nokta{background:var(--yesil)} .ls.kopuk .nokta{background:var(--kirmizi)}
+ .sk-ara input{width:100%;height:42px;margin-top:10px;padding:0 12px;border:0;border-radius:12px;background:var(--yuzey2);
+  color:var(--yazi);font:inherit;font-size:16px;-webkit-user-select:text;user-select:text}   /* 16px: iOS yakınlaştırmasın */
+ .sk-ara input::placeholder{color:#8e8e93}
+ .sk-liste{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:34dvh;overflow:auto}
+ .sk-liste button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;
+  background:var(--yuzey2);text-align:left}
+ .sk-liste b{font-size:14px} .sk-liste small{color:var(--soluk);font-size:12px;display:block}
+ .sk-liste span:last-child{color:var(--soluk);font-variant-numeric:tabular-nums;flex:none}
+ .sk-sayi{display:flex;align-items:baseline;gap:10px;margin:10px 2px 10px}
+ .sk-sayi b{font-size:44px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+ .sk-sayi span{color:var(--soluk);font-size:14px}
+ .sk-sayi .fark{margin-left:auto;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+ .fark.arti{color:var(--yesil)} .fark.eksi{color:var(--kirmizi)} .fark.esit{color:var(--soluk)}
+ .sk-sayi.sabit b{color:var(--sari)}
+ .sk-dugmeler{display:flex;gap:8px}
+ .sk-dugmeler button{flex:1;height:48px;border-radius:14px;font-size:16px;font-weight:700;background:var(--yuzey2)}
+ .sk-dugmeler .ana{background:#fff;color:#000}
+ .sk-dugmeler .yaz{background:var(--yesil);color:#000}
+ .sk-dugmeler button:disabled{opacity:.4}
+
+
+ /* ---- Ölçek / parça boyu çipleri */
+ .sk-cipler{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+ .sk-cip{height:30px;padding:0 11px;border-radius:15px;background:var(--yuzey2);font-size:12.5px;font-weight:600;color:#d1d1d6;
+  display:inline-flex;align-items:center;gap:5px}
+ .sk-cip.ayarli{background:rgba(10,132,255,.22);color:#9ecbff}
+ .sk-cip.bekliyor{background:rgba(255,214,10,.22);color:var(--sari);animation:nabiz 1.4s infinite}
+ #ekran{touch-action:manipulation}
+ body.dokunma #ekran{cursor:pointer;outline:3px solid var(--sari);outline-offset:-3px}
+ .isaret{position:absolute;z-index:3;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+  border:3px solid #fff;background:var(--mavi);box-shadow:0 0 0 2px rgba(0,0,0,.4);pointer-events:none}
+ /* ---- Tedarikçi etiketi kartı */
+ .sk-giris{margin:0 0 10px;padding:10px 12px;border-radius:14px;background:rgba(48,209,88,.12);border:1px solid rgba(48,209,88,.35)}
+ .sk-giris .bas{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--soluk)}
+ .sk-giris .bas b{color:var(--yazi);font-size:15px}
+ .sk-giris .uyar{margin-top:6px;font-size:12.5px;color:var(--sari)}
+ .sk-giris .satirlar{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+ .sk-giris button.ekle{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 12px;border-radius:12px;
+  background:var(--yesil);color:#000;font-weight:700;font-size:14px;text-align:left}
+ .sk-giris button.ekle small{display:block;font-weight:500;font-size:11.5px;opacity:.75}
+ .sk-giris button.ikincil{width:100%;padding:10px 12px;border-radius:12px;background:var(--yuzey2);font-weight:600;font-size:14px}
+ /* ---- Ölçek paneli (alttan) */
+ .secenekler{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+ .secenekler button{height:44px;border-radius:10px;background:var(--yuzey2);font-weight:600;font-size:14px}
+ .secenekler button small{display:block;font-size:10.5px;font-weight:500;color:var(--soluk)}
+ .mm-satir{display:flex;gap:6px;align-items:center;margin-top:8px}
+ .mm-satir input{flex:1;min-width:0;height:40px;border:0;border-radius:10px;background:var(--yuzey2);color:var(--yazi);
+  font:inherit;font-size:16px;padding:0 10px;-webkit-user-select:text;user-select:text}
+ .mm-satir button{height:40px;padding:0 14px;border-radius:10px;background:var(--mavi);color:#fff;font-weight:600}
+ .not{font-size:12px;color:var(--soluk);margin-top:8px;line-height:1.45}
+
+ /* Yatay tutulunca kontroller sağa geçer */
+ @media (orientation:landscape) and (max-height:500px){
+  #uygulama{flex-direction:row}
+  .alt{grid-template-columns:none;grid-template-rows:1fr auto 1fr;padding:20px calc(env(safe-area-inset-right,0px) + 16px) 20px 16px}
+  .alt>:first-child{align-self:start;justify-self:center} .alt>:last-child{align-self:end;justify-self:center}
+  .ust{padding-top:12px}
+  #panel{left:auto;width:min(420px,100%);border-radius:16px 0 0 0}
+ }
+</style></head><body>
+<div id="uygulama">
+ <main id="sahne" class="kapali">
+  <div id="ekran">
+  <video id="v" playsinline muted autoplay></video>
+
+  <div id="bos">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.55-2.28A1 1 0 0 1 21 8.62v6.76a1 1 0 0 1-1.45.9L15 14"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+   <h1>Yayın kapalı</h1>
+   <p>Görüntüyü bilgisayara göndermek için alttaki kırmızı düğmeye dokun.</p>
+   <div class="adres" id="adres"></div>
+  </div>
+  <img id="sayimResim" alt="">
+  </div>
+
+  <header class="ust">
+   <div class="hap" id="bagHap"><span class="nokta"></span><span id="bagYazi">Bağlanıyor</span></div>
+   <div class="hap canli gizli" id="canliHap"><span class="nokta"></span>CANLI</div>
+   <div class="bosluk"></div>
+   <div class="mod" id="modSecici"><button data-mod="kamera" class="on">Kamera</button><button data-mod="sayim">Sayım</button></div>
+   <div class="bosluk"></div>
+   <button class="ikon" id="ayarBtn" aria-label="Ayarlar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+   </button>
+  </header>
+
+  <div id="istat" class="gizli"></div>
+  <div id="sayimKart">
+   <div class="sk-giris gizli" id="skGiris"></div>
+   <div class="sk-ust" id="skUst"></div>
+   <div class="sk-cipler" id="skCipler"></div>
+   <div class="sk-ara gizli" id="skAraKutu"><input id="skAra" type="search" placeholder="QR yoksa: parça ara (ad, MPN)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>
+   <div class="sk-liste gizli" id="skListe"></div>
+   <div class="sk-sayi" id="skSayi"><b id="skAdet">–</b><span id="skNot">sayılıyor</span><span class="fark esit gizli" id="skFark"></span></div>
+   <div class="sk-dugmeler" id="skDugmeler"></div>
+  </div>
+  <div id="bildirim" role="status"></div>
+ </main>
+
+ <footer class="alt">
+  <label class="yan" id="fotoBtn" aria-label="Tam çözünürlüklü foto çek">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.4-2h7l1.4 2h1.6A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.6"/></svg>
+   <input id="foto" type="file" accept="image/*" capture="environment" hidden>
+  </label>
+  <button id="kayit" aria-label="Canlı yayını başlat / durdur"><span></span></button>
+  <button class="yan" id="cevir" aria-label="Kamerayı çevir">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></svg>
+  </button>
+ </footer>
+</div>
+
+<div id="perde"></div>
+<section id="panel" aria-label="Ayarlar">
+ <div class="tutamak"></div>
+ <div class="panel-bas"><h2>Ayarlar</h2><button class="tamam" id="kapat">Bitti</button></div>
+
+ <div class="grup"><label>Kamera</label>
+  <div class="seg" data-hedef="kamera"><button data-d="environment">Arka</button><button data-d="user">Ön</button></div></div>
+ <div class="grup"><label>Çözünürlük <i>30 fps</i></label>
+  <div class="seg" data-hedef="coz"><button data-d="1280x720">720p</button><button data-d="1920x1080">1080p</button><button data-d="3840x2160">4K</button></div></div>
+ <div class="grup"><label>Aktarım <i id="formatNot">H.264 önerilir</i></label>
+  <div class="seg" data-hedef="format"><button data-d="h264">H.264 video</button><button data-d="jpeg">JPEG kareler</button></div></div>
+ <div class="grup" id="bitGrup"><label>Bit hızı <i>yüksek = daha net, daha çok Wi-Fi</i></label>
+  <div class="seg" data-hedef="bit"><button data-d="0">Oto</button><button data-d="4">4</button><button data-d="8">8</button><button data-d="12">12</button><button data-d="20">20</button></div></div>
+ <div class="grup gizli" id="kaliteGrup"><label>JPEG kalitesi</label>
+  <div class="seg" data-hedef="kalite"><button data-d="0.6">%60</button><button data-d="0.75">%75</button><button data-d="0.85">%85</button><button data-d="0.95">%95</button></div></div>
+
+ <div class="bilgi">
+  <div><span>Bilgisayar</span><span id="bAdres">-</span></div>
+  <div><span>Kamera</span><span id="bKamera">-</span></div>
+  <div><span>Kodlayıcı</span><span id="bKodlayici">-</span></div>
+  <div><span>Kare boyutu</span><span id="bKare">-</span></div>
+  <div><span>Atlanan kare</span><span id="bAtlanan">-</span></div>
+ </div>
+</section>
+
+<section id="olcekPanel" class="panel-alt" aria-label="Ölçek">
+ <div class="tutamak"></div>
+ <div class="panel-bas"><h2 id="opBaslik">Ölçek</h2><button class="tamam" id="opKapat">Kapat</button></div>
+ <div id="opOlcek">
+  <div class="grup"><label>Referans: madeni para</label>
+   <div class="secenekler" id="paralar">
+    <button data-ad="1 TL" data-mm="26.15">1 TL<small>26,15 mm</small></button>
+    <button data-ad="50 Kr" data-mm="23.85">50 Kr<small>23,85 mm</small></button>
+    <button data-ad="25 Kr" data-mm="20.5">25 Kr<small>20,5 mm</small></button>
+    <button data-ad="10 Kr" data-mm="18.5">10 Kr<small>18,5 mm</small></button>
+    <button data-ad="5 Kr" data-mm="17.5">5 Kr<small>17,5 mm</small></button>
+   </div></div>
+  <div class="grup"><label>Başka bir referans</label>
+   <div class="mm-satir"><input id="opCap" type="number" inputmode="decimal" placeholder="Yuvarlak: çap (mm)"><button id="opCapTamam">Seç</button></div>
+   <div class="mm-satir"><input id="opKenar" type="number" inputmode="decimal" placeholder="Kare: kenar (mm)"><button id="opKenarTamam">Seç</button></div>
+   <div class="not">Seçtikten sonra resimde referansa dokun. Referans masada kalabilir, sayılmaz (mavi halka). Kamerayı sabit tut; yükseklik değişirse ölçeği yeniden al.</div>
+  </div>
+  <div class="grup"><button class="sk-cip" id="opOlcekSifirla">Ölçeği kaldır</button></div>
+ </div>
+ <div id="opBirim">
+  <div class="grup"><label>Tek parçaya dokunarak öğret</label>
+   <button class="sk-cip" id="opOgret" style="height:40px;width:100%;justify-content:center">Resimde tek bir parçaya dokun</button>
+   <div class="not">Diğerlerine değmeyen, tek duran bir parça seç. Ölçek varsa boyut bu parça için kaydedilir; sonraki sayımlarda tahmine gerek kalmaz.</div></div>
+  <div class="grup"><label>Ya da boyutunu gir (üstten görünen, mm)</label>
+   <div class="mm-satir"><input id="opEn" type="number" inputmode="decimal" placeholder="En"><input id="opBoy" type="number" inputmode="decimal" placeholder="Boy"><button id="opBoyutTamam">Kaydet</button></div>
+   <div class="not">Ölçek gerekir. Bacaklar sayılmaz; sadece gövdenin eni ve boyu.</div></div>
+  <div class="grup"><button class="sk-cip" id="opBirimSifirla">Otomatik tahmine dön</button></div>
+ </div>
+</section>
+
+<!-- Ayarların asıl değerleri burada tutulur; panel düğmeleri bunları değiştirir -->
+<div hidden>
+ <select id="kamera"><option value="environment" selected></option><option value="user"></option></select>
+ <select id="coz"><option value="1280x720"></option><option value="1920x1080" selected></option><option value="3840x2160"></option></select>
+ <select id="format"><option value="h264" selected></option><option value="jpeg"></option></select>
+ <select id="bit"><option value="0" selected></option><option value="2"></option><option value="4"></option><option value="8"></option><option value="12"></option><option value="20"></option></select>
+ <select id="kalite"><option value="0.6"></option><option value="0.75" selected></option><option value="0.85"></option><option value="0.95"></option></select>
+</div>
+<canvas id="c" hidden></canvas>
+
+<script>
+const $=id=>document.getElementById(id);
+const v=$('v'), c=$('c'), ctx=c.getContext('2d');
+const SURUM='__SURUM__';          // PC'deki sayfa değişince telefon kendini yeniler
+// LabStock'taki QR, adresi #k=<anahtar> ile verir. Anahtar adreste kalır: "Ana Ekrana Ekle" denince
+// uygulama da anahtarla açılır (iOS'ta ana ekran uygulamasının depolaması Safari'den ayrıdır).
+const ANAHTAR=(location.hash.match(/k=([A-Za-z0-9_-]+)/)||[])[1]||null;
+const TIP_KARE=1, TIP_FOTO=2, TIP_H264=3;
+let MAKS_BEKLEYEN={jpeg:3, h264:8}; // onay beklenen en fazla kare; fazlası kodlanmadan atlanır
+const ANAHTAR_ARALIK=60;          // her 60 karede bir anahtar kare (bağlantı koparsa hızlı toparlanır)
+
+let ws=null, akis=null, calisiyor=false, kilit=null, nesil=0, kodluyor=false;
+let sonGonderim=0, baslamaZamani=0;   // takılma koruması için
+let bekleyen=[];                  // gönderilip onay beklenen karelerin gönderim zamanları
+let say={gonderilen:0, atlanan:0, bayt:0, rtt:[]}, t0=performance.now();
+
+// H.264 kodlayıcı durumu
+const H264_VAR=typeof VideoEncoder!=='undefined' && typeof VideoFrame!=='undefined';
+let kodlayici=null, kodAyar=null, hazirlaniyor=false, anahtarIste=true, yeniAkis=true, kareNo=0;
+let KAYNAK='video';               // 'tuval': kanvasa çizip kodla, 'video': video karesini doğrudan kodla (hızlı)
+let kaynakBildirildi=false;
+let DONDUR=null, sonDon=0;          // PC'nin uygulayacağı döndürme: 0 yok, 1 saat yönü 90, 2 180, 3 saat tersi 90 (null: otomatik)
+let avccBoy=0, spsPps=null;       // kodlayıcı 'avc' biçiminde verirse Annex B'ye çevirmek için
+
+// ================= Arayüz =================
+let bildirimZaman=null;
+function mesaj(m, sure=2600){
+  const b=$('bildirim'); b.textContent=m; b.classList.add('goster');
+  clearTimeout(bildirimZaman); bildirimZaman=setTimeout(()=>b.classList.remove('goster'), sure);
+}
+function pcyeYaz(tur, m){ try{ if(ws && ws.readyState===1) ws.send(JSON.stringify({[tur]:String(m)})); }catch(_){} }
+window.onerror=(m,k,s)=>pcyeYaz('hata', `${m} (satır ${s})`);
+window.onunhandledrejection=e=>pcyeYaz('hata', e.reason);
+
+function baglantiGoster(durum){   // 'bagli' | 'kopuk' | 'bekliyor'
+  const h=$('bagHap'); h.className='hap '+(durum==='bekliyor'?'':durum);
+  $('bagYazi').textContent= durum==='bagli'? 'Bağlı' : durum==='kopuk'? 'Bağlantı yok' : 'Bağlanıyor';
+}
+
+function arayuzGuncelle(){
+  document.querySelectorAll('.seg').forEach(seg=>{
+    const deger=$(seg.dataset.hedef).value;
+    seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.d===deger));
+  });
+  const h264=$('format').value==='h264';
+  $('bitGrup').classList.toggle('gizli', !h264);
+  $('kaliteGrup').classList.toggle('gizli', h264);
+  $('sahne').classList.toggle('kapali', !calisiyor);
+  $('canliHap').classList.toggle('gizli', !calisiyor);
+  $('istat').classList.toggle('gizli', !calisiyor);
+  $('kayit').classList.toggle('canli', calisiyor);
+  $('v').classList.toggle('ayna', $('kamera').value==='user');
+  if(document.body.classList.contains('sayim')) kartCiz();   // MOD bu noktada henüz tanımlı olmayabilir
+}
+
+// Panel düğmeleri gizli select'leri değiştirir; 'change' olayı yayını gerekirse yeniden başlatır
+document.querySelectorAll('.seg').forEach(seg=>seg.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const s=$(seg.dataset.hedef);
+  if(s.value===b.dataset.d) return;
+  s.value=b.dataset.d; s.dispatchEvent(new Event('change'));
+  arayuzGuncelle();
+}));
+
+function panel(ac){ $('panel').classList.toggle('acik',ac); $('perde').classList.toggle('acik',ac); }
+$('ayarBtn').onclick=()=>panel(true);
+$('kapat').onclick=$('perde').onclick=()=>panel(false);
+
+function cip(etiket, deger, sinif=''){ return `<span class="cip ${sinif}"><b>${deger}</b><span class="k">${etiket}</span></span>`; }
+
+if(!H264_VAR){
+  $('format').value='jpeg';
+  document.querySelector('[data-hedef=format] [data-d=h264]').disabled=true;
+  $('formatNot').textContent='bu tarayıcıda H.264 yok';
+}
+$('adres').textContent=location.host;
+$('bAdres').textContent=location.host;
+arayuzGuncelle();
+
+
+// ================= Sayım modu (LabStock) =================
+const IKON_QR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17 21h4v-4"/></svg>';
+const IKON_X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+let MOD='kamera';
+const sayim={parca:null, konum:null, arama:null, giris:null, olcek:null, birim:null, dokunAmac:null, adet:null, sabit:false, labstock:false, yaziliyor:false};
+let resimUrl=null;
+const kac=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function modSec(m){
+  MOD=m; document.body.classList.toggle('sayim', m==='sayim');
+  document.querySelectorAll('#modSecici button').forEach(b=>b.classList.toggle('on', b.dataset.mod===m));
+  sayim.sabit=false; olayGonder({olay:'mod', mod:m});
+  if(m==='sayim' && !calisiyor) basla();
+  kartCiz();
+}
+document.querySelectorAll('#modSecici button').forEach(b=>b.onclick=()=>{ if(b.dataset.mod!==MOD) modSec(b.dataset.mod); });
+function olayGonder(o){ try{ if(ws && ws.readyState===1) ws.send(JSON.stringify(o)); }catch(_){} }
+
+function yerlestir(el, html){ if(el._html!==html){ el._html=html; el.innerHTML=html; return true; } return false; }
+
+function parcaSec(stokId){
+  olayGonder({olay:'sec', stokId}); mesaj('Parça bilgisi alınıyor…',1500);
+  sayim.arama=null; $('skAra').value=''; $('skAra').blur();
+}
+
+function kartCiz(){
+  ciplerCiz(); girisCiz();
+  const ls=`<span class="ls ${sayim.labstock?'bagli':'kopuk'}"><span class="nokta"></span>LabStock</span>`;
+  const p=sayim.parca;
+  if(p){
+    if(yerlestir($('skUst'), `<div class="sk-parca"><div class="sk-mpn">${kac(p.mpn||'Parça')}</div>
+      <div class="sk-alt">Sistemde <b>${kac(p.adet)}</b> ${kac(p.birim||'adet')}${p.konum? ' · '+kac(p.konum):''}</div></div>${ls}
+      <button class="sk-x" id="skTemizle" aria-label="Parçayı kaldır">${IKON_X}</button>`))
+      $('skTemizle').onclick=()=>{ sayim.parca=null; sayim.konum=null; olayGonder({olay:'parca_birak'}); kartCiz(); };
+  }else if(sayim.konum){
+    if(yerlestir($('skUst'), `<div class="sk-parca"><div class="sk-mpn">${kac(sayim.konum.konumAdi||'Çekmece')}</div>
+      <div class="sk-alt">Sayılacak parçayı seç</div></div>${ls}
+      <button class="sk-x" id="skTemizle" aria-label="Kapat">${IKON_X}</button>`))
+      $('skTemizle').onclick=()=>{ sayim.konum=null; kartCiz(); };
+  }else{
+    yerlestir($('skUst'), `<div class="sk-ipucu" style="flex:1">${IKON_QR}<span>QR etiketini kameraya göster ya da aşağıya parçanın adını yaz</span></div>${ls}`);
+  }
+  // Çekmecedeki parçalar listesi
+  $('skAraKutu').classList.toggle('gizli', !!(p || sayim.konum));
+  const liste=$('skListe');
+  const satir=x=>`<button data-id="${kac(x.stokId)}"><span><b>${kac(x.mpn)}</b><small>${kac([x.aciklama,x.konum].filter(Boolean).join(' · '))}</small></span><span>${kac(x.adet)}</span></button>`;
+  let lhtml=null;
+  if(!p && sayim.konum && sayim.konum.parcalar)
+    lhtml= sayim.konum.parcalar.length? sayim.konum.parcalar.map(satir).join('') : '<div class="sk-alt" style="padding:6px 2px">Bu konumda parça yok</div>';
+  else if(!p && sayim.arama)
+    lhtml= sayim.arama.parcalar.length? sayim.arama.parcalar.map(satir).join('') : '<div class="sk-alt" style="padding:6px 2px">Eşleşen parça yok</div>';
+  liste.classList.toggle('gizli', lhtml===null);
+  if(lhtml!==null && yerlestir(liste, lhtml))
+    liste.querySelectorAll('button').forEach(b=>b.onclick=()=>parcaSec(b.dataset.id));
+
+  // Sayı ve fark
+  const a=sayim.adet;
+  $('skAdet').textContent= a===null? '–' : a;
+  $('skSayi').classList.toggle('sabit', sayim.sabit);
+  $('skNot').textContent= sayim.uyari? '⚠ '+sayim.uyari : sayim.sabit? 'adet (sabit)' : a===null? 'sayılıyor' : 'adet · canlı';
+  $('skNot').style.color= sayim.uyari? 'var(--sari)' : '';
+  const f=$('skFark');
+  if(p && a!==null){
+    const d=a-Number(p.adet);
+    f.className='fark '+(d>0?'arti':d<0?'eksi':'esit'); f.textContent= d===0? 'aynı' : (d>0?'+':'')+d;
+  }else f.className='fark esit gizli';
+
+  // Düğmeler
+  const dg=$('skDugmeler');
+  if(!calisiyor){
+    if(yerlestir(dg, `<button class="ana" id="skBasla">Kamerayı başlat</button>`)) $('skBasla').onclick=basla;
+  }else if(!sayim.sabit){
+    if(yerlestir(dg, `<button class="ana" id="skSabitle" ${a===null?'disabled':''}>Sabitle</button>`))
+      $('skSabitle').onclick=()=>{ olayGonder({olay:'sabitle'}); mesaj('Tam çözünürlükte sayılıyor…',1500); };
+  }else{
+    // Yazılamıyorsa nedeni düğmenin üstünde yazsın (pasif düğme tek başına bir şey anlatmıyor)
+    // Parça seçilmemişse düğme arama kutusuna götürür; LabStock kapalıysa ya da yazılıyorsa pasif
+    const neden= !p? null : !sayim.labstock? 'Bilgisayarda LabStock açık değil' : sayim.yaziliyor? 'Yazılıyor…' : null;
+    const yazi= sayim.yaziliyor? 'Yazılıyor…' : !p? 'Parça seç' : !sayim.labstock? 'LabStock kapalı' : "LabStock'a yaz";
+    if(yerlestir(dg, `<button id="skTekrar">Tekrar</button><button class="yaz" id="skYaz" ${neden?'disabled':''}>${yazi}</button>`)){
+      $('skTekrar').onclick=()=>{ sayim.sabit=false; olayGonder({olay:'coz'}); kartCiz(); };
+      $('skYaz').onclick=()=>{
+        if(!sayim.parca){ $('skAra').focus(); mesaj('QR etiketini göster ya da parçanın adını yaz',2500); return; }
+        onayla();
+      };
+    }
+  }
+}
+
+let araZaman=null;
+$('skAra').addEventListener('input',()=>{
+  clearTimeout(araZaman);
+  const q=$('skAra').value.trim();
+  if(q.length<2){ sayim.arama=null; kartCiz(); return; }
+  araZaman=setTimeout(()=>olayGonder({olay:'ara', q}),350);
+});
+$('skAra').addEventListener('keydown',e=>{ if(e.key==='Enter') $('skAra').blur(); });
+
+function onayla(){
+  if(!sayim.parca || sayim.adet===null) return;
+  sayim.yaziliyor=true; kartCiz();
+  olayGonder({olay:'onayla', stokId:sayim.parca.stokId, adet:sayim.adet});
+}
+
+
+
+// ================= Ölçek ve parça boyu =================
+function olcekPanel(ac, bolum){
+  $('olcekPanel').classList.toggle('acik', ac); $('perde').classList.toggle('acik', ac);
+  if(bolum){ $('opOlcek').classList.toggle('gizli', bolum!=='olcek'); $('opBirim').classList.toggle('gizli', bolum!=='birim');
+    $('opBaslik').textContent= bolum==='olcek'? 'Ölçek' : 'Parça boyu'; }
+}
+$('opKapat').onclick=()=>olcekPanel(false);
+$('perde').addEventListener('click',()=>olcekPanel(false));
+function dokunmaBekle(amac, metin){
+  sayim.dokunAmac=amac; document.body.classList.add('dokunma'); olcekPanel(false); mesaj(metin, 6000); kartCiz();
+}
+function olcekSec(tip, mm, ad){
+  if(!(mm>0)){ mesaj('Geçerli bir ölçü gir',2000); return; }
+  olayGonder({olay:'olcek_baslat', tip, mm, ad});
+  dokunmaBekle('olcek', `Resimde ${ad}'ye dokun`);
+}
+document.querySelectorAll('#paralar button').forEach(b=>b.onclick=()=>olcekSec('daire', +b.dataset.mm, b.dataset.ad));
+$('opCapTamam').onclick=()=>olcekSec('daire', +$('opCap').value, `${$('opCap').value} mm referans`);
+$('opKenarTamam').onclick=()=>olcekSec('kare', +$('opKenar').value, `${$('opKenar').value} mm kare`);
+$('opOlcekSifirla').onclick=()=>{ olayGonder({olay:'olcek_sifirla'}); olcekPanel(false); };
+$('opOgret').onclick=()=>dokunmaBekle('ogret','Resimde tek duran bir parçaya dokun');
+function isaretleriTemizle(){ document.querySelectorAll('.isaret').forEach(e=>e.remove()); }
+function isaretKoy(clientX, clientY){
+  const r=$('ekran').getBoundingClientRect(), d=document.createElement('div');
+  d.className='isaret'; d.style.left=(clientX-r.left)+'px'; d.style.top=(clientY-r.top)+'px'; $('ekran').appendChild(d);
+}
+$('opBoyutTamam').onclick=()=>{
+  const en=+$('opEn').value, boy=+$('opBoy').value;
+  if(!(en>0 && boy>0)){ mesaj('En ve boyu mm olarak gir',2000); return; }
+  if(!sayim.olcek){ mesaj('Önce ölçek ayarla (madeni para vb.)',3000); return; }
+  olayGonder({olay:'birim_elle', en, boy}); olcekPanel(false);
+};
+$('opBirimSifirla').onclick=()=>{ olayGonder({olay:'birim_sifirla'}); olcekPanel(false); };
+
+// Görüntüye dokunma -> görüntü içinde 0-1 koordinat. iPhone Safari düz <img> üzerinde "click"i her zaman
+// iletmiyor; pointerup tüm görüntü alanında dinlenir. Görünen ne ise (işaretli resim ya da canlı video) ona göre hesaplanır.
+$('ekran').addEventListener('pointerup',e=>{
+  if(!sayim.dokunAmac) return;
+  const img=$('sayimResim');
+  const resimVar=img.classList.contains('var') && img.naturalWidth>0;
+  const el= resimVar? img : v;
+  const iw= resimVar? img.naturalWidth : v.videoWidth, ih= resimVar? img.naturalHeight : v.videoHeight;
+  if(!iw||!ih){ mesaj('Görüntü henüz gelmedi, biraz bekle',2500); return; }
+  const r=el.getBoundingClientRect();
+  const o=Math.min(r.width/iw, r.height/ih), gw=iw*o, gh=ih*o;
+  const x=(e.clientX-r.left-(r.width-gw)/2)/gw, y=(e.clientY-r.top-(r.height-gh)/2)/gh;
+  if(x<0||x>1||y<0||y>1){ mesaj('Görüntünün içine dokun',2000); return; }
+  e.preventDefault();
+  isaretleriTemizle(); isaretKoy(e.clientX, e.clientY); setTimeout(isaretleriTemizle, 2500);
+  olayGonder({olay:'dokun', x, y, amac:sayim.dokunAmac});
+  mesaj('Ölçülüyor…', 3000);
+  sayim.dokunAmac=null; document.body.classList.remove('dokunma'); kartCiz();
+});
+
+function ciplerCiz(){
+  const o=sayim.olcek, b=sayim.birim;
+  const olcekYazi= sayim.dokunAmac==='olcek'? 'Referansa dokun…' : o? `📏 ${kac(o.ad)}` : '📏 Ölçek yok';
+  const birimYazi= sayim.dokunAmac==='ogret'? 'Parçaya dokun…' :
+    !b? '⬚ Boyut: otomatik' : b.mm2? `⬚ ${b.mm2.toFixed(b.mm2<10?1:0)} mm²${b.kaynak==='kayitli'?' (kayıtlı)':''}` : '⬚ Boyut: bu oturum';
+  const olcekBekliyor=sayim.dokunAmac==='olcek';
+  const html=`<button class="sk-cip ${olcekBekliyor?'bekliyor':o?'ayarli':''}" id="cipOlcek">${olcekYazi}</button>`+
+    `<button class="sk-cip ${sayim.dokunAmac==='ogret'?'bekliyor':b?'ayarli':''}" id="cipBirim">${birimYazi}</button>`;
+  if(yerlestir($('skCipler'), html)){
+    $('cipOlcek').onclick=()=>olcekPanel(true,'olcek');
+    $('cipBirim').onclick=()=>olcekPanel(true,'birim');
+  }
+}
+
+// ================= Tedarikçi etiketi (LCSC) =================
+function girisCiz(){
+  const g=sayim.giris, kutu=$('skGiris');
+  kutu.classList.toggle('gizli', !g);
+  if(!g){ yerlestir(kutu,''); return; }
+  const bas=`<div class="bas">📦 <span>${kac(g.kaynak)} etiketi · <b>${kac(g.kod)}</b> · +${kac(g.adet)}</span>
+    <span style="flex:1"></span><button class="sk-x" id="girisKapat" aria-label="Kapat">${IKON_X}</button></div>
+    <div class="sk-alt" style="margin-top:2px">${kac(g.mpn||'')}</div>`;
+  let govde='';
+  if(g.yukleniyor) govde='<div class="not">LabStock\'ta aranıyor…</div>';
+  else if(!g.ok) govde=`<div class="uyar">${kac(g.hata||'Aranamadı')}</div>`;
+  else{
+    const once= g.dahaOnce? `<div class="uyar">⚠ Bu etiket ${new Date(g.dahaOnce).toLocaleString('tr-TR')} tarihinde işlenmiş</div>` : '';
+    if(g.bulunanlar.length) govde= once + '<div class="satirlar">' + g.bulunanlar.map(x=>
+      `<button class="ekle" data-id="${kac(x.stokId)}"><span>${g.dahaOnce?'Yine de ':''}+${kac(g.adet)} ekle<small>${kac(x.mpn)}${x.konum?' · '+kac(x.konum):''}</small></span><span>${kac(x.adet)} → ${kac(x.adet+g.adet)}</span></button>`).join('') + '</div>';
+    else govde= once + `<div class="not">Bu parça LabStock'ta yok.</div><div class="satirlar"><button class="ikincil" id="girisYeni">Bilgisayarda yeni parça olarak aç</button></div>`;
+  }
+  if(yerlestir(kutu, bas+govde)){
+    $('girisKapat').onclick=()=>{ sayim.giris=null; kartCiz(); };
+    kutu.querySelectorAll('button.ekle').forEach(b=>b.onclick=()=>{
+      olayGonder({olay:'giris_ekle', stokId:b.dataset.id, adet:g.adet, iz:g.iz, kaynak:`${g.kaynak} etiketi ${g.kod} ×${g.adet}`, zorla:!!g.dahaOnce});
+      sayim.giris={...g, yukleniyor:true}; kartCiz();
+    });
+    const yeni=$('girisYeni');
+    if(yeni) yeni.onclick=()=>{ olayGonder({olay:'yeni_parca', kod:g.kod, mpn:g.mpn, adet:g.adet}); mesaj('Bilgisayarda yeni parça formu açıldı',3000); sayim.giris=null; kartCiz(); };
+  }
+}
+
+// PC'den gelen sayım mesajları
+function sayimMesaji(m){
+  if(m.resim){ return; }
+  if(m.sayim){ if(!(sayim.sabit && !m.sayim.sabit)){ sayim.adet=m.sayim.adet; sayim.sabit=!!m.sayim.sabit; sayim.uyari=m.sayim.uyari||null; } }
+  if(m.qr){ if(navigator.vibrate) navigator.vibrate(30); }
+  if(m.parca){
+    if(m.parca.ok){ sayim.parca=m.parca; sayim.konum=null; mesaj(m.parca.mpn+' seçildi',1500); }
+    else mesaj(m.parca.hata||'Parça bulunamadı',3500);
+  }
+  if(m.konum){
+    if(m.konum.ok){ sayim.konum=m.konum; sayim.parca=null; }
+    else mesaj(m.konum.hata||'Konum bulunamadı',3500);
+  }
+  if(m.arama){
+    if(!m.arama.ok) mesaj(m.arama.hata||'Arama yapılamadı',3000);
+    else if(m.arama.q===$('skAra').value.trim()) sayim.arama=m.arama;
+  }
+  if(m.labstock) sayim.labstock=!!m.labstock.bagli;
+  if('olcek' in m) sayim.olcek=m.olcek;
+  if('birim' in m) sayim.birim=m.birim;
+  if(m.dokunHata) mesaj(m.dokunHata,3500);
+  if(m.bilgiMesaj) mesaj(m.bilgiMesaj,3500);
+  if(m.giris){
+    if(!sayim.giris && !m.giris.yukleniyor) mesaj('Ekledikten sonra etiketi masadan kaldır; yoksa parça diye sayılır',4000);
+    sayim.giris=m.giris; if(navigator.vibrate) navigator.vibrate(30);
+  }
+  if(m.girisSonuc){
+    const r=m.girisSonuc;
+    if(r.ok){ mesaj(`Eklendi: ${r.mpn} ${r.eski} → ${r.yeni}`,4000); sayim.giris=null; if(navigator.vibrate) navigator.vibrate([40,60,40]); }
+    else{ mesaj('Eklenemedi: '+(r.hata||''),5000); if(sayim.giris) sayim.giris={...sayim.giris, yukleniyor:false}; }
+  }
+  if(m.islendi){
+    sayim.yaziliyor=false;
+    const r=m.islendi;
+    if(r.ok){
+      mesaj(r.degisti? `LabStock'a yazıldı: ${r.eski} → ${r.yeni}` : `Sayım tuttu: ${r.yeni} (değişiklik yok)`, 4000);
+      // Yazıldı: sıradaki parça için seçimi temizle (QR göster ya da ara ekranına dön)
+      sayim.parca=null; sayim.konum=null; sayim.arama=null; $('skAra').value='';
+      sayim.sabit=false; olayGonder({olay:'coz'});
+      if(navigator.vibrate) navigator.vibrate([40,60,40]);
+    }else mesaj('LabStock: '+(r.hata||'yazılamadı'),5000);
+  }
+  if(MOD==='sayim') kartCiz();
+}
+
+function resimGeldi(buf){
+  const blob=new Blob([new Uint8Array(buf,1)],{type:'image/jpeg'});
+  const eski=resimUrl; resimUrl=URL.createObjectURL(blob);
+  const img=$('sayimResim'); img.onload=()=>{ if(eski) URL.revokeObjectURL(eski); };
+  img.src=resimUrl; img.classList.add('var');
+}
+
+// ---- WebSocket: tek kalıcı bağlantı, koparsa 1 sn sonra yeniden bağlan
+function baglan(){
+  if(!ANAHTAR){ baglantiGoster('kopuk'); $('bagYazi').textContent='Eşleşme yok';
+    mesaj("LabStock'ta Telefon kamerası'nı açıp ekrandaki QR kodu bu telefonla okut", 60000); return; }
+  ws=new WebSocket(`wss://${location.host}/ws?k=${encodeURIComponent(ANAHTAR)}`);
+  ws.binaryType='arraybuffer';
+  ws.onopen=()=>{
+    baglantiGoster('bagli'); bekleyen=[]; anahtarIste=true; yeniAkis=true;
+    pcyeYaz('bilgi', `H.264 destegi: ${H264_VAR}  ${navigator.userAgent}`);
+    olayGonder({olay:'mod', mod:MOD});
+  };
+  ws.onclose=e=>{
+    baglantiGoster('kopuk'); bekleyen=[];
+    if(e.code===4001){ $('bagYazi').textContent='Eşleşme geçersiz';
+      mesaj("Eşleşme geçersiz: LabStock'taki QR kodu yeniden okut", 60000); return; }
+    if(e.code===4002){ $('bagYazi').textContent='Başka telefon bağlı';
+      mesaj('LabStock\'a başka bir telefon bağlandı', 8000); return; }
+    setTimeout(baglan,1000);
+  };
+  ws.onmessage=e=>{
+    if(e.data instanceof ArrayBuffer){ if(new Uint8Array(e.data)[0]===0x10) resimGeldi(e.data); return; }
+    const m=JSON.parse(e.data);
+    if(m.sayim||m.qr||m.parca||m.konum||m.arama||m.labstock||m.islendi||m.giris||m.girisSonuc||('olcek' in m)||('birim' in m)||m.dokunHata||m.bilgiMesaj){ sayimMesaji(m); return; }
+    if(m.surum && m.surum!==SURUM){
+      try{ sessionStorage.setItem('otomatik', calisiyor?'1':''); }catch(_){}
+      location.reload(); return;
+    }
+    if(m.ayar){ ayarUygula(m.ayar); return; }
+    if(m.ack){ const t=bekleyen.shift(); if(t!==undefined) say.rtt.push(performance.now()-t); }
+    if(m.anahtar) anahtarIste=true;     // PC çözücüsü baştan başlamak istiyor
+    if(m.foto) mesaj(m.foto, 4000);
+  };
+}
+baglan();
+
+// PC'den gelen ayarlar (kamera, coz, format, bit, kalite, bekleyen, kaynak, dondur)
+function ayarUygula(a){
+  for(const [k,d] of Object.entries(a)){
+    if(k==='bekleyen') MAKS_BEKLEYEN[$('format').value]=+d;
+    else if(k==='kaynak'){ KAYNAK=d; kaynakBildirildi=false; anahtarIste=true; }
+    else if(k==='dondur'){ DONDUR=d; }
+    else if($(k)) $(k).value=d;
+  }
+  if('format' in a) kodlayiciKapat();
+  if(calisiyor && ('kamera' in a || 'coz' in a)) basla();
+  arayuzGuncelle();
+  mesaj('Ayar bilgisayardan değişti');
+}
+
+// ---- Kamera
+async function basla(){
+  durdur();
+  const [w,h]=$('coz').value.split('x').map(Number);
+  try{
+    akis=await navigator.mediaDevices.getUserMedia({audio:false,
+      video:{facingMode:{exact:$('kamera').value},width:{ideal:w},height:{ideal:h},frameRate:{ideal:30}}});
+  }catch(e){ mesaj('Kamera açılamadı: '+e.message, 5000); pcyeYaz('hata','Kamera açılamadı: '+e); arayuzGuncelle(); return; }
+  v.srcObject=akis; await v.play();
+  try{ kilit=await navigator.wakeLock.request('screen'); }catch(e){}
+  calisiyor=true; baslamaZamani=sonGonderim=performance.now(); arayuzGuncelle();
+  kareBekle(++nesil);
+}
+
+function durdur(){
+  calisiyor=false;
+  if(akis){ akis.getTracks().forEach(t=>t.stop()); akis=null; }
+  if(kilit){ kilit.release(); kilit=null; }
+  kodlayiciKapat();
+  arayuzGuncelle();
+}
+
+function kodlayiciKapat(){
+  if(kodlayici){ try{ kodlayici.close(); }catch(_){} }
+  kodlayici=null; kodAyar=null;
+}
+
+// Her yeni kamera karesinde çağrılır (aynı kareyi iki kez göndermemek için).
+// nesil: kamera yeniden başlatılınca eski döngü kendini bitirir.
+function kareBekle(n){
+  if(!calisiyor || n!==nesil) return;
+  const sonra=()=>kareGeldi(n);
+  if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(sonra);
+  else requestAnimationFrame(sonra);
+}
+
+function kareGeldi(n){
+  if(n!==nesil) return;
+  kareBekle(n);
+  if(!ws || ws.readyState!==1 || !v.videoWidth) return;
+  if($('format').value==='h264') h264Kare(); else jpegKare();
+}
+
+function tuvaleCiz(w,h){
+  if(c.width!==w || c.height!==h){ c.width=w; c.height=h; }
+  ctx.drawImage(v,0,0,w,h);
+}
+
+// ---- JPEG: her kare ayrı resim
+function jpegKare(){
+  if(kodluyor || bekleyen.length>=MAKS_BEKLEYEN.jpeg){ say.atlanan++; return; }
+  kodluyor=true;
+  tuvaleCiz(v.videoWidth, v.videoHeight);
+  c.toBlob(blob=>{
+    kodluyor=false;
+    if(!blob || !ws || ws.readyState!==1) return;
+    ws.send(new Blob([new Uint8Array([TIP_KARE]), blob]));
+    sonGonderim=performance.now();
+    bekleyen.push(performance.now());
+    say.gonderilen++; say.bayt+=blob.size;
+  },'image/jpeg',parseFloat($('kalite').value));
+}
+
+// ---- H.264: iPhone'un donanım video kodlayıcısı (WebCodecs)
+function bitHizi(w,h){
+  const secili=+$('bit').value;
+  if(secili) return secili*1e6;
+  return Math.min(20e6, Math.max(2e6, w*h*30*0.15));   // otomatik: ~0.15 bit/piksel
+}
+
+async function kodlayiciHazirla(w,h,bit){
+  // Yüksek profil önce (daha iyi sıkıştırır); seviye 5.1 4K'ya kadar yeter
+  const kodekler=['avc1.640033','avc1.4D0033','avc1.42E033','avc1.640028','avc1.42E028','avc1.42E01F'];
+  let secilen=null;
+  for(const codec of kodekler){
+    for(const avc of [{format:'annexb'}, undefined]){
+      const ayar={codec, width:w, height:h, bitrate:bit, framerate:30, latencyMode:'realtime'};
+      if(avc) ayar.avc=avc;
+      try{ const r=await VideoEncoder.isConfigSupported(ayar); if(r.supported){ secilen=ayar; break; } }catch(_){}
+    }
+    if(secilen) break;
+  }
+  if(!secilen) throw new Error(`${w}x${h} için uygun H.264 ayarı yok`);
+  kodlayici=new VideoEncoder({output:h264Cikti, error:e=>{ pcyeYaz('hata','Kodlayıcı: '+e); kodlayiciKapat(); }});
+  kodlayici.configure(secilen);
+  kodAyar={w,h,bit,codec:secilen.codec,annexb:!!secilen.avc};
+  avccBoy=0; spsPps=null; anahtarIste=true; yeniAkis=true; kareNo=0;
+  pcyeYaz('bilgi', `Kodlayici: ${secilen.codec} ${w}x${h} ${(bit/1e6).toFixed(1)} Mbit/s annexb=${!!secilen.avc}`);
+}
+
+function h264Kare(){
+  const zaman=Math.round(performance.now()*1000);
+  let kare=null, w, h, don=0;
+  if(KAYNAK==='video'){
+    // Video karesini doğrudan kodla (tuvale çizmekten çok daha hızlı). Kare sensör yönünde
+    // (yatay) gelebilir; o zaman döndürmeyi PC yapar.
+    try{ kare=new VideoFrame(v,{timestamp:zaman}); }
+    catch(_){ return; }              // video o an kare vermiyor (duraklama/yeniden başlama); sonraki kareyi bekle
+    w=kare.displayWidth; h=kare.displayHeight;
+    const vw=v.videoWidth, vh=v.videoHeight;
+    if(!kaynakBildirildi){ kaynakBildirildi=true;
+      pcyeYaz('bilgi',`video karesi: ${w}x${h}, ekranda ${vw}x${vh}`); }
+    if(w===vh && h===vw && w!==h) don = DONDUR!==null? DONDUR : 1;   // iPhone ham kareyi yatay verir; arka ve ön kamera için 1 doğrulandı
+    else if(w!==vw || h!==vh){
+      kare.close(); KAYNAK='tuval'; pcyeYaz('bilgi','video karesi boyutu uymuyor, tuvale donuldu'); return;
+    }
+  }else{
+    w=v.videoWidth&~1; h=v.videoHeight&~1;   // H.264 çift boyut ister
+  }
+  const bit=bitHizi(w,h);
+  if(!kodlayici || kodAyar.w!==w || kodAyar.h!==h || kodAyar.bit!==bit){
+    if(kare) kare.close();
+    if(!hazirlaniyor){
+      hazirlaniyor=true; kodlayiciKapat();
+      kodlayiciHazirla(w,h,bit)
+        .catch(e=>{ mesaj('H.264 başlamadı, JPEG kullanılıyor', 4000); pcyeYaz('hata','H.264: '+e); $('format').value='jpeg'; arayuzGuncelle(); })
+        .finally(()=>{ hazirlaniyor=false; });
+    }
+    return;
+  }
+  // Kodlayıcı ya da ağ yetişemiyorsa kareyi KODLAMADAN atla (kodlanmış kare atlanırsa görüntü bozulur)
+  if(kodlayici.encodeQueueSize>1 || bekleyen.length>=MAKS_BEKLEYEN.h264){ if(kare) kare.close(); say.atlanan++; return; }
+  if(!kare){ tuvaleCiz(w,h); kare=new VideoFrame(c,{timestamp:zaman}); }
+  sonDon=don;
+  const anahtar=anahtarIste || kareNo%ANAHTAR_ARALIK===0;
+  anahtarIste=false; kareNo++;
+  kodlayici.encode(kare,{keyFrame:anahtar});
+  kare.close();
+}
+
+// 'avc' biçimindeki (uzunluk önekli) veriyi Annex B'ye (00 00 00 01 başlangıç kodu) çevir
+function avccOku(d){
+  const b=new Uint8Array(d instanceof ArrayBuffer? d : d.buffer.slice(d.byteOffset, d.byteOffset+d.byteLength));
+  avccBoy=(b[4]&3)+1;
+  const parca=[]; let i=5;
+  for(let tur=0; tur<2; tur++){
+    const adet= tur===0? (b[i++]&0x1f) : b[i++];
+    for(let k=0;k<adet;k++){ const n=(b[i]<<8)|b[i+1]; i+=2; parca.push(b.subarray(i,i+n)); i+=n; }
+  }
+  spsPps=birlestir(parca);
+}
+function birlestir(naller){
+  let top=0; for(const n of naller) top+=4+n.length;
+  const o=new Uint8Array(top); let p=0;
+  for(const n of naller){ o.set([0,0,0,1],p); o.set(n,p+4); p+=4+n.length; }
+  return o;
+}
+function annexbYap(b, anahtar){
+  const naller=[]; let i=0;
+  while(i+avccBoy<=b.length){
+    let n=0; for(let k=0;k<avccBoy;k++) n=(n<<8)|b[i+k];
+    i+=avccBoy; naller.push(b.subarray(i,i+n)); i+=n;
+  }
+  const govde=birlestir(naller);
+  if(!anahtar || !spsPps) return govde;
+  const o=new Uint8Array(spsPps.length+govde.length); o.set(spsPps); o.set(govde,spsPps.length); return o;
+}
+
+function h264Cikti(parca, meta){
+  if(meta && meta.decoderConfig && meta.decoderConfig.description) avccOku(meta.decoderConfig.description);
+  if(!kodAyar) return;             // kodlayıcı bu arada kapatıldı
+  if(!ws || ws.readyState!==1){ anahtarIste=true; return; }
+  let b=new Uint8Array(parca.byteLength); parca.copyTo(b);
+  const anahtar=parca.type==='key';
+  if(!kodAyar.annexb || avccBoy) b=annexbYap(b, anahtar);
+  const mesajB=new Uint8Array(2+b.length);
+  mesajB[0]=TIP_H264;
+  mesajB[1]=(anahtar?1:0) | (yeniAkis?2:0) | (sonDon<<2);   // bit0 anahtar, bit1 yeni akış, bit2-3 döndürme
+  if(anahtar) yeniAkis=false;
+  mesajB.set(b,2);
+  ws.send(mesajB);
+  sonGonderim=performance.now();
+  bekleyen.push(performance.now());
+  say.gonderilen++; say.bayt+=b.length;
+}
+
+// iOS videoyu bazen duraklatır (açılır pencere, bildirim): yayındaysak hemen devam ettir
+v.addEventListener('pause',()=>{ if(calisiyor) v.play().catch(()=>{}); });
+
+// ---- Saniyede bir istatistik: ekrana yaz ve PC'ye gönder
+setInterval(()=>{
+  // Takılma koruması: bağlıyken 2.5 sn kare gitmediyse videoyu dürt, 5 sn olduysa kamerayı yeniden başlat
+  if(calisiyor && ws && ws.readyState===1){
+    const bos=performance.now()-sonGonderim;
+    if(bos>2500 && v.paused) v.play().catch(()=>{});
+    if(bos>5000 && performance.now()-baslamaZamani>5000){
+      pcyeYaz('bilgi',`akis ${Math.round(bos/1000)} sn takildi, kamera yeniden baslatiliyor`);
+      basla();
+    }
+  }
+  const sn=(performance.now()-t0)/1000; t0=performance.now();
+  const rtt=say.rtt.length? say.rtt.reduce((a,b)=>a+b)/say.rtt.length : 0;
+  const ayar=akis? akis.getVideoTracks()[0].getSettings() : null;
+  const fmt=$('format').value;
+  const ist={
+    kamera: ayar? `${ayar.width}x${ayar.height} @${Math.round(ayar.frameRate||0)}` : '-',
+    format: fmt==='h264'? (kodAyar? `H.264 ${(kodAyar.bit/1e6).toFixed(0)}M` : 'H.264 (hazirlaniyor)') : `JPEG ${$('kalite').value}`,
+    fps: +(say.gonderilen/sn).toFixed(1),
+    atlanan: +(say.atlanan/sn).toFixed(1),
+    kb: say.gonderilen? Math.round(say.bayt/say.gonderilen/1024) : 0,
+    mbps: +(say.bayt*8/sn/1e6).toFixed(1),
+    rtt: Math.round(rtt),
+    bekleyen: MAKS_BEKLEYEN[fmt],
+    kaynak: KAYNAK
+  };
+  if(calisiyor){
+    const kisa= ayar? (Math.max(ayar.width,ayar.height)>=3000? '4K' : Math.min(ayar.width,ayar.height)+'p') : '';
+    $('istat').innerHTML=
+      cip('fps', Math.round(ist.fps), ist.fps>=25?'iyi':ist.fps>=12?'orta':'kotu')+
+      cip('ms', ist.rtt, ist.rtt<=80?'iyi':ist.rtt<=200?'orta':'kotu')+
+      cip('Mbit/s', ist.mbps)+
+      cip(fmt==='h264'?'H.264':'JPEG', kisa);
+    $('bKamera').textContent=ist.kamera;
+    $('bKodlayici').textContent= fmt==='h264'? (kodAyar? `${kodAyar.codec} · ${(kodAyar.bit/1e6).toFixed(1)} Mbit/s` : 'hazırlanıyor') : `JPEG ${$('kalite').value}`;
+    $('bKare').textContent=`${ist.kb} KB`;
+    $('bAtlanan').textContent=`${ist.atlanan} /sn`;
+  }
+  if(ws && ws.readyState===1 && calisiyor) ws.send(JSON.stringify(ist));
+  say={gonderilen:0, atlanan:0, bayt:0, rtt:[]};
+},1000);
+
+// ---- Olaylar
+$('kayit').onclick=()=>{ if(calisiyor){ durdur(); mesaj('Yayın durduruldu'); } else basla(); };
+$('cevir').onclick=()=>{
+  const k=$('kamera'); k.value= k.value==='user'? 'environment' : 'user';
+  $('cevir').classList.remove('donuyor'); void $('cevir').offsetWidth; $('cevir').classList.add('donuyor');
+  k.dispatchEvent(new Event('change')); arayuzGuncelle();
+  mesaj(k.value==='user'? 'Ön kamera' : 'Arka kamera', 1200);
+};
+// Yayın sürerken kamera veya çözünürlük değişirse yeni ayarla yeniden başlat
+['kamera','coz'].forEach(id=>$(id).onchange=()=>{ if(calisiyor) basla(); });
+['bit','kalite'].forEach(id=>$(id).onchange=()=>{});   // bit hızı değişince kodlayıcı kendiliğinden yeniden kurulur
+$('format').onchange=()=>{ kodlayiciKapat(); bekleyen=[]; };
+$('foto').onchange=e=>{
+  const f=e.target.files[0]; e.target.value='';
+  if(!f) return;
+  if(!ws || ws.readyState!==1){ mesaj('Bağlantı yok, foto gönderilemedi'); return; }
+  mesaj('Foto gönderiliyor ('+(f.size/1048576).toFixed(1)+' MB)…', 8000);
+  ws.send(new Blob([new Uint8Array([TIP_FOTO]), f]));
+};
+// Sekme arka plana geçince kamerayı bırak, geri gelince devam et
+let arkadaDurdu=false;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ if(calisiyor){ arkadaDurdu=true; durdur(); } }
+  else if(arkadaDurdu){ arkadaDurdu=false; basla(); }
+});
+if(location.hash.includes('ayarlar')) panel(true);   // tasarım önizlemesi için
+if(location.hash.includes('sayim')){                 // tasarım önizlemesi için (örnek veriyle)
+  MOD='sayim'; document.body.classList.add('sayim');
+  Object.assign(sayim,{parca:{ok:true,stokId:'x',mpn:'RC0805FR-0710KL',aciklama:'10k direnç',adet:50,birim:'adet',konum:'A1 › Çekmece 3'},adet:47,sabit:true,labstock:true});
+  kartCiz();
+}
+// Sayfa sürüm güncellemesiyle yenilendiyse yayına kendiliğinden devam et
+try{ if(sessionStorage.getItem('otomatik')==='1'){ sessionStorage.removeItem('otomatik'); basla(); } }catch(_){}
+</script></body></html>

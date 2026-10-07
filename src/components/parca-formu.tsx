@@ -66,11 +66,14 @@ type Props = {
   mod?: 'ekle' | 'duzenle';
   baslangic?: ParcaBaslangic;
   donus?: string;
+  /** Yeni parça formunu önceden doldurmak için (ör. telefonla okutulan LCSC etiketi). */
+  ilkDolgu?: LinkDolgu;
+  ilkAdet?: number;
 };
 
 // linkOnizle()'dan dönen veriyle formu doldurmak için — kaydetmeden önce
 // kullanıcıya gözden geçirme fırsatı verir (bkz. linktenCekTikla).
-type LinkDolgu = {
+export type LinkDolgu = {
   mpn?: string;
   uretici?: string | null;
   aciklama?: string | null;
@@ -83,7 +86,7 @@ type LinkDolgu = {
   resim_url?: string | null;
 };
 
-export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) {
+export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu, ilkAdet }: Props) {
   const duzenle = mod === 'duzenle';
   const eylem = duzenle ? parcaGuncelle : parcaEkle;
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(eylem, {});
@@ -92,7 +95,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
   const resimGirdi = useRef<HTMLInputElement>(null);
   const linkGirdi = useRef<HTMLInputElement>(null);
 
-  const [dolgu, setDolgu] = useState<LinkDolgu | null>(null);
+  const [dolgu, setDolgu] = useState<LinkDolgu | null>(ilkDolgu ?? null);
   const [surum, setSurum] = useState(0);
   const [cekDurumu, setCekDurumu] = useState<'bos' | 'cekiliyor' | 'basarili' | 'basarisiz'>('bos');
   const [cekHatasi, setCekHatasi] = useState<string | null>(null);
@@ -390,7 +393,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
               type="number"
               min={0}
               step="any"
-              defaultValue={0}
+              defaultValue={ilkAdet ?? 0}
             />
           </div>
         )}

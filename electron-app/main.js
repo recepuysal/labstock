@@ -4,8 +4,10 @@ const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
+const { KameraSunucusu } = require('./kamera');
 
-const PORT = 4317;
+// LABSTOCK_PORT: kurulu uygulama açıkken yerel deneme sürümünü başka portta çalıştırmak için
+const PORT = Number(process.env.LABSTOCK_PORT) || 4317;
 let serverProcess;
 let mainWindow;
 
@@ -189,6 +191,28 @@ ipcMain.handle('sifre-sil', () => {
   }
 });
 
+// ---- Telefon kamerası: sunucu ana süreçte, görüntü işleme pencerede (Web Worker)
+const kamera = new KameraSunucusu({
+  ayarKlasoru: app.getPath('userData'),
+  sayfaYolu: path.join(__dirname, 'kamera', 'telefon.html'),
+  log: logYaz,
+  olay: (tur, veri) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('kamera-olay', { tur, veri });
+  },
+});
+ipcMain.handle('kamera-baslat', async () => {
+  try {
+    return { ok: true, ...(await kamera.baslat()) };
+  } catch (err) {
+    logYaz(`[kamera-hata] ${err.message}`);
+    return { ok: false, hata: err.message, ...kamera.durum() };
+  }
+});
+ipcMain.handle('kamera-durdur', () => ({ ok: true, ...kamera.durdur() }));
+ipcMain.handle('kamera-durum', () => kamera.durum());
+ipcMain.handle('kamera-anahtar-yenile', () => kamera.anahtariYenile());
+ipcMain.on('kamera-gonder', (_event, veri) => kamera.gonder(veri));
+
 app.whenReady().then(() => {
   sunucuyuBaslat();
   sunucuHazirMi(() => {
@@ -205,6 +229,7 @@ app.on('window-all-closed', () => {
 // bir sonraki açılışta tekrar giriş ekranı gelsin.
 let cikisTemizlendi = false;
 app.on('before-quit', (event) => {
+  kamera.durdur();
   if (serverProcess) {
     serverProcess.kill();
     serverProcess = null;

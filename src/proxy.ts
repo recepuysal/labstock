@@ -51,5 +51,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // kamera/: kamera sayımı Web Worker'ı ve kütüphaneleri (public/kamera) — gizli bir şey yok;
+  // oturum kontrolüne takılınca worker JS yerine giriş sayfasının HTML'ini alıp çöküyordu
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|kamera/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

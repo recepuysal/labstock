@@ -13,4 +13,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sifreKaydet: (sifre) => ipcRenderer.invoke('sifre-kaydet', sifre),
   sifreAl: () => ipcRenderer.invoke('sifre-al'),
   sifreSil: () => ipcRenderer.invoke('sifre-sil'),
+  // Telefon kamerası (bkz. kamera.js)
+  kamera: {
+    baslat: () => ipcRenderer.invoke('kamera-baslat'),
+    durdur: () => ipcRenderer.invoke('kamera-durdur'),
+    durum: () => ipcRenderer.invoke('kamera-durum'),
+    anahtariYenile: () => ipcRenderer.invoke('kamera-anahtar-yenile'),
+    gonder: (veri) => ipcRenderer.send('kamera-gonder', veri),
+    dinle: (callback) => {
+      const kanal = (_event, olay) => callback(olay);
+      ipcRenderer.on('kamera-olay', kanal);
+      return () => ipcRenderer.removeListener('kamera-olay', kanal);
+    },
+  },
 });
