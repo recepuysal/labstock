@@ -1,6 +1,6 @@
 # Privacy Policy — LabStock
 
-🇬🇧 English · 🇹🇷 [Türkçe](#gizlilik-politikası--labstock)
+English · [Türkçe](#gizlilik-politikası--labstock)
 
 _Last updated: 10 October 2026_
 
@@ -61,7 +61,7 @@ delete your account and all of its data.
 
 # Gizlilik Politikası — LabStock
 
-🇬🇧 [English](#privacy-policy--labstock) · 🇹🇷 Türkçe
+[English](#privacy-policy--labstock) · Türkçe
 
 _Son güncelleme: 10 Ekim 2026_
 

@@ -1,11 +1,8 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="labstock-a1-logo/png/yatay-2048-koyu.png">
-    <img src="labstock-a1-logo/png/yatay-1024.png" alt="LabStock" width="360">
-  </picture>
+  <img src="labstock-a1-logo/png/yatay-rozet.png" alt="LabStock" width="320">
 </p>
 
-<p align="center">🇬🇧 <b>English</b> · 🇹🇷 <a href="README.tr.md">Türkçe</a></p>
+<p align="center"><b>English</b> · <a href="README.tr.md">Türkçe</a></p>
 
 <h3 align="center">Never ask “which drawer was that resistor in?” again.</h3>
 
