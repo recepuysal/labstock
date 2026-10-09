@@ -100,8 +100,8 @@ isim, üretici, açıklama, teknik özellikler, fiyat ve görsel otomatik dolar 
 kaydetmeden önce gözden geçirip düzeltebilirsin. Direnç.net, Robotistan ve
 Motorobit için yerleşik (ücretsiz, hızlı) destek var; Ayarlar'dan kendi
 ücretsiz [Google Gemini API anahtarını](https://aistudio.google.com/apikey)
-eklersen **herhangi bir satıcı sitesinde** de çalışır. Anahtar sadece sende
-kalır; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
+eklersen **herhangi bir satıcı sitesinde** de çalışır. Anahtar sadece kendi
+hesabında saklanır, kimseyle paylaşılmaz; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
 
 <p align="center">
   <img src="docs/screenshots/linkten-cek.png" alt="Direnç.net linkinden doldurulmuş parça formu" width="820">
@@ -210,6 +210,8 @@ Bir hata mı buldun, bir özellik mi eksik? İki yolu var:
 
 - Uygulama içinden: **Ayarlar → Geri Bildirim** kartından doğrudan yaz, gönder.
 - E-posta: **labstockassistant@gmail.com**
+
+Uygulamanın hangi verileri işlediği için [gizlilik politikasına](PRIVACY.md#gizlilik-politikası--labstock) bak.
 
 ## Lisans
 

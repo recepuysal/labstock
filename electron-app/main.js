@@ -88,6 +88,9 @@ function renderereGonder(veri) {
 }
 
 function guncellemeleriKontrolEt() {
+  // Microsoft Store sürümünü Store günceller; GitHub'dan kendi kendine güncellemeye
+  // çalışmak hem gereksiz hem de MSIX paketinde yazma izni olmadığı için başarısız olur.
+  if (process.windowsStore) return;
   autoUpdater.autoDownload = false;
   // GitHub'ın sürüm listesi CDN üzerinden önbelleklenebiliyor — arka arkaya
   // sürüm çıkarınca bir öncekinin bir süre "en güncel" görünmesine yol açabilir.

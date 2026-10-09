@@ -103,8 +103,8 @@ name, manufacturer, description, specifications, price and image are filled in
 for you to review before saving. Direnç.net, Robotistan and Motorobit work out of
 the box (free and fast). Add your own free
 [Google Gemini API key](https://aistudio.google.com/apikey) in Settings and it
-works on **any shop's product page**. The key stays on your machine; usage
-counts against your own free Google quota.
+works on **any shop's product page**. The key is stored only in your own account and is never
+shared; usage counts against your own free Google quota.
 
 ### Chat assistant
 Open **Chat** from the top bar and ask about your inventory in plain language —
@@ -203,6 +203,8 @@ Found a bug, missing a feature? Two ways:
 
 - In the app: **Settings → Feedback** — write and send.
 - Email: **labstockassistant@gmail.com**
+
+See the [privacy policy](PRIVACY.md) for what data the app handles.
 
 ## License
 

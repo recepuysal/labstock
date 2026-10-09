@@ -16,3 +16,6 @@ electron-app/dist/
 # Kamera sayımı kütüphaneleri (scripts/kamera-dosyalari.js kopyalar)
 /public/kamera/opencv.js
 /public/kamera/jsQR.js
+
+# Microsoft Store (MSIX) kutucuk görselleri — electron-builder buradan okur
+!electron-app/build/

@@ -34,6 +34,19 @@
       "allowToChangeInstallationDirectory": true,
       "artifactName": "LabStock-Kurulum.${ext}",
       "shortcutName": "LabStock v${version}"
+    },
+    "appx": {
+      "identityName": "PARTNER_CENTER_PACKAGE_IDENTITY_NAME",
+      "publisher": "CN=PARTNER-CENTER-PUBLISHER-ID",
+      "publisherDisplayName": "PARTNER_CENTER_PUBLISHER_DISPLAY_NAME",
+      "applicationId": "LabStock",
+      "displayName": "LabStock",
+      "backgroundColor": "transparent",
+      "languages": [
+        "en-US",
+        "tr-TR"
+      ],
+      "artifactName": "LabStock-Store.${ext}"
     }
   },
   "dependencies": {
