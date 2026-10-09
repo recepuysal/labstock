@@ -145,9 +145,25 @@ function MesajBalonu({ mesaj, yukleniyor }: { mesaj: SohbetMesaji; yukleniyor?: 
           color: 'var(--ink)',
         }}
       >
-        {yukleniyor ? <SohbetNoktalari /> : mesaj.icerik}
+        {yukleniyor ? <SohbetNoktalari /> : kullaniciMi ? mesaj.icerik : <BicimliMetin metin={mesaj.icerik} />}
       </div>
     </div>
+  );
+}
+
+// Asistan cevaplarındaki basit markdown'ı (**kalın**, "- " maddeleri) ham işaret
+// olarak göstermek yerine biçimlendirir.
+function BicimliMetin({ metin }: { metin: string }) {
+  const satirlar = metin.split('\n').map((s) => s.replace(/^(\s*)[-*]\s+/, '$1• '));
+  return (
+    <>
+      {satirlar.map((satir, i) => (
+        <span key={i}>
+          {satir.split(/\*\*(.+?)\*\*/g).map((parca, j) => (j % 2 ? <strong key={j}>{parca}</strong> : parca))}
+          {i < satirlar.length - 1 && '\n'}
+        </span>
+      ))}
+    </>
   );
 }
 
