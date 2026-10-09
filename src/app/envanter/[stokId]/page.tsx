@@ -14,15 +14,17 @@ import { KopyalaButonu } from '@/components/kopyala-butonu';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
   agacKur,
-  DURUM_ETIKET,
+  hareketAciklamasi,
   konumSecenekleri,
   paraFormatla,
-  sayi,
-  SEBEP_ETIKET,
+  sayiBicimi,
   zamanOnce,
   type EnvanterSatiri,
   type Konum,
 } from '@/lib/types';
+import { sozluk, yerel } from '@/lib/i18n';
+import { dilAl } from '@/lib/i18n/sunucu';
+import { kategoriGoster } from '@/lib/i18n/kategori';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,6 +83,11 @@ export default async function ParcaDetaySayfasi({
   if (!satir) notFound();
   const s = satir as EnvanterSatiri;
   const donus = `/envanter/${s.stok_id}`;
+  const dil = await dilAl();
+  const sz = sozluk(dil);
+  const t = sz.parca.detay;
+  const sayi = sayiBicimi(dil);
+  const sebepler: Record<string, string> = sz.ortak.sebep;
 
   const { data: konumVerisi } = await supabase
     .from('locations')
@@ -156,13 +163,13 @@ export default async function ParcaDetaySayfasi({
 
         <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)', marginBottom: 8 }}>
           <Link href="/envanter" style={{ color: 'inherit' }}>
-            Envanter
+            {t.envanter}
           </Link>
           {s.kategori && (
             <>
               {' / '}
               <Link href={`/envanter?kategori=${encodeURIComponent(s.kategori)}`} style={{ color: 'inherit' }}>
-                {s.kategori}
+                {kategoriGoster(s.kategori, dil)}
               </Link>
             </>
           )}
@@ -176,8 +183,8 @@ export default async function ParcaDetaySayfasi({
               <h1 className="mn" style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>
                 {s.mpn}
               </h1>
-              <KopyalaButonu metin={s.mpn} baslik="Malzeme adını kopyala" boyut={15} />
-              {s.kategori && <span className="rozet rozet-notr">{s.kategori}</span>}
+              <KopyalaButonu metin={s.mpn} baslik={t.mpnKopyala} boyut={15} />
+              {s.kategori && <span className="rozet rozet-notr">{kategoriGoster(s.kategori, dil)}</span>}
               {s.kilif && (
                 <span className="rozet rozet-notr mn">
                   {s.kilif}
@@ -186,12 +193,12 @@ export default async function ParcaDetaySayfasi({
               {s.rohs === true && (
                 <span className="rozet rozet-yesil">
                   <RohsRozet boyut={12} renk="var(--ok)" />
-                  RoHS uyumlu
+                  {sz.parca.rohsUyumlu}
                 </span>
               )}
               {s.rohs === false && (
                 <span className="rozet" style={{ background: 'var(--crit-bg)', color: 'var(--crit)' }}>
-                  RoHS değil
+                  {sz.parca.rohsDegil}
                 </span>
               )}
             </div>
@@ -211,11 +218,11 @@ export default async function ParcaDetaySayfasi({
                 saltOkunur={saltOkunur}
               />
               <Link href={`/envanter/${s.stok_id}/etiket`} className="btn">
-                Etiket yazdır
+                {t.etiketYazdir}
               </Link>
               {s.datasheet_url && (
                 <a href={s.datasheet_url} target="_blank" rel="noopener noreferrer" className="btn">
-                  Datasheet
+                  {t.datasheet}
                 </a>
               )}
               {s.tedarikci === 'LCSC' && s.tedarikci_kodu && (
@@ -225,7 +232,7 @@ export default async function ParcaDetaySayfasi({
                   rel="noopener noreferrer"
                   className="btn"
                 >
-                  LCSC&apos;de gör
+                  {t.lcscdeGor}
                 </a>
               )}
               <LcscCekFormu
@@ -245,25 +252,25 @@ export default async function ParcaDetaySayfasi({
                 marginTop: 18,
               }}
             >
-              <IstatKart baslik="TOPLAM ADET">
+              <IstatKart baslik={t.toplamAdet}>
                 <span className="mn" style={{ fontSize: 22, fontWeight: 600 }}>
                   {sayi.format(s.adet)}
                 </span>
               </IstatKart>
-              <IstatKart baslik="PROJELERE AYRILAN">
+              <IstatKart baslik={t.projelereAyrilan}>
                 <span className="mn" style={{ fontSize: 22, fontWeight: 600 }}>
                   {sayi.format(ayrilan)}
                 </span>
               </IstatKart>
-              <IstatKart baslik="KULLANILABİLİR">
+              <IstatKart baslik={t.kullanilabilir}>
                 <span className="mn" style={{ fontSize: 22, fontWeight: 600 }}>
                   {sayi.format(kullanilabilir)}
                 </span>
               </IstatKart>
-              <IstatKart baslik={`MİN. SEVİYE · ${sayi.format(s.min_adet)}`} vurgu={s.durum !== 'yeterli'}>
+              <IstatKart baslik={t.minSeviye(sayi.format(s.min_adet))} vurgu={s.durum !== 'yeterli'}>
                 <span className={`pill pill-${s.durum}`}>
                   <span className="dot" />
-                  {DURUM_ETIKET[s.durum]}
+                  {sz.ortak.durum[s.durum]}
                 </span>
               </IstatKart>
             </div>
@@ -274,7 +281,7 @@ export default async function ParcaDetaySayfasi({
                   className="mn"
                   style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
                 >
-                  PARAMETRELER
+                  {t.parametreler}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 24, rowGap: 8 }}>
                   {Object.entries(s.parametreler).map(([anahtar, deger]) => (
@@ -300,44 +307,45 @@ export default async function ParcaDetaySayfasi({
                   className="mn"
                   style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)' }}
                 >
-                  HAREKET GEÇMİŞİ
+                  {t.hareketGecmisi}
                 </span>
                 {!tumu && (toplamHareket ?? 0) > HAREKET_LIMIT && (
                   <Link href={`/envanter/${s.stok_id}?tumu=1`} style={{ fontSize: 11, color: 'var(--copper)' }}>
-                    tümünü gör ({toplamHareket})
+                    {t.tumunuGor(toplamHareket ?? 0)}
                   </Link>
                 )}
               </div>
 
               {hareketler.length === 0 ? (
-                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)' }}>Henüz hareket yok.</p>
+                <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)' }}>{t.hareketYok}</p>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table className="mn" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
                       <tr style={{ textAlign: 'left', color: 'var(--muted-2)', fontSize: 10 }}>
-                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0' }}>TARIH</th>
-                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0' }}>İŞLEM</th>
-                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0', textAlign: 'right' }}>ADET</th>
-                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0' }}>SEBEP / PROJE</th>
-                        <th style={{ fontWeight: 600, padding: '0 0 8px', textAlign: 'right' }}>SONRA</th>
+                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0' }}>{t.tablo.tarih}</th>
+                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0' }}>{t.tablo.islem}</th>
+                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0', textAlign: 'right' }}>{t.tablo.adet}</th>
+                        <th style={{ fontWeight: 600, padding: '0 8px 8px 0' }}>{t.tablo.sebepProje}</th>
+                        <th style={{ fontWeight: 600, padding: '0 0 8px', textAlign: 'right' }}>{t.tablo.sonra}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {hareketler.map((h) => {
                         const artis = Number(h.delta) > 0;
                         const projeAdi = h.proje_id ? projeAdHarita.get(h.proje_id) : undefined;
-                        const sebepMetni = SEBEP_ETIKET[h.sebep] ?? h.sebep;
-                        const aciklamaParcalari = [projeAdi, h.aciklama ?? (projeAdi ? undefined : sebepMetni)].filter(
+                        const sebepMetni = sebepler[h.sebep] ?? h.sebep;
+                        const aciklamaMetni = h.aciklama != null ? hareketAciklamasi(h.aciklama, dil) : null;
+                        const aciklamaParcalari = [projeAdi, aciklamaMetni ?? (projeAdi ? undefined : sebepMetni)].filter(
                           Boolean,
                         );
                         return (
                           <tr key={h.id} style={{ borderTop: '1px solid var(--line-soft)' }}>
                             <td style={{ padding: '7px 8px 7px 0', color: 'var(--muted)' }}>
-                              {new Date(h.created_at).toLocaleDateString('tr-TR')}
+                              {new Date(h.created_at).toLocaleDateString(yerel(dil))}
                             </td>
                             <td style={{ padding: '7px 8px 7px 0', color: artis ? 'var(--ok)' : 'var(--crit)' }}>
-                              {artis ? 'Giriş' : 'Düşüldü'}
+                              {artis ? t.giris : t.dusuldu}
                             </td>
                             <td
                               style={{
@@ -406,7 +414,7 @@ export default async function ParcaDetaySayfasi({
                   className="mn"
                   style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)' }}
                 >
-                  TEDARİK
+                  {t.tedarik}
                 </div>
                 {s.tedarikci && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 12.5 }}>
@@ -418,11 +426,11 @@ export default async function ParcaDetaySayfasi({
                 )}
                 {s.alis_fiyati != null && (
                   <div style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)' }}>
-                    Son alım fiyatı:{' '}
+                    {t.sonAlimFiyati}{' '}
                     <span className="mn" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>
-                      {paraFormatla(s.alis_fiyati, s.para_birimi)}
+                      {paraFormatla(s.alis_fiyati, s.para_birimi, dil)}
                     </span>{' '}
-                    · {zamanOnce(s.updated_at)}
+                    · {zamanOnce(s.updated_at, dil)}
                   </div>
                 )}
               </div>
@@ -433,7 +441,7 @@ export default async function ParcaDetaySayfasi({
                 className="mn"
                 style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
               >
-                KULLANILDIĞI PROJELER
+                {t.kullanildigiProjeler}
               </div>
 
               {bomSatirlari.length > 0 && (
@@ -441,11 +449,11 @@ export default async function ParcaDetaySayfasi({
                   {bomSatirlari.map((b) => (
                     <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5 }}>
                       <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {projeAdHarita.get(b.proje_id) ?? 'Proje'}
+                        {projeAdHarita.get(b.proje_id) ?? t.proje}
                         {b.referans && <span style={{ color: 'var(--muted)' }}> · {b.referans}</span>}
                       </span>
                       <span className="mn" style={{ color: 'var(--muted)', flexShrink: 0, marginLeft: 8 }}>
-                        {sayi.format(Number(b.adet))} / kart
+                        {sayi.format(Number(b.adet))} {t.kartBasina}
                       </span>
                     </div>
                   ))}
@@ -454,7 +462,7 @@ export default async function ParcaDetaySayfasi({
 
               {bomSatirlari.length === 0 && (
                 <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>
-                  Henüz bir projede kullanılmıyor.
+                  {t.projedeKullanilmiyor}
                 </p>
               )}
 

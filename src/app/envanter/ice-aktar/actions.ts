@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { dosyayiAyristir } from '@/lib/ice-aktar';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export type IceAktarSonuc = {
   hata?: string;
@@ -20,33 +21,31 @@ export async function excelIceAktar(
   _onceki: IceAktarSonuc,
   formData: FormData,
 ): Promise<IceAktarSonuc> {
+  const s = (await sozlukAl()).envanter.hata;
   const dosya = formData.get('dosya');
   if (!(dosya instanceof File) || dosya.size === 0) {
-    return { hata: 'Bir dosya seç.' };
+    return { hata: s.dosyaSec };
   }
 
   let ayristirma;
   try {
     ayristirma = dosyayiAyristir(await dosya.arrayBuffer());
   } catch {
-    return { hata: 'Dosya okunamadı — geçerli bir Excel (.xlsx) ya da CSV dosyası olmalı.' };
+    return { hata: s.dosyaOkunamadi };
   }
 
   if (ayristirma.mpnBulunamadi) {
-    return {
-      hata:
-        'MPN / Parça No sütunu bulunamadı. İlk satır başlık olmalı ve bir sütun parça numarasını içermeli.',
-    };
+    return { hata: s.mpnSutunuYok };
   }
   if (ayristirma.satirlar.length === 0) {
-    return { hata: 'İçe aktarılacak (parça numarası dolu) satır bulunamadı.' };
+    return { hata: s.satirYok };
   }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: s.oturumYok };
 
   const { data: konumVerisi } = await supabase.from('locations').select('id, ad, kod').eq('user_id', user.id);
   const konumlar = konumVerisi ?? [];
@@ -148,7 +147,7 @@ export async function excelIceAktar(
       }
     } catch (e) {
       atlanan++;
-      const mesaj = e instanceof Error ? e.message : 'bilinmeyen hata';
+      const mesaj = e instanceof Error ? e.message : s.bilinmeyen;
       if (hatalar.length < 10) hatalar.push(`${satir.mpn}: ${mesaj}`);
     }
   }

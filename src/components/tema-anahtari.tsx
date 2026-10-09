@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 const ANAHTAR = 'labstock-tema';
 
 export function TemaAnahtari() {
   const [koyu, setKoyu] = useState(false);
+  const s = useSozluk().ayarlar.gorunum;
 
   useEffect(() => {
     setKoyu(document.documentElement.getAttribute('data-theme') === 'koyu');
@@ -27,9 +29,9 @@ export function TemaAnahtari() {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13 }}>
-      <span>{koyu ? 'Koyu tema' : 'Açık tema'}</span>
+      <span>{koyu ? s.koyuTema : s.acikTema}</span>
       <label className="anahtar">
-        <input type="checkbox" role="switch" checked={koyu} onChange={degistir} aria-label="Koyu tema" />
+        <input type="checkbox" role="switch" checked={koyu} onChange={degistir} aria-label={s.koyuTema} />
         <span className="parmak" />
       </label>
     </div>

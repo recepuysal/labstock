@@ -4,22 +4,25 @@ import { GuncellemeBildirimi } from '@/components/guncelleme-bildirimi';
 import { AlinacaklarBildirimi } from '@/components/alinacaklar-bildirimi';
 import { KameraIstasyonu } from '@/components/kamera-istasyonu';
 import { alinacaklarBildirimVerisiAl } from '@/lib/gozlemci';
+import { dilAl, sozlukAl } from '@/lib/i18n/sunucu';
+import { DilSaglayici } from '@/lib/i18n/istemci';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'LabStock — elektronik komponent deposu',
-  description: 'Elektronik komponent stok ve depo takibi.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await sozlukAl();
+  return { title: s.ortak.uygulamaBaslik, description: s.ortak.uygulamaAciklama };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Kök layout'ta: "alınacaklara eklendi" bildirimi uygulamanın her sayfasında
   // çalışsın diye burada - sadece /envanter/* altında olsaydı, Ayarlar gibi
   // diğer sayfalardayken bildirim kaçırılırdı.
   const bildirimVerisi = await alinacaklarBildirimVerisiAl();
+  const dil = await dilAl();
 
   return (
-    <html lang="tr">
+    <html lang={dil}>
       <head>
         {/* Tema flaşını önlemek için: sayfa boyanmadan önce kayıtlı tercihi uygula. */}
         <script
@@ -37,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
+        <DilSaglayici dil={dil}>
         {children}
         <GuncellemeBildirimi />
         {bildirimVerisi && (
@@ -48,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         {/* Telefon kamerasıyla QR okuma ve sayım (sadece masaüstü uygulamasında); izleme modunda yazma kapalı */}
         {bildirimVerisi && !bildirimVerisi.saltOkunur && <KameraIstasyonu />}
+        </DilSaglayici>
       </body>
     </html>
   );

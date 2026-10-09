@@ -12,6 +12,8 @@
 
 import type { ModulVerisi } from './direnc';
 import type { SohbetMesaji } from './gemini';
+import { sozluk, type Dil } from './i18n';
+import { dilAl } from './i18n/sunucu';
 
 const CLAUDE_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_SURUM = '2023-06-01';
@@ -29,9 +31,10 @@ function gecikme(ms: number): Promise<void> {
 
 // JSON Schema — Gemini'nin URUN_SEMASI'nın (lib/gemini.ts) Claude tool-use
 // karşılığı; aynı alanlar, aynı gerekçelerle (parametreler açık uçlu obje
-// yerine {etiket, deger} dizisi).
-const URUN_ARACI = {
-  name: 'urun_bilgisi_kaydet',
+// yerine {etiket, deger} dizisi). Okunabilir alanlar arayüz dilinde istenir.
+const URUN_ARACI_ADI = 'urun_bilgisi_kaydet';
+const urunAraci = (dil: Dil) => ({
+  name: URUN_ARACI_ADI,
   description: 'Sayfadan çıkarılan ürün bilgisini verilen şemaya göre kaydeder.',
   input_schema: {
     type: 'object' as const,
@@ -41,7 +44,7 @@ const URUN_ARACI = {
       aciklama: {
         type: 'string',
         description:
-          'Ürünle ilgili kısa, tek cümlelik Türkçe bir özet (teknik özellikleri tekrar etme, onlar ayrı alanda).',
+          `Ürünle ilgili kısa, tek cümlelik ${dil === 'tr' ? 'Türkçe' : 'İngilizce'} bir özet (teknik özellikleri tekrar etme, onlar ayrı alanda).`,
       },
       parametreler: {
         type: 'array',
@@ -49,7 +52,10 @@ const URUN_ARACI = {
         items: {
           type: 'object',
           properties: {
-            etiket: { type: 'string', description: 'Ör. "Çalışma Gerilimi", "Boyut".' },
+            etiket: {
+              type: 'string',
+              description: dil === 'tr' ? 'Ör. "Çalışma Gerilimi", "Boyut".' : 'İngilizce; ör. "Operating Voltage", "Size".',
+            },
             deger: { type: 'string', description: 'Ör. "5V", "43mm x 21mm".' },
           },
           required: ['etiket', 'deger'],
@@ -60,7 +66,7 @@ const URUN_ARACI = {
     },
     required: ['isim', 'aciklama', 'parametreler', 'paraBirimi'],
   },
-};
+});
 
 /** <meta property="..." content="..."> içeriğini bulur (bkz. lib/gemini.ts — aynı mantık). */
 function metaIcerikBul(html: string, ozellikAdi: string, ozellikDegeri: string): string | null {
@@ -106,7 +112,7 @@ type ClaudeIstek = {
   max_tokens: number;
   system?: string;
   messages: { role: 'user' | 'assistant'; content: string }[];
-  tools?: (typeof URUN_ARACI)[];
+  tools?: ReturnType<typeof urunAraci>[];
   tool_choice?: { type: 'tool'; name: string };
 };
 
@@ -122,7 +128,7 @@ async function claudeCagir(apiKey: string, govde: ClaudeIstek): Promise<Response
   });
 }
 
-async function claudeHataMesaji(yanit: Response): Promise<string> {
+async function claudeHataMesaji(yanit: Response, dil: Dil): Promise<string> {
   const govde = await yanit.text();
   try {
     const ayristirilmis = JSON.parse(govde);
@@ -130,7 +136,7 @@ async function claudeHataMesaji(yanit: Response): Promise<string> {
   } catch {
     // düz metin/boş gövde olabilir, aşağıdaki genel mesaj kullanılır
   }
-  return `Yapay zeka isteği başarısız (HTTP ${yanit.status}).`;
+  return sozluk(dil).parca.ai.istekBasarisizHttp(yanit.status);
 }
 
 type ClaudeSonuc = { basarili: true; govde: unknown } | { basarili: false; hata: string };
@@ -138,13 +144,13 @@ type ClaudeSonuc = { basarili: true; govde: unknown } | { basarili: false; hata:
 /** 529 (Anthropic tarafı o an aşırı yüklü) ya da 429 (kota) durumunda kısa
  * aralıklarla birkaç kez daha dener; kalıcı bir hatada (ör. geçersiz anahtar,
  * 401/403) hemen döner — çağıran taraf (lib/ai.ts) sıradaki anahtara geçer. */
-async function claudeCagirYenidenDeneyerek(apiKey: string, govde: ClaudeIstek): Promise<ClaudeSonuc> {
-  let sonHata = 'Yapay zeka isteğine yanıt alınamadı.';
+async function claudeCagirYenidenDeneyerek(apiKey: string, govde: ClaudeIstek, dil: Dil): Promise<ClaudeSonuc> {
+  let sonHata = sozluk(dil).parca.ai.yanitAlinamadi;
   for (let deneme = 0; ; deneme++) {
     const yanit = await claudeCagir(apiKey, govde);
     if (yanit.ok) return { basarili: true, govde: await yanit.json() };
 
-    sonHata = await claudeHataMesaji(yanit);
+    sonHata = await claudeHataMesaji(yanit, dil);
     if ((yanit.status === 529 || yanit.status === 429) && deneme < AZAMI_YUKLENME_DENEMESI) {
       await gecikme(DENEME_GECIKMESI_MS[deneme]);
       continue;
@@ -154,20 +160,20 @@ async function claudeCagirYenidenDeneyerek(apiKey: string, govde: ClaudeIstek): 
 }
 
 /** messages.create yanıtından metni ya da (tool-use varsa) aracın girdisini çıkarır. */
-function metinBlogunuCikar(govde: unknown): string {
+function metinBlogunuCikar(govde: unknown, dil: Dil): string {
   type SanalGovde = { content?: { type?: string; text?: unknown }[] };
   const bloklar = (govde as SanalGovde).content ?? [];
   const metinBlogu = bloklar.find((b) => b.type === 'text');
   if (typeof metinBlogu?.text === 'string') return metinBlogu.text;
-  throw new Error(`Yapay zekadan beklenmeyen bir yanıt geldi: ${JSON.stringify(govde).slice(0, 400)}`);
+  throw new Error(sozluk(dil).parca.ai.beklenmeyenYanit(JSON.stringify(govde).slice(0, 400)));
 }
 
-function araçGirdisiniCikar(govde: unknown): Record<string, unknown> {
+function araçGirdisiniCikar(govde: unknown, dil: Dil): Record<string, unknown> {
   type SanalGovde = { content?: { type?: string; input?: unknown }[] };
   const bloklar = (govde as SanalGovde).content ?? [];
   const aracBlogu = bloklar.find((b) => b.type === 'tool_use');
   if (aracBlogu?.input && typeof aracBlogu.input === 'object') return aracBlogu.input as Record<string, unknown>;
-  throw new Error(`Yapay zekadan beklenmeyen bir yanıt geldi: ${JSON.stringify(govde).slice(0, 400)}`);
+  throw new Error(sozluk(dil).parca.ai.beklenmeyenYanit(JSON.stringify(govde).slice(0, 400)));
 }
 
 /** Ayarlar'da "Kaydet" denince anahtarın gerçekten çalışıp çalışmadığını
@@ -175,46 +181,66 @@ function araçGirdisiniCikar(govde: unknown): Record<string, unknown> {
  * hata mesajını da döner — "anahtar doğrulanamadı" gibi genel bir mesaj
  * arkasında sebep (geçersiz anahtar/model/kota) gizlenip kullanıcı ne
  * yapacağını bilemesin diye. */
-export async function claudeApiAnahtariniDogrula(apiKey: string): Promise<{ gecerli: boolean; hata?: string }> {
+export async function claudeApiAnahtariniDogrula(
+  apiKey: string,
+  dil?: Dil,
+): Promise<{ gecerli: boolean; hata?: string }> {
+  const d = dil ?? (await dilAl());
   try {
-    const sonuc = await claudeCagirYenidenDeneyerek(apiKey, {
-      model: CLAUDE_MODEL,
-      max_tokens: 8,
-      messages: [{ role: 'user', content: 'Sadece "tamam" yaz.' }],
-    });
+    const sonuc = await claudeCagirYenidenDeneyerek(
+      apiKey,
+      {
+        model: CLAUDE_MODEL,
+        max_tokens: 8,
+        messages: [{ role: 'user', content: 'Sadece "tamam" yaz.' }],
+      },
+      d,
+    );
     if (sonuc.basarili) return { gecerli: true };
     console.error('claudeApiAnahtariniDogrula:', sonuc.hata);
     return { gecerli: false, hata: sonuc.hata };
   } catch (err) {
     console.error('claudeApiAnahtariniDogrula:', err);
-    return { gecerli: false, hata: err instanceof Error ? err.message : 'bilinmeyen hata' };
+    return { gecerli: false, hata: err instanceof Error ? err.message : sozluk(d).parca.ai.bilinmeyenHata };
   }
 }
 
-export async function claudeIleUrunCek(apiKey: string, sayfaUrl: string, html: string): Promise<ModulVerisi> {
+export async function claudeIleUrunCek(
+  apiKey: string,
+  sayfaUrl: string,
+  html: string,
+  dil?: Dil,
+): Promise<ModulVerisi> {
+  const d = dil ?? (await dilAl());
+  const s = sozluk(d).parca.ai;
   const metin = htmlMetneDonustur(html);
-  if (!metin) throw new Error('Sayfadan okunabilir bir metin çıkarılamadı.');
+  if (!metin) throw new Error(s.metinYok);
 
   const yonerge =
     `Aşağıda bir e-ticaret sitesindeki ürün sayfasının (${sayfaUrl}) metni var. ` +
     'Bu genelde bir elektronik/hobi/robotik malzemesi (sensör, geliştirme kartı, modül, komponent vb.). ' +
     'Sayfadan ürün bilgilerini çıkarıp urun_bilgisi_kaydet aracını çağır. ' +
     "Emin olmadığın ya da sayfada bulunmayan alanları boş bırak, asla uydurma.\n\n" +
+    (d === 'tr' ? '' : 'Okunabilir metin alanlarını (aciklama, parametre etiketleri) İNGİLİZCE yaz.\n\n') +
     `SAYFA METNİ:\n${metin}`;
 
-  const sonuc = await claudeCagirYenidenDeneyerek(apiKey, {
-    model: CLAUDE_MODEL,
-    max_tokens: AZAMI_TOKEN,
-    messages: [{ role: 'user', content: yonerge }],
-    tools: [URUN_ARACI],
-    tool_choice: { type: 'tool', name: URUN_ARACI.name },
-  });
+  const sonuc = await claudeCagirYenidenDeneyerek(
+    apiKey,
+    {
+      model: CLAUDE_MODEL,
+      max_tokens: AZAMI_TOKEN,
+      messages: [{ role: 'user', content: yonerge }],
+      tools: [urunAraci(d)],
+      tool_choice: { type: 'tool', name: URUN_ARACI_ADI },
+    },
+    d,
+  );
   if (!sonuc.basarili) throw new Error(sonuc.hata);
 
-  const ayristirilmis = araçGirdisiniCikar(sonuc.govde);
+  const ayristirilmis = araçGirdisiniCikar(sonuc.govde, d);
 
   const isim = typeof ayristirilmis.isim === 'string' ? ayristirilmis.isim.trim() : '';
-  if (!isim) throw new Error('Sayfadan ürün bilgisi çıkarılamadı.');
+  if (!isim) throw new Error(s.urunYok);
 
   const parametreler: Record<string, string> = {};
   const hamParametreler = ayristirilmis.parametreler;
@@ -257,7 +283,13 @@ export async function claudeIleUrunCek(apiKey: string, sayfaUrl: string, html: s
 
 /** LCSC gibi tedarikçi sitelerinden gelen ham açıklamayı kısa ve doğal bir
  * Türkçe açıklamaya çevirir/düzenler (bkz. lib/gemini.ts — aynı amaç). */
-export async function claudeIleAciklamaCevir(apiKey: string, hamAciklama: string, baglam?: string): Promise<string> {
+export async function claudeIleAciklamaCevir(
+  apiKey: string,
+  hamAciklama: string,
+  baglam?: string,
+  dil?: Dil,
+): Promise<string> {
+  const d = dil ?? (await dilAl());
   const yonerge =
     'Aşağıda bir elektronik parçanın tedarikçi sitesinden alınmış ham açıklaması var ' +
     '(genelde İngilizce/Çince karışık, kötü yazılmış ya da makine çevirisi kalitesinde). ' +
@@ -266,13 +298,17 @@ export async function claudeIleAciklamaCevir(apiKey: string, hamAciklama: string
     'Sadece açıklama metnini yaz - tırnak işareti, "Açıklama:" gibi bir etiket ya da başka hiçbir ek metin kullanma.\n\n' +
     `HAM AÇIKLAMA:\n${hamAciklama}`;
 
-  const sonuc = await claudeCagirYenidenDeneyerek(apiKey, {
-    model: CLAUDE_MODEL,
-    max_tokens: AZAMI_TOKEN,
-    messages: [{ role: 'user', content: yonerge }],
-  });
+  const sonuc = await claudeCagirYenidenDeneyerek(
+    apiKey,
+    {
+      model: CLAUDE_MODEL,
+      max_tokens: AZAMI_TOKEN,
+      messages: [{ role: 'user', content: yonerge }],
+    },
+    d,
+  );
   if (!sonuc.basarili) throw new Error(sonuc.hata);
-  return metinBlogunuCikar(sonuc.govde).trim();
+  return metinBlogunuCikar(sonuc.govde, d).trim();
 }
 
 /** Envanter asistanı sohbeti (bkz. lib/gemini.ts geminiSohbetCevapla — aynı amaç). */
@@ -280,16 +316,22 @@ export async function claudeSohbetCevapla(
   apiKey: string,
   sistemYonergesi: string,
   mesajlar: SohbetMesaji[],
+  dil?: Dil,
 ): Promise<string> {
-  const sonuc = await claudeCagirYenidenDeneyerek(apiKey, {
-    model: CLAUDE_MODEL,
-    max_tokens: AZAMI_TOKEN,
-    system: sistemYonergesi,
-    messages: mesajlar.map((m) => ({
-      role: m.rol === 'kullanici' ? 'user' : 'assistant',
-      content: m.icerik,
-    })),
-  });
+  const d = dil ?? (await dilAl());
+  const sonuc = await claudeCagirYenidenDeneyerek(
+    apiKey,
+    {
+      model: CLAUDE_MODEL,
+      max_tokens: AZAMI_TOKEN,
+      system: sistemYonergesi,
+      messages: mesajlar.map((m) => ({
+        role: m.rol === 'kullanici' ? 'user' : 'assistant',
+        content: m.icerik,
+      })),
+    },
+    d,
+  );
   if (!sonuc.basarili) throw new Error(sonuc.hata);
-  return metinBlogunuCikar(sonuc.govde).trim();
+  return metinBlogunuCikar(sonuc.govde, d).trim();
 }

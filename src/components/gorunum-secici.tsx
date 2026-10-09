@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { gorunumuDegistir } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function GorunumSecici({
   izleniyor,
@@ -11,6 +12,7 @@ export function GorunumSecici({
   izleniyor: boolean;
   izlenenAdi: string;
 }) {
+  const s = useSozluk().envanter.gorunum;
   const [bekliyor, basla] = useTransition();
   const router = useRouter();
 
@@ -47,10 +49,10 @@ export function GorunumSecici({
         borderRadius: 'var(--r)',
         opacity: bekliyor ? 0.6 : 1,
       }}
-      title="Görüntülenen depo"
+      title={s.baslik}
     >
       <button type="button" style={pil(!izleniyor)} disabled={bekliyor} onClick={() => degistir('kendi')}>
-        Benim Depom
+        {s.benimDepom}
       </button>
       <button type="button" style={pil(izleniyor)} disabled={bekliyor} onClick={() => degistir('gozlemci')}>
         {izlenenAdi}

@@ -5,16 +5,18 @@ import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ALINACAK_DURUMLAR, type AlinacakDurumu } from '@/lib/types';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
-function alanlariOku(
+async function alanlariOku(
   formData: FormData,
-): { malzemeAdi: string; adet: number; notMetni: string | null; link: string | null } | { hata: string } {
+): Promise<{ malzemeAdi: string; adet: number; notMetni: string | null; link: string | null } | { hata: string }> {
+  const s = (await sozlukAl()).envanter.hata;
   const malzemeAdi = String(formData.get('malzeme_adi') ?? '').trim();
-  if (!malzemeAdi) return { hata: 'Malzeme adı gerekli.' };
+  if (!malzemeAdi) return { hata: s.malzemeAdiGerekli };
 
   const adetHam = String(formData.get('adet') ?? '').trim();
   const adet = adetHam ? Number(adetHam) : 1;
-  if (!Number.isFinite(adet) || adet <= 0) return { hata: 'Adet geçersiz.' };
+  if (!Number.isFinite(adet) || adet <= 0) return { hata: s.adetGecersiz };
 
   const notMetni = String(formData.get('not_metni') ?? '').trim() || null;
   const link = String(formData.get('link') ?? '').trim() || null;
@@ -28,14 +30,15 @@ function durumOku(formData: FormData): AlinacakDurumu {
 }
 
 export async function alinacakEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
-  const alanlar = alanlariOku(formData);
+  const s = (await sozlukAl()).envanter;
+  const alanlar = await alanlariOku(formData);
   if ('hata' in alanlar) return alanlar;
 
   // user_id'yi açıkça hedefe yazıyoruz — bir gözlemci izlediği depoya
   // eklerken varsayılan auth.uid() kendi hesabına düşer, kayıt yanlışlıkla
   // gözlemcinin kendi listesine gider.
   const aktif = await aktifGorunumAl();
-  if (!aktif) return { hata: 'Oturum bulunamadı.' };
+  if (!aktif) return { hata: s.hata.oturumYok };
 
   const supabase = await createClient();
   const { error } = await supabase.from('alinacaklar').insert({
@@ -48,14 +51,15 @@ export async function alinacakEkle(_onceki: EylemDurum, formData: FormData): Pro
   if (error) return { hata: error.message };
 
   revalidatePath('/envanter/alinacaklar');
-  return { bilgi: 'Eklendi.' };
+  return { bilgi: s.bilgi.eklendi };
 }
 
 export async function alinacakGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const s = (await sozlukAl()).envanter;
   const id = String(formData.get('id') ?? '');
-  if (!id) return { hata: 'Geçersiz kayıt.' };
+  if (!id) return { hata: s.hata.gecersizKayit };
 
-  const alanlar = alanlariOku(formData);
+  const alanlar = await alanlariOku(formData);
   if ('hata' in alanlar) return alanlar;
 
   const supabase = await createClient();
@@ -72,7 +76,7 @@ export async function alinacakGuncelle(_onceki: EylemDurum, formData: FormData):
   if (error) return { hata: error.message };
 
   revalidatePath('/envanter/alinacaklar');
-  return { bilgi: 'Güncellendi.' };
+  return { bilgi: s.bilgi.guncellendi };
 }
 
 export async function alinacakDurumDegistir(id: string, durum: AlinacakDurumu): Promise<void> {

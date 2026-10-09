@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { konumDegistir } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function KonumDegistirFormu({
   stokId,
@@ -15,6 +16,8 @@ export function KonumDegistirFormu({
   konumlar: { id: string; etiket: string }[];
   saltOkunur?: boolean;
 }) {
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.konumDegistir;
   const [acik, setAcik] = useState(false);
   const [secili, setSecili] = useState(konumId ?? '');
   const [hata, setHata] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function KonumDegistirFormu({
   return (
     <div style={{ position: 'relative', display: 'inline-flex' }}>
       <button type="button" className="btn" disabled={saltOkunur} onClick={() => setAcik((a) => !a)}>
-        Konum değiştir
+        {s.buton}
       </button>
 
       {acik && (
@@ -71,7 +74,7 @@ export function KonumDegistirFormu({
             onChange={(e) => setSecili(e.target.value)}
             autoFocus
           >
-            <option value="">konumsuz</option>
+            <option value="">{s.konumsuz}</option>
             {konumlar.map((k) => (
               <option key={k.id} value={k.id}>
                 {k.etiket}
@@ -79,10 +82,10 @@ export function KonumDegistirFormu({
             ))}
           </select>
           <button type="button" className="btn btn-birincil" disabled={bekliyor} onClick={kaydet}>
-            {bekliyor ? 'Kaydediliyor…' : 'Kaydet'}
+            {bekliyor ? sozlukler.ortak.buton.kaydediliyor : sozlukler.ortak.buton.kaydet}
           </button>
           <button type="button" className="btn" onClick={kapat} disabled={bekliyor}>
-            Vazgeç
+            {sozlukler.envanter.vazgec}
           </button>
           {hata && <span style={{ fontSize: 11.5, color: 'var(--crit)' }}>{hata}</span>}
         </div>

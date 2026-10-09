@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { haftalikYedekAyarlariniKaydet } from '@/app/ayarlar/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function HaftalikYedekFormu({
   baslangicAktif,
@@ -15,6 +16,8 @@ export function HaftalikYedekFormu({
 }) {
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(haftalikYedekAyarlariniKaydet, {});
   const [aktif, setAktif] = useState(baslangicAktif);
+  const so = useSozluk();
+  const s = so.ayarlar.yedek;
 
   return (
     <div className="kart" style={{ padding: 20, marginTop: 16 }}>
@@ -22,12 +25,10 @@ export function HaftalikYedekFormu({
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}
       >
-        HAFTALIK YEDEK E-POSTASI
+        {s.baslik}
       </div>
       <p style={{ margin: '0 0 14px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-        Açarsan her Pazartesi sabahı envanterinin bir özetini (kritik/az stoklu kalemler, tahmini
-        toplam değer) ve tam listeyi CSV eki olarak e-posta ile alırsın — hem bilgilendirme hem
-        yedek amaçlı.
+        {s.aciklama}
       </p>
 
       <form action={gonder} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -39,13 +40,13 @@ export function HaftalikYedekFormu({
             onChange={(e) => setAktif(e.target.checked)}
             style={{ width: 16, height: 16 }}
           />
-          Haftalık özet + yedek e-postası gönder
+          {s.gonder}
         </label>
 
         {aktif && (
           <div>
             <label className="etiket" htmlFor="eposta">
-              Gönderilecek adres (boş bırakırsan {girisEpostasi ?? 'giriş e-postan'} kullanılır)
+              {s.adres(girisEpostasi ?? s.girisEpostan)}
             </label>
             <input
               className="alan mn"
@@ -53,7 +54,7 @@ export function HaftalikYedekFormu({
               name="eposta"
               type="email"
               defaultValue={baslangicEposta ?? ''}
-              placeholder={girisEpostasi ?? 'ornek@eposta.com'}
+              placeholder={girisEpostasi ?? so.ayarlar.auth.epostaIpucu}
               style={{ maxWidth: 320 }}
             />
           </div>
@@ -61,7 +62,7 @@ export function HaftalikYedekFormu({
 
         <div>
           <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-            {bekliyor ? 'Kaydediliyor…' : 'Kaydet'}
+            {bekliyor ? so.ortak.buton.kaydediliyor : so.ortak.buton.kaydet}
           </button>
         </div>
       </form>

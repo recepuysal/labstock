@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function AlinacakSatirMenu({
   malzemeAdi,
@@ -12,6 +13,8 @@ export function AlinacakSatirMenu({
   onDuzenle: () => void;
   onSil: () => void;
 }) {
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.alinacaklar;
   const [acik, setAcik] = useState(false);
   const dugmeRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,7 +44,7 @@ export function AlinacakSatirMenu({
 
   function sil() {
     setAcik(false);
-    if (!window.confirm(`"${malzemeAdi}" listeden silinsin mi?`)) return;
+    if (!window.confirm(s.silOnay(malzemeAdi))) return;
     onSil();
   }
 
@@ -66,7 +69,7 @@ export function AlinacakSatirMenu({
           e.stopPropagation();
           setAcik((a) => !a);
         }}
-        aria-label="Satır işlemleri"
+        aria-label={s.satirIslemleri}
         aria-haspopup="menu"
         aria-expanded={acik}
         style={{
@@ -117,7 +120,7 @@ export function AlinacakSatirMenu({
               }}
               style={{ ...menuOge, color: 'var(--ink-2)' }}
             >
-              Düzenle
+              {sozlukler.ortak.buton.duzenle}
             </button>
             <button
               type="button"
@@ -125,7 +128,7 @@ export function AlinacakSatirMenu({
               onClick={sil}
               style={{ ...menuOge, color: 'var(--crit)', borderTop: '1px solid var(--line-soft)' }}
             >
-              Sil
+              {sozlukler.ortak.buton.sil}
             </button>
           </div>,
           document.body,

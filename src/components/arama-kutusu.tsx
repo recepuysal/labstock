@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { LSTK_DESENI } from '@/lib/etiket';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function AramaKutusu() {
+  const s = useSozluk().envanter.arama;
   const searchParams = useSearchParams();
   const q = searchParams.get('q') ?? '';
 
@@ -113,7 +115,7 @@ export function AramaKutusu() {
         value={deger}
         onChange={degisti}
         onKeyDown={tusaBasildi}
-        placeholder="Parça, MPN, açıklama ara…"
+        placeholder={s.yerTutucu}
         style={{
           flex: 1,
           minWidth: 0,

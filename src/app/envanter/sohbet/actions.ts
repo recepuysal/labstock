@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { aiSohbetCevapla, type SohbetMesaji } from '@/lib/ai';
 import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
+import { sozluk, type Dil } from '@/lib/i18n';
+import { dilAl } from '@/lib/i18n/sunucu';
 
 export type { SohbetMesaji };
 export type SohbetSonucu = { hata?: string; cevap?: string };
@@ -44,7 +46,8 @@ function envanterMetniOlustur(satirlar: EnvanterSatiriHam[]): string {
     .join('\n');
 }
 
-function sistemYonergesiOlustur(envanterMetni: string, parcaSayisi: number, kirpildiMi: boolean): string {
+/** Asistan, kullanıcının arayüz dilinde cevap verir (envanter verisi — ör. kategori adları — Türkçe kalabilir). */
+function sistemYonergesiOlustur(envanterMetni: string, parcaSayisi: number, kirpildiMi: boolean, dil: Dil): string {
   return [
     'Sen LabStock adlı elektronik parça envanteri uygulamasının içindeki bir asistansın.',
     'Kullanıcının depo/parça sorularını SADECE aşağıda verilen gerçek envanter listesine dayanarak yanıtla.',
@@ -52,7 +55,9 @@ function sistemYonergesiOlustur(envanterMetni: string, parcaSayisi: number, kirp
     '- İstenen parça listede yoksa açıkça "yok" de; ama işlevsel olarak yerini tutabilecek başka bir parça listedeyse onu öner ve neden uygun olabileceğini kısaca açıkla.',
     '- Envanterde olmayan bir bilgiyi asla uydurma.',
     '- Adet/konum sorulursa listedeki değerleri birebir kullan.',
-    '- Kısa, net ve Türkçe cevap ver; gereksiz uzatma, madde madde yazman gerekmiyorsa düz cümle kullan.',
+    dil === 'tr'
+      ? '- Kısa, net ve Türkçe cevap ver; gereksiz uzatma, madde madde yazman gerekmiyorsa düz cümle kullan.'
+      : '- Kısa, net ve İNGİLİZCE (English) cevap ver; gereksiz uzatma, madde madde yazman gerekmiyorsa düz cümle kullan. Envanterdeki kategori adları Türkçe olabilir; cevapta bunları İngilizce karşılıklarıyla an.',
     '',
     `ENVANTER (${parcaSayisi} kalem${kirpildiMi ? ', çok büyük olduğu için ilk ' + AZAMI_PARCA_SAYISI + ' tanesi gösteriliyor' : ''}) — format: parça | üretici | kategori | kılıf | adet birim | konum | açıklama | özellikler`,
     envanterMetni || '(envanter şu an boş)',
@@ -64,6 +69,8 @@ const AZAMI_GECMIS = 20;
 const AZAMI_MESAJ_UZUNLUGU = 4000;
 
 export async function sohbetSor(gelen: SohbetMesaji[]): Promise<SohbetSonucu> {
+  const dil = await dilAl();
+  const s = sozluk(dil).parca.sohbet;
   // İstemciden geleni doğrula ve kırp: rol/metin dışında bir şey taşınmasın, geçmiş sınırlı kalsın
   let mesajlar: SohbetMesaji[] = (Array.isArray(gelen) ? gelen : [])
     .slice(-AZAMI_GECMIS)
@@ -74,23 +81,23 @@ export async function sohbetSor(gelen: SohbetMesaji[]): Promise<SohbetSonucu> {
     .filter((m) => m.icerik.trim());
   // Modeller konuşmanın kullanıcı mesajıyla başlamasını bekler
   while (mesajlar.length && mesajlar[0].rol !== 'kullanici') mesajlar = mesajlar.slice(1);
-  if (mesajlar.length === 0) return { hata: 'Boş mesaj.' };
+  if (mesajlar.length === 0) return { hata: s.bosMesaj };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: s.oturumYok };
 
   const anahtarlar = await aiAnahtarlariGetir(supabase, user.id);
   if (anahtarlar.length === 0) {
     return {
-      hata: 'Sohbet için önce Ayarlar sayfasından ücretsiz bir Gemini ya da Claude API anahtarı ekle.',
+      hata: s.anahtarYok,
     };
   }
 
   const aktif = await aktifGorunumAl();
-  if (!aktif) return { hata: 'Oturum bulunamadı.' };
+  if (!aktif) return { hata: s.oturumYok };
 
   const { data: envanterVerisi, error: envanterHatasi } = await supabase
     .from('envanter')
@@ -105,13 +112,13 @@ export async function sohbetSor(gelen: SohbetMesaji[]): Promise<SohbetSonucu> {
   const kirpildiMi = tumSatirlar.length > AZAMI_PARCA_SAYISI;
   const satirlar = kirpildiMi ? tumSatirlar.slice(0, AZAMI_PARCA_SAYISI) : tumSatirlar;
 
-  const sistemYonergesi = sistemYonergesiOlustur(envanterMetniOlustur(satirlar), satirlar.length, kirpildiMi);
+  const sistemYonergesi = sistemYonergesiOlustur(envanterMetniOlustur(satirlar), satirlar.length, kirpildiMi, dil);
 
   try {
-    const cevap = await aiSohbetCevapla(anahtarlar, sistemYonergesi, mesajlar);
+    const cevap = await aiSohbetCevapla(anahtarlar, sistemYonergesi, mesajlar, dil);
     return { cevap };
   } catch (err) {
     console.error('sohbetSor:', err);
-    return { hata: err instanceof Error ? err.message : 'Cevap alınamadı.' };
+    return { hata: err instanceof Error ? err.message : s.cevapAlinamadi };
   }
 }

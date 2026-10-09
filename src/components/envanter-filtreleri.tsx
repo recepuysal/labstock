@@ -1,14 +1,16 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { DURUM_ETIKET } from '@/lib/types';
+import { DURUM_ETIKET, durumEtiketi, type Durum } from '@/lib/types';
+import { kategoriGoster } from '@/lib/i18n/kategori';
+import { useDil, useSozluk } from '@/lib/i18n/istemci';
 
 const SIRALAMALAR = [
-  { deger: 'yeni', etiket: 'En son güncellenen' },
-  { deger: 'eski', etiket: 'En eski güncellenen' },
-  { deger: 'ad', etiket: 'Ada göre (A-Z)' },
-  { deger: 'adet-azalan', etiket: 'Adet (çoktan aza)' },
-  { deger: 'adet-artan', etiket: 'Adet (azdan çoka)' },
+  { deger: 'yeni', anahtar: 'yeni' },
+  { deger: 'eski', anahtar: 'eski' },
+  { deger: 'ad', anahtar: 'ad' },
+  { deger: 'adet-azalan', anahtar: 'adetAzalan' },
+  { deger: 'adet-artan', anahtar: 'adetArtan' },
 ] as const;
 
 export function EnvanterFiltreleri({
@@ -20,6 +22,8 @@ export function EnvanterFiltreleri({
   kiliflar: string[];
   etiketler: string[];
 }) {
+  const dil = useDil();
+  const s = useSozluk().envanter.filtre;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,16 +51,19 @@ export function EnvanterFiltreleri({
         value={kategori}
         onChange={(e) => guncelle('kategori', e.target.value)}
       >
-        <option value="">Tüm kategoriler</option>
-        {kategoriler.map((k) => (
-          <option key={k} value={k}>
-            {k}
-          </option>
-        ))}
+        <option value="">{s.tumKategoriler}</option>
+        {kategoriler
+          .map((k) => ({ deger: k, metin: kategoriGoster(k, dil) }))
+          .sort((a, b) => a.metin.localeCompare(b.metin, dil))
+          .map((k) => (
+            <option key={k.deger} value={k.deger}>
+              {k.metin}
+            </option>
+          ))}
       </select>
 
       <select className="filtre" value={kilif} onChange={(e) => guncelle('kilif', e.target.value)}>
-        <option value="">Tüm kılıflar</option>
+        <option value="">{s.tumKiliflar}</option>
         {kiliflar.map((k) => (
           <option key={k} value={k}>
             {k}
@@ -65,17 +72,17 @@ export function EnvanterFiltreleri({
       </select>
 
       <select className="filtre" value={durum} onChange={(e) => guncelle('durum', e.target.value)}>
-        <option value="">Tüm durumlar</option>
-        {Object.entries(DURUM_ETIKET).map(([deger, metin]) => (
+        <option value="">{s.tumDurumlar}</option>
+        {(Object.keys(DURUM_ETIKET) as Durum[]).map((deger) => (
           <option key={deger} value={deger}>
-            {metin}
+            {durumEtiketi(deger, dil)}
           </option>
         ))}
       </select>
 
       {etiketler.length > 0 && (
         <select className="filtre" value={etiket} onChange={(e) => guncelle('etiket', e.target.value)}>
-          <option value="">Tüm etiketler</option>
+          <option value="">{s.tumEtiketler}</option>
           {etiketler.map((e) => (
             <option key={e} value={e}>
               {e}
@@ -98,16 +105,16 @@ export function EnvanterFiltreleri({
             router.replace(`${pathname}?${p.toString()}`);
           }}
         >
-          Filtreleri temizle ✕
+          {s.temizle}
         </button>
       )}
 
       <span style={{ width: 1, height: 16, background: 'var(--line)', margin: '0 2px' }} />
 
       <select className="filtre" value={sira} onChange={(e) => guncelle('sira', e.target.value)}>
-        {SIRALAMALAR.map((s) => (
-          <option key={s.deger} value={s.deger}>
-            {s.etiket}
+        {SIRALAMALAR.map((r) => (
+          <option key={r.deger} value={r.deger}>
+            {s.sira[r.anahtar]}
           </option>
         ))}
       </select>
@@ -116,7 +123,7 @@ export function EnvanterFiltreleri({
         <button
           type="button"
           onClick={() => guncelle('gorunum', '')}
-          aria-label="Liste görünümü"
+          aria-label={s.listeGorunumu}
           aria-pressed={gorunum === 'liste'}
           style={{
             width: 28,
@@ -139,7 +146,7 @@ export function EnvanterFiltreleri({
         <button
           type="button"
           onClick={() => guncelle('gorunum', 'izgara')}
-          aria-label="Izgara görünümü"
+          aria-label={s.izgaraGorunumu}
           aria-pressed={gorunum === 'izgara'}
           style={{
             width: 28,

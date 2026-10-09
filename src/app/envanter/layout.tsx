@@ -2,6 +2,7 @@ import { UstBar } from '@/components/ust-bar';
 import { createClient } from '@/lib/supabase/server';
 import { basHarfleri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
+import { dilAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,11 +26,12 @@ export default async function EnvanterLayout({ children }: { children: React.Rea
   }
 
   const avatarEtiket = gorunum?.saltOkunur ? gorunum.izlenenAdi || '' : etiket;
+  const dil = await dilAl();
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <UstBar
-        bas={avatarEtiket ? basHarfleri(avatarEtiket) : undefined}
+        bas={avatarEtiket ? basHarfleri(avatarEtiket, dil) : undefined}
         resimUrl={gorunum?.saltOkunur ? gorunum.izlenenResim : resimUrl}
         saltOkunur={gorunum?.saltOkunur ?? false}
         gozlemciOf={gorunum?.gozlemciOf ?? null}

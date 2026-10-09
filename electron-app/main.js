@@ -191,11 +191,39 @@ ipcMain.handle('sifre-sil', () => {
   }
 });
 
+// ---- Dil (Türkçe / İngilizce)
+// LabStock'un dili `labstock-dil` çerezindedir (Next tarafı yazar; bkz. src/lib/i18n). Çerez
+// yoksa sistem dili: Türkçe ise 'tr', değilse 'en'. Next sunucusu çerez yokken Accept-Language
+// başlığına bakar; Electron bunu sistem diline göre kendisi gönderir, burada değiştirilmiyor.
+// Ana süreç dili sadece telefon sayfası ve kamera sunucusunun hata metinleri için kullanır.
+const DIL_COOKIE = 'labstock-dil';
+let dil = 'tr';
+
+function sistemDili() {
+  return (app.getLocale() || '').toLowerCase().startsWith('tr') ? 'tr' : 'en';
+}
+
+async function diliGuncelle() {
+  let yeni = sistemDili();
+  try {
+    const cerezler = await session.defaultSession.cookies.get({ name: DIL_COOKIE });
+    const deger = cerezler.find((c) => c.value === 'tr' || c.value === 'en')?.value;
+    if (deger) yeni = deger;
+  } catch (err) {
+    logYaz(`[dil-hata] ${err.message}`);
+  }
+  if (yeni !== dil) {
+    dil = yeni;
+    kamera.dilDegisti(); // bağlı telefon sayfayı yeni dille yeniler
+  }
+}
+
 // ---- Telefon kamerası: sunucu ana süreçte, görüntü işleme pencerede (Web Worker)
 const kamera = new KameraSunucusu({
   ayarKlasoru: app.getPath('userData'),
   sayfaYolu: path.join(__dirname, 'kamera', 'telefon.html'),
   log: logYaz,
+  dil: () => dil,
   olay: (tur, veri) => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('kamera-olay', { tur, veri });
   },
@@ -214,6 +242,10 @@ ipcMain.handle('kamera-anahtar-yenile', () => kamera.anahtariYenile());
 ipcMain.on('kamera-gonder', (_event, veri) => kamera.gonder(veri));
 
 app.whenReady().then(() => {
+  diliGuncelle();
+  session.defaultSession.cookies.on('changed', (_event, cerez) => {
+    if (cerez.name === DIL_COOKIE) diliGuncelle();
+  });
   sunucuyuBaslat();
   sunucuHazirMi(() => {
     pencereyiAc();
@@ -236,8 +268,31 @@ app.on('before-quit', (event) => {
   }
   if (cikisTemizlendi) return;
   event.preventDefault();
-  session.defaultSession
-    .clearStorageData({ storages: ['cookies'] })
+  const cerezler = session.defaultSession.cookies;
+  // Dil tercihi oturum değil: çerezler silinse de bir sonraki açılışta aynı dille açılsın
+  cerezler
+    .get({ name: DIL_COOKIE })
+    .catch(() => [])
+    .then((dilCerezleri) =>
+      session.defaultSession
+        .clearStorageData({ storages: ['cookies'] })
+        .then(() =>
+          Promise.all(
+            dilCerezleri.map((c) =>
+              cerezler.set({
+                url: `http://${(c.domain || '127.0.0.1').replace(/^\./, '')}${c.path || '/'}`,
+                name: c.name,
+                value: c.value,
+                path: c.path || '/',
+                httpOnly: !!c.httpOnly,
+                sameSite: c.sameSite && c.sameSite !== 'unspecified' ? c.sameSite : 'lax',
+                expirationDate: c.expirationDate || Date.now() / 1000 + 5 * 365 * 24 * 3600,
+              }),
+            ),
+          ),
+        )
+        .then(() => cerezler.flushStore()),
+    )
     .catch((err) => logYaz(`[cikis-temizleme-hata] ${err.message}`))
     .finally(() => {
       cikisTemizlendi = true;

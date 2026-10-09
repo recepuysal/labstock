@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
-import { SEBEP_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
+import { hareketAciklamasi, sayiBicimi, sebepEtiketi, type EnvanterSatiri } from '@/lib/types';
+import { sozluk, yerel } from '@/lib/i18n';
+import { dilAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +15,9 @@ export default async function AktivitelerSayfasi() {
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris');
   const hedef = aktif.kullaniciId;
+  const dil = await dilAl();
+  const s = sozluk(dil).envanter.aktivite;
+  const sayi = sayiBicimi(dil);
 
   const { data: hareketVerisi } = await supabase
     .from('stock_movements')
@@ -41,35 +46,35 @@ export default async function AktivitelerSayfasi() {
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)', marginBottom: 8 }}>
           <Link href="/envanter" style={{ color: 'inherit' }}>
-            Envanter
+            {s.envanter}
           </Link>{' '}
-          / Son Aktiviteler
+          / {s.baslik}
         </div>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          Son Aktiviteler
+          {s.baslik}
         </h1>
         <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)' }}>
-          Depondaki tüm stok hareketleri, en yeniden eskiye.
-          {hareketler.length === LIMIT && ` Son ${LIMIT} hareket gösteriliyor.`}
+          {s.aciklama}
+          {hareketler.length === LIMIT && s.sonN(LIMIT)}
         </p>
 
         <div className="kart" style={{ overflow: 'hidden' }}>
           {hareketler.length === 0 ? (
             <p style={{ margin: 0, padding: 24, fontSize: 13, color: 'var(--muted)' }}>
-              Henüz bir hareket yok.
+              {s.bos}
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="mn" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
                 <thead>
                   <tr style={{ textAlign: 'left', color: 'var(--muted-2)', fontSize: 10 }}>
-                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>TARİH</th>
-                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>PARÇA</th>
-                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>İŞLEM</th>
-                    <th style={{ fontWeight: 600, padding: '10px 12px', textAlign: 'right' }}>ADET</th>
-                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>SEBEP / PROJE</th>
-                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>KONUM</th>
-                    <th style={{ fontWeight: 600, padding: '10px 12px', textAlign: 'right' }}>SONRA</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>{s.tarih}</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>{s.parca}</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>{s.islem}</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px', textAlign: 'right' }}>{s.adet}</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>{s.sebepProje}</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px' }}>{s.konum}</th>
+                    <th style={{ fontWeight: 600, padding: '10px 12px', textAlign: 'right' }}>{s.sonra}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -77,15 +82,15 @@ export default async function AktivitelerSayfasi() {
                     const artis = Number(h.delta) > 0;
                     const parca = envanterHarita.get(h.stock_item_id);
                     const projeAdi = h.proje_id ? projeHarita.get(h.proje_id) : undefined;
-                    const sebepMetni = SEBEP_ETIKET[h.sebep] ?? h.sebep;
+                    const sebepMetni = sebepEtiketi(h.sebep, dil);
                     const aciklamaParcalari = [
                       projeAdi,
-                      h.aciklama ?? (projeAdi ? undefined : sebepMetni),
+                      h.aciklama != null ? hareketAciklamasi(h.aciklama, dil) : projeAdi ? undefined : sebepMetni,
                     ].filter(Boolean);
                     return (
                       <tr key={h.id} style={{ borderTop: '1px solid var(--line-soft)' }}>
                         <td style={{ padding: '9px 12px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                          {new Date(h.created_at).toLocaleString('tr-TR', {
+                          {new Date(h.created_at).toLocaleString(yerel(dil), {
                             day: '2-digit',
                             month: '2-digit',
                             hour: '2-digit',
@@ -102,7 +107,7 @@ export default async function AktivitelerSayfasi() {
                           )}
                         </td>
                         <td style={{ padding: '9px 12px', color: artis ? 'var(--ok)' : 'var(--crit)' }}>
-                          {artis ? 'Giriş' : 'Düşüldü'}
+                          {artis ? s.giris : s.dusuldu}
                         </td>
                         <td
                           style={{

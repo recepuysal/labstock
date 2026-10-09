@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useTransition } from 'react';
 import { etiketEkle, etiketSil, type EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 type Etiket = { id: string; ad: string };
 
@@ -19,6 +20,8 @@ export function EtiketlerKarti({
   const [durum, gonder, ekleniyor] = useActionState<EylemDurum, FormData>(etiketEkle, {});
   const [siliniyor, basla] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const sz = useSozluk();
+  const s = sz.parca.etiketler;
 
   function sil(tagId: string) {
     basla(async () => {
@@ -32,7 +35,7 @@ export function EtiketlerKarti({
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
       >
-        ETİKETLER
+        {s.baslik}
       </div>
 
       {etiketler.length > 0 && (
@@ -48,7 +51,7 @@ export function EtiketlerKarti({
                 type="button"
                 onClick={() => sil(e.id)}
                 disabled={saltOkunur || siliniyor}
-                aria-label={`${e.ad} etiketini kaldır`}
+                aria-label={s.kaldir(e.ad)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -72,7 +75,7 @@ export function EtiketlerKarti({
       )}
 
       {etiketler.length === 0 && (
-        <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>Henüz etiket yok.</p>
+        <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>{s.yok}</p>
       )}
 
       <form
@@ -88,7 +91,7 @@ export function EtiketlerKarti({
           className="alan"
           style={{ height: 30, fontSize: 12 }}
           name="etiket_adi"
-          placeholder="+ etiket ekle"
+          placeholder={s.ekle}
           list="etiket-onerileri"
           autoComplete="off"
           disabled={saltOkunur}
@@ -104,7 +107,7 @@ export function EtiketlerKarti({
           type="submit"
           disabled={saltOkunur || ekleniyor}
         >
-          {ekleniyor ? '…' : 'Ekle'}
+          {ekleniyor ? '…' : sz.ortak.buton.ekle}
         </button>
       </form>
       {durum.hata && (

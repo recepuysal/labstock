@@ -1,10 +1,12 @@
+import { sozluk, yerel, type Dil } from './i18n';
+
 export type Durum = 'yeterli' | 'az' | 'kritik' | 'yok';
 
 /** Bir isim/e-posta'dan avatar baş harflerini üretir (ör. "Recep Uysal" -> "RU"). */
-export function basHarfleri(kaynak: string): string {
+export function basHarfleri(kaynak: string, dil: Dil = 'tr'): string {
   const parcalar = kaynak.trim().split(/[\s.@_-]+/).filter(Boolean);
   const harfler = parcalar.slice(0, 2).map((p) => p[0]);
-  return harfler.join('').toLocaleUpperCase('tr-TR') || '··';
+  return harfler.join('').toLocaleUpperCase(yerel(dil)) || '··';
 }
 
 export type EnvanterSatiri = {
@@ -46,6 +48,14 @@ export type Konum = {
 export const KONUM_TIPLERI = ['Oda', 'Dolap', 'Çekmece', 'Raf', 'Kutu', 'Bölme'] as const;
 
 /** Konum tipi -> rozet rengi (globals.css'teki .rozet-* sınıflarıyla eşleşir). */
+/** Kayıtlı (Türkçe) konum tipini arayüz dilinde gösterir; `adet` verilirse
+ * sayıya uygun (İngilizcede çoğul) biçim döner. Bilinmeyen tipler olduğu gibi kalır. */
+export function konumTipiGoster(tip: string, dil: Dil = 'tr', adet?: number): string {
+  const s = sozluk(dil).envanter;
+  const tablo: Record<string, string> = adet !== undefined && adet !== 1 ? s.konumTipiCogul : s.konumTipi;
+  return tablo[tip] ?? tip;
+}
+
 export const KONUM_TIP_RENK: Record<string, string> = {
   Oda: 'mavi',
   Dolap: 'turuncu',
@@ -64,6 +74,11 @@ export const DURUM_ETIKET: Record<Durum, string> = {
   yok: 'Tükendi',
 };
 
+/** Stok durumu etiketi arayüz dilinde (DURUM_ETIKET'in dil destekli hali). */
+export function durumEtiketi(durum: Durum, dil: Dil = 'tr'): string {
+  return sozluk(dil).envanter.durum[durum] ?? durum;
+}
+
 export const ALINACAK_DURUMLAR = ['bekliyor', 'siparis_verildi', 'alindi'] as const;
 export type AlinacakDurumu = (typeof ALINACAK_DURUMLAR)[number];
 
@@ -72,6 +87,11 @@ export const ALINACAK_DURUM_ETIKET: Record<AlinacakDurumu, string> = {
   siparis_verildi: 'Sipariş verildi',
   alindi: 'Alındı',
 };
+
+/** Alınacak durumu etiketi arayüz dilinde (ALINACAK_DURUM_ETIKET'in dil destekli hali). */
+export function alinacakDurumEtiketi(durum: AlinacakDurumu, dil: Dil = 'tr'): string {
+  return sozluk(dil).envanter.alinacakDurum[durum] ?? durum;
+}
 
 export const ALINACAK_DURUM_ROZET: Record<AlinacakDurumu, string> = {
   bekliyor: 'rozet-notr',
@@ -121,11 +141,21 @@ export function altAgacIdleri(kokId: string, konumlar: Konum[]): string[] {
 
 export const sayi = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 3 });
 
+const SAYI_BICIMLERI: Record<Dil, Intl.NumberFormat> = {
+  tr: sayi,
+  en: new Intl.NumberFormat(yerel('en'), { maximumFractionDigits: 3 }),
+};
+
+/** Arayüz diline göre sayı biçimlendirici (`sayi`nın dil destekli hali). */
+export function sayiBicimi(dil: Dil = 'tr'): Intl.NumberFormat {
+  return SAYI_BICIMLERI[dil];
+}
+
 const PARA_SEMBOL: Record<string, string> = { TRY: '₺', USD: '$', EUR: '€' };
 
-export function paraFormatla(tutar: number, birim: string): string {
+export function paraFormatla(tutar: number, birim: string, dil: Dil = 'tr'): string {
   const sembol = PARA_SEMBOL[birim] ?? `${birim} `;
-  return `${sembol}${sayi.format(Math.round(tutar * 100) / 100)}`;
+  return `${sembol}${sayiBicimi(dil).format(Math.round(tutar * 100) / 100)}`;
 }
 
 /** parts.parametreler (jsonb) <-> "Anahtar: Değer" satırlarından oluşan düzenlenebilir metin. */
@@ -149,24 +179,25 @@ export function metinToParametreler(metin: string): Record<string, string> {
 }
 
 /** "3 dk önce", "2 gün önce" gibi göreli zaman; bir aydan eskiyse tarih gösterir. */
-export function zamanOnce(iso: string): string {
+export function zamanOnce(iso: string, dil: Dil = 'tr'): string {
+  const z = sozluk(dil).envanter.zaman;
   const fark = Date.now() - new Date(iso).getTime();
   const dk = Math.floor(fark / 60000);
-  if (dk < 1) return 'az önce';
-  if (dk < 60) return `${dk} dk önce`;
+  if (dk < 1) return z.azOnce;
+  if (dk < 60) return z.dkOnce(dk);
   const saat = Math.floor(dk / 60);
-  if (saat < 24) return `${saat} sa önce`;
+  if (saat < 24) return z.saOnce(saat);
   const gun = Math.floor(saat / 24);
-  if (gun < 30) return `${gun} gün önce`;
-  return new Date(iso).toLocaleDateString('tr-TR');
+  if (gun < 30) return z.gunOnce(gun);
+  return new Date(iso).toLocaleDateString(yerel(dil));
 }
 
 /** "14:32" gibi saat:dakika; bugünden eskiyse tarih de ekler. */
-export function saatFormatla(iso: string): string {
+export function saatFormatla(iso: string, dil: Dil = 'tr'): string {
   const tarih = new Date(iso);
-  const saat = tarih.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  const saat = tarih.toLocaleTimeString(yerel(dil), { hour: '2-digit', minute: '2-digit' });
   const bugun = new Date().toDateString() === tarih.toDateString();
-  return bugun ? saat : `${tarih.toLocaleDateString('tr-TR')} ${saat}`;
+  return bugun ? saat : `${tarih.toLocaleDateString(yerel(dil))} ${saat}`;
 }
 
 /** stock_movements.sebep -> okunabilir etiket. */
@@ -176,6 +207,30 @@ export const SEBEP_ETIKET: Record<string, string> = {
   ice_aktarma: 'İçe aktarma',
   sayim: 'Sayım',
 };
+
+/** stock_movements.sebep -> arayüz dilinde etiket (bilinmeyen sebep olduğu gibi kalır). */
+export function sebepEtiketi(sebep: string, dil: Dil = 'tr'): string {
+  const tablo: Record<string, string> = sozluk(dil).ortak.sebep;
+  return tablo[sebep] ?? sebep;
+}
+
+/** stock_movements.aciklama veritabanına Türkçe yazılır (ör. "ilk giriş",
+ * "Kamera sayımı: 17 adet"). Bilinen sabit kalıpları arayüz dilinde gösterir;
+ * kullanıcının yazdığı ya da tanınmayan metin olduğu gibi kalır. */
+export function hareketAciklamasi(aciklama: string, dil: Dil = 'tr'): string {
+  if (dil === 'tr') return aciklama;
+  const kaynak = sozluk('tr').envanter.hareket;
+  const hedef = sozluk(dil).envanter.hareket;
+  if (aciklama === kaynak.elleGiris) return hedef.elleGiris;
+  if (aciklama === kaynak.ilkGiris) return hedef.ilkGiris;
+  if (aciklama === kaynak.iceAktarma) return hedef.iceAktarma;
+  const sayim = aciklama.match(/^Kamera sayımı: (.+) adet$/);
+  if (sayim) return hedef.kameraSayimi(sayim[1]);
+  if (aciklama.startsWith(`${kaynak.tedarikciEtiketi} · `)) {
+    return hedef.tedarikciEtiketi + aciklama.slice(kaynak.tedarikciEtiketi.length);
+  }
+  return aciklama;
+}
 
 /** Her konumun kendisi + tüm alt ağacındaki stok kalemi sayısı (doğrudan
  * sayılardan aşağıdan yukarıya toplanarak). */
@@ -199,9 +254,9 @@ export function konumToplamSayilari(
 }
 
 /** "4 Dolap, 1 Raf, 312 Bölme" gibi bir konum tipi özeti üretir. */
-export function konumTipOzeti(konumlar: Konum[]): string {
+export function konumTipOzeti(konumlar: Konum[], dil: Dil = 'tr'): string {
   return konumTipSayimlari(konumlar)
-    .map(({ tip, adet }) => `${adet} ${tip}`)
+    .map(({ tip, adet }) => `${adet} ${konumTipiGoster(tip, dil, adet)}`)
     .join(', ');
 }
 

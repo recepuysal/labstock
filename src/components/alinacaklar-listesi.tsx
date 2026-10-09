@@ -7,11 +7,12 @@ import { AlinacakSatirMenu } from '@/components/alinacak-satir-menu';
 import { KopyalaButonu } from '@/components/kopyala-butonu';
 import {
   ALINACAK_DURUMLAR,
-  ALINACAK_DURUM_ETIKET,
   ALINACAK_DURUM_ROZET,
-  sayi,
+  alinacakDurumEtiketi,
+  sayiBicimi,
   type AlinacakDurumu,
 } from '@/lib/types';
+import { useDil, useSozluk } from '@/lib/i18n/istemci';
 
 export type AlinacakKaydi = {
   id: string;
@@ -40,6 +41,7 @@ const SUTUN = {
 } as const;
 
 export function AlinacaklarListesi({ kayitlar }: { kayitlar: AlinacakKaydi[] }) {
+  const s = useSozluk().envanter.alinacaklar;
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null);
 
   return (
@@ -49,7 +51,7 @@ export function AlinacaklarListesi({ kayitlar }: { kayitlar: AlinacakKaydi[] }) 
       <div className="kart" style={{ marginTop: 16, overflow: 'hidden' }}>
         {kayitlar.length === 0 ? (
           <p style={{ padding: 20, margin: 0, fontSize: 13, color: 'var(--muted)' }}>
-            Henüz bir şey eklenmemiş.
+            {s.bos}
           </p>
         ) : (
           <>
@@ -68,10 +70,10 @@ export function AlinacaklarListesi({ kayitlar }: { kayitlar: AlinacakKaydi[] }) 
                 color: 'var(--muted-2)',
               }}
             >
-              <div style={SUTUN.malzeme}>Malzeme / Durum</div>
-              <div style={{ ...SUTUN.adet, textAlign: 'right' }}>Adet</div>
-              <div style={SUTUN.not}>Not</div>
-              <div style={SUTUN.link}>Link</div>
+              <div style={SUTUN.malzeme}>{s.malzemeDurum}</div>
+              <div style={{ ...SUTUN.adet, textAlign: 'right' }}>{s.adet}</div>
+              <div style={SUTUN.not}>{s.not}</div>
+              <div style={SUTUN.link}>{s.link}</div>
               <div style={SUTUN.menu} />
             </div>
 
@@ -95,6 +97,7 @@ export function AlinacaklarListesi({ kayitlar }: { kayitlar: AlinacakKaydi[] }) 
 }
 
 function EklemeFormu() {
+  const s = useSozluk().envanter.alinacaklar;
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(alinacakEkle, {});
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -112,30 +115,30 @@ function EklemeFormu() {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 2fr 1.4fr auto', gap: 8, alignItems: 'end' }}>
         <div>
           <label className="etiket" htmlFor="malzeme_adi">
-            Malzeme adı *
+            {s.malzemeAdi}
           </label>
-          <input className="alan" id="malzeme_adi" name="malzeme_adi" required placeholder="Örn. 100nF kondansatör" />
+          <input className="alan" id="malzeme_adi" name="malzeme_adi" required placeholder={s.malzemeOrnek} />
         </div>
         <div>
           <label className="etiket" htmlFor="adet">
-            Adet
+            {s.adet}
           </label>
           <input className="alan mn" id="adet" name="adet" type="number" min={0} step="any" defaultValue={1} />
         </div>
         <div>
           <label className="etiket" htmlFor="not_metni">
-            Not
+            {s.not}
           </label>
-          <input className="alan" id="not_metni" name="not_metni" placeholder="Örn. Mouser'dan al" />
+          <input className="alan" id="not_metni" name="not_metni" placeholder={s.notOrnek} />
         </div>
         <div>
           <label className="etiket" htmlFor="link">
-            Link
+            {s.link}
           </label>
           <input className="alan mn" id="link" name="link" type="url" placeholder="https://..." />
         </div>
         <button className="btn btn-birincil" type="submit" disabled={bekliyor} style={{ height: 38 }}>
-          {bekliyor ? '…' : '+ Ekle'}
+          {bekliyor ? '…' : s.ekle}
         </button>
       </div>
     </form>
@@ -143,9 +146,11 @@ function EklemeFormu() {
 }
 
 function DurumRozeti({ durum, tiklanabilir, onTikla }: { durum: string; tiklanabilir?: boolean; onTikla?: () => void }) {
+  const dil = useDil();
+  const s = useSozluk().envanter.alinacaklar;
   const gecerli = gecerliDurum(durum);
   const sinif = `rozet ${ALINACAK_DURUM_ROZET[gecerli]}`;
-  const etiket = ALINACAK_DURUM_ETIKET[gecerli];
+  const etiket = alinacakDurumEtiketi(gecerli, dil);
 
   if (!tiklanabilir) {
     return (
@@ -160,7 +165,7 @@ function DurumRozeti({ durum, tiklanabilir, onTikla }: { durum: string; tiklanab
       type="button"
       onClick={onTikla}
       className={sinif}
-      title="Sonraki duruma geçir"
+      title={s.sonrakiDurum}
       style={{ flexShrink: 0, cursor: 'pointer', fontFamily: 'inherit' }}
     >
       {etiket}
@@ -177,6 +182,8 @@ function GosterSatiri({
   ilk: boolean;
   onDuzenle: () => void;
 }) {
+  const dil = useDil();
+  const s = useSozluk().envanter.alinacaklar;
   const [, basla] = useTransition();
 
   return (
@@ -196,7 +203,7 @@ function GosterSatiri({
         >
           {kayit.malzeme_adi}
         </span>
-        <KopyalaButonu metin={kayit.malzeme_adi} baslik="Malzeme adını kopyala" />
+        <KopyalaButonu metin={kayit.malzeme_adi} baslik={s.malzemeKopyala} />
         <DurumRozeti
           durum={kayit.durum}
           tiklanabilir
@@ -207,7 +214,7 @@ function GosterSatiri({
       </div>
 
       <div className="mn" style={{ ...SUTUN.adet, textAlign: 'right', fontSize: 12.5, color: 'var(--muted)' }}>
-        {sayi.format(kayit.adet)}
+        {sayiBicimi(dil).format(kayit.adet)}
       </div>
 
       <div style={{ ...SUTUN.not, fontSize: 12, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={kayit.not_metni ?? ''}>
@@ -227,7 +234,7 @@ function GosterSatiri({
             >
               {kayit.link.replace(/^https?:\/\//, '')}
             </a>
-            <KopyalaButonu metin={kayit.link} baslik="Bağlantıyı kopyala" />
+            <KopyalaButonu metin={kayit.link} baslik={s.baglantiKopyala} />
           </>
         ) : (
           <span style={{ color: 'var(--muted-2)' }}>—</span>
@@ -246,6 +253,9 @@ function GosterSatiri({
 }
 
 function DuzenleSatiri({ kayit, onIptal }: { kayit: AlinacakKaydi; onIptal: () => void }) {
+  const dil = useDil();
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.alinacaklar;
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(alinacakGuncelle, {});
 
   useEffect(() => {
@@ -263,19 +273,19 @@ function DuzenleSatiri({ kayit, onIptal }: { kayit: AlinacakKaydi; onIptal: () =
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 70px 160px', gap: 8, marginBottom: 10 }}>
         <div>
-          <label className="etiket">Malzeme adı *</label>
+          <label className="etiket">{s.malzemeAdi}</label>
           <input className="alan" name="malzeme_adi" required defaultValue={kayit.malzeme_adi} autoFocus />
         </div>
         <div>
-          <label className="etiket">Adet</label>
+          <label className="etiket">{s.adet}</label>
           <input className="alan mn" name="adet" type="number" min={0} step="any" defaultValue={kayit.adet} />
         </div>
         <div>
-          <label className="etiket">Durum</label>
+          <label className="etiket">{s.durum}</label>
           <select className="alan" name="durum" defaultValue={gecerliDurum(kayit.durum)}>
             {ALINACAK_DURUMLAR.map((d) => (
               <option key={d} value={d}>
-                {ALINACAK_DURUM_ETIKET[d]}
+                {alinacakDurumEtiketi(d, dil)}
               </option>
             ))}
           </select>
@@ -283,18 +293,18 @@ function DuzenleSatiri({ kayit, onIptal }: { kayit: AlinacakKaydi; onIptal: () =
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.6fr auto auto', gap: 8, alignItems: 'end' }}>
         <div>
-          <label className="etiket">Not</label>
+          <label className="etiket">{s.not}</label>
           <input className="alan" name="not_metni" defaultValue={kayit.not_metni ?? ''} />
         </div>
         <div>
-          <label className="etiket">Link</label>
+          <label className="etiket">{s.link}</label>
           <input className="alan mn" name="link" type="url" defaultValue={kayit.link ?? ''} />
         </div>
         <button className="btn btn-birincil" type="submit" disabled={bekliyor} style={{ height: 38 }}>
-          {bekliyor ? '…' : 'Kaydet'}
+          {bekliyor ? '…' : sozlukler.ortak.buton.kaydet}
         </button>
         <button type="button" className="btn" onClick={onIptal} disabled={bekliyor} style={{ height: 38 }}>
-          Vazgeç
+          {sozlukler.envanter.vazgec}
         </button>
       </div>
     </form>

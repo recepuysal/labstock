@@ -3,6 +3,9 @@
 // bir sayfa isteği — sitenin zaten herkese açık yayınladığı yapılandırılmış
 // veriyi okuyoruz (bkz. lcsc.ts, aynı yöntemin ilk kullanıldığı yer).
 
+import { sozluk, type Dil } from './i18n';
+import { dilAl } from './i18n/sunucu';
+
 export const TARAYICI_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 
@@ -21,9 +24,9 @@ export type LdProduct = {
 
 /** Sayfadaki <script type="application/ld+json"> bloklarını gezip ilk "Product"
  * düğümünü döner (blok düz bir obje ya da "@graph" listesi içinde olabilir). */
-export async function ldJsonUrunGetir(url: string): Promise<LdProduct | null> {
+export async function ldJsonUrunGetir(url: string, dil?: Dil): Promise<LdProduct | null> {
   const yanit = await fetch(url, { headers: { 'User-Agent': TARAYICI_USER_AGENT } });
-  if (!yanit.ok) throw new Error(`Sayfa alınamadı (HTTP ${yanit.status}).`);
+  if (!yanit.ok) throw new Error(sozluk(dil ?? (await dilAl())).parca.tedarikci.sayfaAlinamadi(yanit.status));
   const html = await yanit.text();
 
   for (const esleme of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {

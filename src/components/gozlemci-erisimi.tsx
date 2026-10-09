@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { davetKoduOlustur, gozlemciyiCikar } from '@/app/ayarlar/actions';
 import { zamanOnce } from '@/lib/types';
+import { useDil, useSozluk } from '@/lib/i18n/istemci';
 
 type Gozlemci = { id: string; ad: string; baglandi: string | null; son_gorulme: string | null };
 
@@ -21,6 +22,9 @@ export function GozlemciErisimi({
   const [cikariliyorId, setCikariliyorId] = useState<string | null>(null);
   const [cikariliyor, basla] = useTransition();
   const router = useRouter();
+  const dil = useDil();
+  const so = useSozluk();
+  const s = so.ayarlar.gozlemci;
 
   async function olustur() {
     setCalisiyor(true);
@@ -46,7 +50,7 @@ export function GozlemciErisimi({
   }
 
   function cikar(g: Gozlemci) {
-    if (!window.confirm(`${g.ad} artık deponu izleyemesin mi? İstersen kodu tekrar paylaşarak yeniden bağlanabilir.`)) {
+    if (!window.confirm(s.cikarOnay(g.ad))) {
       return;
     }
     setCikariliyorId(g.id);
@@ -62,10 +66,10 @@ export function GozlemciErisimi({
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}
       >
-        GÖZLEMCİ ERİŞİMİ
+        {s.baslik}
       </div>
       <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-        Bu kodu paylaştığın kişiler envanterini salt-okunur görebilir — düzenleyemez, silemez.
+        {s.aciklama}
       </p>
 
       {kod ? (
@@ -85,11 +89,11 @@ export function GozlemciErisimi({
             {kod}
           </span>
           <button type="button" className="btn" style={{ height: 32, fontSize: 12.5 }} onClick={kopyala}>
-            {kopyalandi ? 'Kopyalandı' : 'Kopyala'}
+            {kopyalandi ? so.ortak.buton.kopyalandi : so.ortak.buton.kopyala}
           </button>
         </div>
       ) : (
-        <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>Henüz kod oluşturulmadı.</p>
+        <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>{s.kodYok}</p>
       )}
 
       <button
@@ -99,11 +103,11 @@ export function GozlemciErisimi({
         onClick={olustur}
         disabled={calisiyor}
       >
-        {calisiyor ? '…' : kod ? 'Yeniden oluştur' : 'Kod oluştur'}
+        {calisiyor ? '…' : kod ? s.yenidenOlustur : s.kodOlustur}
       </button>
       {kod && (
         <p style={{ margin: '8px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-          Yeniden oluşturmak eski kodu geçersiz kılar — o kodu daha önce kullanmış olanları etkilemez.
+          {s.yenidenIpucu}
         </p>
       )}
       {hata && (
@@ -118,7 +122,7 @@ export function GozlemciErisimi({
             className="mn"
             style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
           >
-            SENİ İZLEYENLER · {gozlemciler.length}/8
+            {s.izleyenler(gozlemciler.length)}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {gozlemciler.map((g) => (
@@ -131,9 +135,9 @@ export function GozlemciErisimi({
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                   <span style={{ color: 'var(--muted)', fontSize: 11, textAlign: 'right' }}>
-                    {g.baglandi && `${zamanOnce(g.baglandi)} bağlandı`}
+                    {g.baglandi && s.baglandi(zamanOnce(g.baglandi, dil))}
                     {g.baglandi && g.son_gorulme && ' · '}
-                    {g.son_gorulme && `son görülme ${zamanOnce(g.son_gorulme)}`}
+                    {g.son_gorulme && s.sonGorulme(zamanOnce(g.son_gorulme, dil))}
                   </span>
                   <button
                     type="button"
@@ -149,7 +153,7 @@ export function GozlemciErisimi({
                       opacity: cikariliyor && cikariliyorId === g.id ? 0.5 : 1,
                     }}
                   >
-                    {cikariliyor && cikariliyorId === g.id ? '…' : 'Çıkar'}
+                    {cikariliyor && cikariliyorId === g.id ? '…' : s.cikar}
                   </button>
                 </span>
               </div>

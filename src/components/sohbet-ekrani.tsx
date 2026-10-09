@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { sohbetSor, type SohbetMesaji } from '@/app/envanter/sohbet/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 /* Konuşma bileşenin dışında, modül düzeyinde tutulur: başka sayfaya gidip dönünce bileşen yeniden
  * kurulsa da konuşma ve süren istek yaşar (cevap sayfa dışındayken gelse bile konuşmaya eklenir).
@@ -45,7 +46,7 @@ function abone(f: () => void) {
   return () => dinleyiciler.delete(f);
 }
 
-async function sor(depoId: string, metin: string) {
+async function sor(depoId: string, metin: string, yedekHata: string) {
   const d = durumOku(depoId);
   if (d.gonderiliyor) return;
   const surum = d.surum;
@@ -58,7 +59,7 @@ async function sor(depoId: string, metin: string) {
     if (sonuc.hata) durumYaz(depoId, { hata: sonuc.hata });
     else if (sonuc.cevap) durumYaz(depoId, { mesajlar: [...durumOku(depoId).mesajlar, { rol: 'asistan', icerik: sonuc.cevap }] });
   } catch (e) {
-    if (durumOku(depoId).surum === surum) durumYaz(depoId, { hata: e instanceof Error ? e.message : 'Cevap alınamadı.' });
+    if (durumOku(depoId).surum === surum) durumYaz(depoId, { hata: e instanceof Error ? e.message : yedekHata });
   } finally {
     if (durumOku(depoId).surum === surum) durumYaz(depoId, { gonderiliyor: false });
   }
@@ -67,12 +68,6 @@ async function sor(depoId: string, metin: string) {
 function yeniSohbet(depoId: string) {
   durumYaz(depoId, { mesajlar: [], gonderiliyor: false, hata: null, surum: durumOku(depoId).surum + 1 });
 }
-
-const ORNEK_SORULAR = [
-  '12V\'u 5V\'a düşüren bir şeyim var mı?',
-  'Kaç tane ESP32 modülüm var, nerede?',
-  'Elimde röle sürmek için ne var?',
-];
 
 function AsistanAvatar({ boyut = 26 }: { boyut?: number }) {
   return (
@@ -168,6 +163,8 @@ function BicimliMetin({ metin }: { metin: string }) {
 }
 
 export function SohbetEkrani({ depoId }: { depoId: string }) {
+  const sz = useSozluk();
+  const s = sz.parca.sohbet;
   const { mesajlar, gonderiliyor, hata } = useSyncExternalStore(
     abone,
     () => durumOku(depoId),
@@ -185,7 +182,7 @@ export function SohbetEkrani({ depoId }: { depoId: string }) {
     const temiz = metin.trim();
     if (!temiz || gonderiliyor) return;
     setGirdi('');
-    await sor(depoId, temiz);
+    await sor(depoId, temiz, s.cevapAlinamadi);
     girdiRef.current?.focus();
   }
 
@@ -227,10 +224,10 @@ export function SohbetEkrani({ depoId }: { depoId: string }) {
             className="btn"
             style={{ fontSize: 12 }}
             onClick={() => {
-              if (confirm('Bu konuşma silinsin ve yeni bir sohbet başlasın mı?')) yeniSohbet(depoId);
+              if (confirm(s.yeniSohbetOnay)) yeniSohbet(depoId);
             }}
           >
-            Yeni sohbet
+            {s.yeniSohbet}
           </button>
         </div>
       )}
@@ -241,13 +238,12 @@ export function SohbetEkrani({ depoId }: { depoId: string }) {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
               <AsistanAvatar boyut={44} />
             </div>
-            <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: 15 }}>LabStock Asistanı</p>
+            <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: 15 }}>{s.asistan}</p>
             <p style={{ margin: '0 0 18px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-              Depon hakkında soru sor — stokta ne var, nerede, ya da bir şey yoksa yerine ne
-              kullanabileceğini öğren.
+              {s.giris}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ORNEK_SORULAR.map((soru) => (
+              {s.ornekler.map((soru) => (
                 <button
                   key={soru}
                   type="button"
@@ -282,12 +278,12 @@ export function SohbetEkrani({ depoId }: { depoId: string }) {
           value={girdi}
           onChange={(e) => setGirdi(e.target.value)}
           onKeyDown={tuslamaOldu}
-          placeholder="Depon hakkında bir şey sor…"
+          placeholder={s.placeholder}
           autoFocus
           style={{ flex: 1, resize: 'none', height: 40, padding: '9px 12px', fontFamily: 'inherit' }}
         />
         <button className="btn btn-birincil" type="submit" disabled={gonderiliyor || !girdi.trim()}>
-          Gönder
+          {sz.ortak.buton.gonder}
         </button>
       </form>
     </div>

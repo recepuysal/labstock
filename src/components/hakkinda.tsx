@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import type { GuncellemeDurumu } from './guncelleme-bildirimi';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function Hakkinda() {
   const [surum, setSurum] = useState<string | null>(null);
   const [masaustu, setMasaustu] = useState(false);
   const [guncellemeDurumu, setGuncellemeDurumu] = useState<GuncellemeDurumu | null>(null);
+  const s = useSozluk().ayarlar.hakkinda;
 
   useEffect(() => {
     const api = window.electronAPI;
@@ -22,7 +24,7 @@ export function Hakkinda() {
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}
       >
-        HAKKINDA
+        {s.baslik}
       </div>
 
       <div style={{ fontSize: 13.5, fontWeight: 500 }}>
@@ -36,17 +38,17 @@ export function Hakkinda() {
       </div>
 
       {!masaustu && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--muted)' }}>Tarayıcıda çalışıyor.</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--muted)' }}>{s.tarayicida}</p>
       )}
 
       {masaustu && guncellemeDurumu?.tip === 'mevcut' && (
         <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--copper)' }}>
-          Yeni sürüm var: v{guncellemeDurumu.versiyon}
+          {s.yeniSurum(guncellemeDurumu.versiyon)}
         </p>
       )}
       {masaustu && guncellemeDurumu?.tip === 'hazir' && (
         <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--copper)' }}>
-          v{guncellemeDurumu.versiyon} indirildi — yeniden başlatınca kurulacak.
+          {s.indirildi(guncellemeDurumu.versiyon)}
         </p>
       )}
 
@@ -57,13 +59,13 @@ export function Hakkinda() {
           style={{ marginTop: 12, height: 32, fontSize: 12.5 }}
           onClick={() => window.electronAPI?.guncellemeleriKontrolEt()}
         >
-          Güncellemeleri kontrol et
+          {s.kontrolEt}
         </button>
       )}
 
       <p style={{ margin: '14px 0 0', fontSize: 12 }}>
         <a href="https://github.com/recepuysal/labstock" target="_blank" rel="noopener noreferrer">
-          GitHub&apos;da görüntüle
+          {s.github}
         </a>
       </p>
     </div>

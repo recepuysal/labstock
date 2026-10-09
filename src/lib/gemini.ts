@@ -11,6 +11,8 @@
 // https://ai.google.dev/gemini-api/docs/structured-output
 
 import type { ModulVerisi } from './direnc';
+import { sozluk, type Dil } from './i18n';
+import { dilAl } from './i18n/sunucu';
 
 const GEMINI_ENDPOINT = (model: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
@@ -33,14 +35,15 @@ function gecikme(ms: number): Promise<void> {
 // obje (rastgele anahtar adları) yerine {etiket, deger} dizisi olarak
 // istiyoruz; rastgele anahtarlı objeler her şema varyantında güvenilir
 // desteklenmiyor, dizi + sabit alanlar her yerde çalışır.
-const URUN_SEMASI = {
+// Okunabilir alanlar (açıklama, parametre etiketleri) arayüz dilinde istenir.
+const urunSemasi = (dil: Dil) => ({
   type: 'OBJECT',
   properties: {
     isim: { type: 'STRING', description: 'Ürünün tam adı/başlığı.' },
     uretici: { type: 'STRING', description: 'Üretici/marka adı; bulunamazsa boş metin.' },
     aciklama: {
       type: 'STRING',
-      description: 'Ürünle ilgili kısa, tek cümlelik Türkçe bir özet (teknik özellikleri tekrar etme, onlar ayrı alanda).',
+      description: `Ürünle ilgili kısa, tek cümlelik ${dil === 'tr' ? 'Türkçe' : 'İngilizce'} bir özet (teknik özellikleri tekrar etme, onlar ayrı alanda).`,
     },
     parametreler: {
       type: 'ARRAY',
@@ -48,7 +51,10 @@ const URUN_SEMASI = {
       items: {
         type: 'OBJECT',
         properties: {
-          etiket: { type: 'STRING', description: 'Ör. "Çalışma Gerilimi", "Boyut".' },
+          etiket: {
+            type: 'STRING',
+            description: dil === 'tr' ? 'Ör. "Çalışma Gerilimi", "Boyut".' : 'İngilizce; ör. "Operating Voltage", "Size".',
+          },
           deger: { type: 'STRING', description: 'Ör. "5V", "43mm x 21mm".' },
         },
         required: ['etiket', 'deger'],
@@ -58,7 +64,7 @@ const URUN_SEMASI = {
     paraBirimi: { type: 'STRING', description: 'Fiyatın para birimi kodu: TRY, USD ya da EUR. Bulunamazsa TRY.' },
   },
   required: ['isim', 'aciklama', 'parametreler', 'paraBirimi'],
-};
+});
 // resimUrl şemada yok — htmlMetneDonustur() tüm etiketleri sildiği için model
 // zaten hiçbir <img>/meta URL'sini göremiyor, tahmin ettirmenin anlamı yok.
 // Onun yerine ürün fotoğrafı aşağıda ogGoruntusuBul() ile ham HTML'den
@@ -114,12 +120,10 @@ type GeminiIstek = {
   generationConfig?: Record<string, unknown>;
 };
 
-function tekMesajIstek(input: string, semaIsteniyor: boolean): GeminiIstek {
+function tekMesajIstek(input: string, sema: ReturnType<typeof urunSemasi> | null): GeminiIstek {
   return {
     contents: [{ parts: [{ text: input }] }],
-    ...(semaIsteniyor
-      ? { generationConfig: { responseMimeType: 'application/json', responseSchema: URUN_SEMASI } }
-      : {}),
+    ...(sema ? { generationConfig: { responseMimeType: 'application/json', responseSchema: sema } } : {}),
   };
 }
 
@@ -131,7 +135,7 @@ async function gemininiCagir(apiKey: string, model: string, govde: unknown): Pro
   });
 }
 
-async function gemininiHataMesaji(yanit: Response): Promise<string> {
+async function gemininiHataMesaji(yanit: Response, dil: Dil): Promise<string> {
   const govde = await yanit.text();
   try {
     const ayristirilmis = JSON.parse(govde);
@@ -142,7 +146,7 @@ async function gemininiHataMesaji(yanit: Response): Promise<string> {
   } catch {
     // düz metin/boş gövde olabilir, aşağıdaki genel mesaj kullanılır
   }
-  return `Yapay zeka isteği başarısız (HTTP ${yanit.status}).`;
+  return sozluk(dil).parca.ai.istekBasarisizHttp(yanit.status);
 }
 
 /** 503 (model o an aşırı yüklü/yoğun), 429 (kota) ya da 404/mesajında "artık
@@ -159,14 +163,14 @@ type GeminiSonuc = { basarili: true; govde: unknown } | { basarili: false; hata:
  * modeli kısa aralıklarla birkaç kez daha dener, başka bir
  * yenidenDenenebilirMi() hatasında listede varsa bir sonraki modele geçer,
  * kalıcı bir hatada (ör. geçersiz anahtar) hemen döner. */
-async function gemininiModelSirasiylaCagir(apiKey: string, govde: GeminiIstek): Promise<GeminiSonuc> {
-  let sonHata = 'Yapay zeka isteğine yanıt alınamadı.';
+async function gemininiModelSirasiylaCagir(apiKey: string, govde: GeminiIstek, dil: Dil): Promise<GeminiSonuc> {
+  let sonHata = sozluk(dil).parca.ai.yanitAlinamadi;
   for (const model of GEMINI_MODELLER) {
     for (let deneme = 0; ; deneme++) {
       const yanit = await gemininiCagir(apiKey, model, govde);
       if (yanit.ok) return { basarili: true, govde: await yanit.json() };
 
-      const mesaj = await gemininiHataMesaji(yanit);
+      const mesaj = await gemininiHataMesaji(yanit, dil);
       sonHata = mesaj;
 
       if (yanit.status === 503 && deneme < AZAMI_503_DENEME) {
@@ -184,7 +188,7 @@ async function gemininiModelSirasiylaCagir(apiKey: string, govde: GeminiIstek): 
  * candidates[0].content.parts[0].text; olası varyantlar için birkaç yedek
  * yol daha denenir, hiçbiri tutmazsa ham gövdenin bir kısmı hataya eklenir
  * (teşhis için). */
-function outputMetniCikar(govde: unknown): string {
+function outputMetniCikar(govde: unknown, dil: Dil): string {
   type SanalGovde = {
     candidates?: { content?: { parts?: { text?: unknown }[] } }[];
     interaction?: { outputText?: unknown };
@@ -205,49 +209,61 @@ function outputMetniCikar(govde: unknown): string {
     if (typeof aday === 'string') return aday;
   }
 
-  throw new Error(`Yapay zekadan beklenmeyen bir yanıt geldi: ${JSON.stringify(govde).slice(0, 400)}`);
+  throw new Error(sozluk(dil).parca.ai.beklenmeyenYanit(JSON.stringify(govde).slice(0, 400)));
 }
 
 /** Ayarlar'da "Kaydet" denince anahtarın gerçekten çalışıp çalışmadığını
  * küçük, ucuz bir istekle doğrular. Gerçek hata mesajını da döner — "anahtar
  * doğrulanamadı" gibi genel bir mesaj arkasında sebep (geçersiz anahtar/
  * model/kota) gizlenip kullanıcı ne yapacağını bilemesin diye. */
-export async function geminiApiAnahtariniDogrula(apiKey: string): Promise<{ gecerli: boolean; hata?: string }> {
+export async function geminiApiAnahtariniDogrula(
+  apiKey: string,
+  dil?: Dil,
+): Promise<{ gecerli: boolean; hata?: string }> {
+  const d = dil ?? (await dilAl());
   try {
-    const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek('Sadece "tamam" yaz.', false));
+    const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek('Sadece "tamam" yaz.', null), d);
     if (sonuc.basarili) return { gecerli: true };
     console.error('geminiApiAnahtariniDogrula:', sonuc.hata);
     return { gecerli: false, hata: sonuc.hata };
   } catch (err) {
     console.error('geminiApiAnahtariniDogrula:', err);
-    return { gecerli: false, hata: err instanceof Error ? err.message : 'bilinmeyen hata' };
+    return { gecerli: false, hata: err instanceof Error ? err.message : sozluk(d).parca.ai.bilinmeyenHata };
   }
 }
 
-export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: string): Promise<ModulVerisi> {
+export async function geminiIleUrunCek(
+  apiKey: string,
+  sayfaUrl: string,
+  html: string,
+  dil?: Dil,
+): Promise<ModulVerisi> {
+  const d = dil ?? (await dilAl());
+  const s = sozluk(d).parca.ai;
   const metin = htmlMetneDonustur(html);
-  if (!metin) throw new Error('Sayfadan okunabilir bir metin çıkarılamadı.');
+  if (!metin) throw new Error(s.metinYok);
 
   const yonerge =
     `Aşağıda bir e-ticaret sitesindeki ürün sayfasının (${sayfaUrl}) metni var. ` +
     'Bu genelde bir elektronik/hobi/robotik malzemesi (sensör, geliştirme kartı, modül, komponent vb.). ' +
     'Sayfadan ürün bilgilerini çıkarıp istenen şemaya uygun JSON döndür. ' +
     "Emin olmadığın ya da sayfada bulunmayan alanları boş bırak, asla uydurma.\n\n" +
+    (d === 'tr' ? '' : 'Okunabilir metin alanlarını (aciklama, parametre etiketleri) İNGİLİZCE yaz.\n\n') +
     `SAYFA METNİ:\n${metin}`;
 
-  const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek(yonerge, true));
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek(yonerge, urunSemasi(d)), d);
   if (!sonuc.basarili) throw new Error(sonuc.hata);
 
-  const ham = outputMetniCikar(sonuc.govde);
+  const ham = outputMetniCikar(sonuc.govde, d);
   let ayristirilmis: Record<string, unknown>;
   try {
     ayristirilmis = JSON.parse(ham);
   } catch {
-    throw new Error('Yapay zeka yanıtı okunamadı.');
+    throw new Error(s.yanitOkunamadi);
   }
 
   const isim = typeof ayristirilmis.isim === 'string' ? ayristirilmis.isim.trim() : '';
-  if (!isim) throw new Error('Sayfadan ürün bilgisi çıkarılamadı.');
+  if (!isim) throw new Error(s.urunYok);
 
   const parametreler: Record<string, string> = {};
   const hamParametreler = ayristirilmis.parametreler;
@@ -292,7 +308,13 @@ export async function geminiIleUrunCek(apiKey: string, sayfaUrl: string, html: s
  * Çince karışık, makine çevirisi kalitesinde) kısa ve doğal bir Türkçe
  * açıklamaya çevirir/düzenler. Yapılandırılmış şemaya gerek yok, düz metin
  * yanıtı yeterli. */
-export async function geminiIleAciklamaCevir(apiKey: string, hamAciklama: string, baglam?: string): Promise<string> {
+export async function geminiIleAciklamaCevir(
+  apiKey: string,
+  hamAciklama: string,
+  baglam?: string,
+  dil?: Dil,
+): Promise<string> {
+  const d = dil ?? (await dilAl());
   const yonerge =
     'Aşağıda bir elektronik parçanın tedarikçi sitesinden alınmış ham açıklaması var ' +
     '(genelde İngilizce/Çince karışık, kötü yazılmış ya da makine çevirisi kalitesinde). ' +
@@ -301,9 +323,9 @@ export async function geminiIleAciklamaCevir(apiKey: string, hamAciklama: string
     'Sadece açıklama metnini yaz - tırnak işareti, "Açıklama:" gibi bir etiket ya da başka hiçbir ek metin kullanma.\n\n' +
     `HAM AÇIKLAMA:\n${hamAciklama}`;
 
-  const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek(yonerge, false));
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, tekMesajIstek(yonerge, null), d);
   if (!sonuc.basarili) throw new Error(sonuc.hata);
-  return outputMetniCikar(sonuc.govde).trim();
+  return outputMetniCikar(sonuc.govde, d).trim();
 }
 
 export type SohbetMesaji = { rol: 'kullanici' | 'asistan'; icerik: string };
@@ -316,7 +338,9 @@ export async function geminiSohbetCevapla(
   apiKey: string,
   sistemYonergesi: string,
   mesajlar: SohbetMesaji[],
+  dil?: Dil,
 ): Promise<string> {
+  const d = dil ?? (await dilAl());
   const govde: GeminiIstek = {
     systemInstruction: { parts: [{ text: sistemYonergesi }] },
     contents: mesajlar.map((m) => ({
@@ -325,7 +349,7 @@ export async function geminiSohbetCevapla(
     })),
   };
 
-  const sonuc = await gemininiModelSirasiylaCagir(apiKey, govde);
+  const sonuc = await gemininiModelSirasiylaCagir(apiKey, govde, d);
   if (!sonuc.basarili) throw new Error(sonuc.hata);
-  return outputMetniCikar(sonuc.govde).trim();
+  return outputMetniCikar(sonuc.govde, d).trim();
 }

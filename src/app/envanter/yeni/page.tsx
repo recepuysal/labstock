@@ -4,6 +4,8 @@ import { ParcaFormu, type LinkDolgu } from '@/components/parca-formu';
 import { lcscKoduGetir } from '@/lib/lcsc';
 import { agacKur, konumSecenekleri, type Konum } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
+import { dilAl } from '@/lib/i18n/sunucu';
+import { sozluk } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +27,9 @@ export default async function YeniParcaSayfasi({
 
   const konumlar = konumSecenekleri(agacKur((data ?? []) as Konum[]));
 
+  const dil = await dilAl();
+  const sz = sozluk(dil).parca.yeni;
+
   const { lcsc, mpn, adet } = await searchParams;
   const lcscKodu = /^C\d{1,12}$/i.test(lcsc ?? '') ? lcsc!.toUpperCase() : null;
   const ilkAdet = Number.isInteger(Number(adet)) && Number(adet) > 0 ? Number(adet) : undefined;
@@ -33,7 +38,7 @@ export default async function YeniParcaSayfasi({
   if (lcscKodu) {
     ilkDolgu = { mpn: mpn?.slice(0, 80) || undefined, tedarikci: 'LCSC', tedarikci_kodu: lcscKodu };
     try {
-      const v = await lcscKoduGetir(lcscKodu);
+      const v = await lcscKoduGetir(lcscKodu, dil);
       ilkDolgu = {
         ...ilkDolgu,
         uretici: v.uretici,
@@ -45,7 +50,7 @@ export default async function YeniParcaSayfasi({
         resim_url: v.resimUrl,
       };
     } catch (e) {
-      lcscHatasi = e instanceof Error ? e.message : 'LCSC bilgisi alınamadı';
+      lcscHatasi = e instanceof Error ? e.message : sz.lcscAlinamadi;
     }
   }
 
@@ -53,16 +58,16 @@ export default async function YeniParcaSayfasi({
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          Parça ekle
+          {sz.baslik}
         </h1>
         <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          MPN ortak katalogda varsa ona bağlanır, yoksa katalog için yeni bir kayıt açılır. Adet
-          girersen bu bir stok hareketi olarak da kaydedilir.
+          {sz.aciklama}
         </p>
         {lcscKodu && (
           <p className="kart" style={{ margin: '0 0 16px', padding: '10px 14px', fontSize: 12.5, lineHeight: 1.5 }}>
-            Telefonla okutulan LCSC etiketi: <strong className="mn">{lcscKodu}</strong>
-            {ilkAdet ? ` · ${ilkAdet} adet` : ''}. Bilgiler LCSC&apos;den dolduruldu; konumu seçip kaydet.
+            {sz.lcscEtiketi} <strong className="mn">{lcscKodu}</strong>
+            {ilkAdet ? sz.adet(ilkAdet) : ''}
+            {sz.lcscDolduruldu}
             {lcscHatasi && <span style={{ display: 'block', color: '#dc2626' }}>{lcscHatasi}</span>}
           </p>
         )}

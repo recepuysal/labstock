@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { projeyeEkle } from '@/app/envanter/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 const YENI_PROJE = '__yeni__';
 
@@ -20,6 +21,8 @@ export function ProjeEkleFormu({
   const [acik, setAcik] = useState(false);
   const [secim, setSecim] = useState(projeler.length ? projeler[0].id : YENI_PROJE);
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(projeyeEkle, {});
+  const sz = useSozluk();
+  const s = sz.parca.proje;
 
   if (!acik) {
     return (
@@ -36,7 +39,7 @@ export function ProjeEkleFormu({
           padding: 0,
         }}
       >
-        + Projeye ekle
+        {s.projeyeEkle}
       </button>
     );
   }
@@ -63,7 +66,7 @@ export function ProjeEkleFormu({
             {p.ad}
           </option>
         ))}
-        <option value={YENI_PROJE}>+ Yeni proje…</option>
+        <option value={YENI_PROJE}>{s.yeniProje}</option>
       </select>
       <input type="hidden" name="proje_id" value={secim === YENI_PROJE ? '' : secim} />
 
@@ -72,7 +75,7 @@ export function ProjeEkleFormu({
           className="alan"
           style={{ height: 32, fontSize: 12, marginBottom: 8 }}
           name="yeni_proje_adi"
-          placeholder="Proje adı"
+          placeholder={s.projeAdi}
           required
         />
       )}
@@ -86,19 +89,19 @@ export function ProjeEkleFormu({
           min={0.001}
           step="any"
           defaultValue={1}
-          placeholder="Adet"
+          placeholder={s.adet}
         />
         <input
           className="alan"
           style={{ height: 32, fontSize: 12 }}
           name="referans"
-          placeholder="Referans (R12, C4…)"
+          placeholder={s.referans}
         />
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="btn btn-birincil" style={{ height: 30, fontSize: 12 }} type="submit" disabled={bekliyor}>
-          {bekliyor ? 'Ekleniyor…' : 'Ekle'}
+          {bekliyor ? s.ekleniyor : sz.ortak.buton.ekle}
         </button>
         <button
           type="button"
@@ -106,7 +109,7 @@ export function ProjeEkleFormu({
           style={{ height: 30, fontSize: 12 }}
           onClick={() => setAcik(false)}
         >
-          Vazgeç
+          {sz.parca.vazgec}
         </button>
       </div>
     </form>

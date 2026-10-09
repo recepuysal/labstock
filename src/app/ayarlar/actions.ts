@@ -11,24 +11,31 @@ import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
 import { geminiApiAnahtariniDogrula } from '@/lib/gemini';
 import { claudeApiAnahtariniDogrula } from '@/lib/claude';
 import type { AiSaglayici } from '@/lib/ai-anahtarlari';
+import { dilAl, sozlukAl } from '@/lib/i18n/sunucu';
+import { sozluk, yerel } from '@/lib/i18n';
+
+/** Bu dosyadaki action'ların kullanıcıya döndürdüğü mesajlar (aktif dilde). */
+async function mesajlar() {
+  return (await sozlukAl()).ayarlar.eylem;
+}
 
 export async function geriBildirimGonder(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const mesaj = String(formData.get('mesaj') ?? '').trim();
   const surum = String(formData.get('surum') ?? '').trim() || null;
 
-  if (!mesaj) return { hata: 'Bir şeyler yaz.' };
-  if (mesaj.length > 4000) return { hata: 'Mesaj en fazla 4000 karakter olabilir.' };
+  if (!mesaj) return { hata: (await mesajlar()).birSeylerYaz };
+  if (mesaj.length > 4000) return { hata: (await mesajlar()).mesajUzun };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   const { error } = await supabase.from('feedback').insert({ user_id: user.id, mesaj, surum });
   if (error) return { hata: error.message };
 
-  return { bilgi: 'Gönderildi, teşekkürler!' };
+  return { bilgi: (await mesajlar()).gonderildi };
 }
 
 /** Etiket (QR) görünüm tercihini (şekil/boyut/marka) kaydeder. */
@@ -52,7 +59,7 @@ export async function profilGuncelle(_onceki: EylemDurum, formData: FormData): P
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   // update yerine upsert: profiles satırı (tetikleyici çalışmamışsa) hiç
   // olmayabilir — bu durumda update sessizce 0 satır etkiler, upsert ise
@@ -71,7 +78,7 @@ export async function profilGuncelle(_onceki: EylemDurum, formData: FormData): P
   if (error) return { hata: error.message };
 
   revalidatePath('/', 'layout');
-  return { bilgi: 'Kaydedildi.' };
+  return { bilgi: (await mesajlar()).kaydedildi };
 }
 
 const IZINLI_TURLER = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
@@ -79,15 +86,15 @@ const AZAMI_BOYUT = 2 * 1024 * 1024; // 2 MB
 
 export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const dosya = formData.get('resim');
-  if (!(dosya instanceof File) || dosya.size === 0) return { hata: 'Bir görsel seç.' };
-  if (!IZINLI_TURLER.includes(dosya.type)) return { hata: 'Sadece PNG, JPEG, WEBP veya SVG kabul edilir.' };
-  if (dosya.size > AZAMI_BOYUT) return { hata: 'Görsel en fazla 2 MB olabilir.' };
+  if (!(dosya instanceof File) || dosya.size === 0) return { hata: (await mesajlar()).gorselSec };
+  if (!IZINLI_TURLER.includes(dosya.type)) return { hata: (await mesajlar()).gorselTuru };
+  if (dosya.size > AZAMI_BOYUT) return { hata: (await mesajlar()).gorselBoyutu };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   const uzanti = dosya.type.split('/')[1] === 'svg+xml' ? 'svg' : dosya.type.split('/')[1];
   const yol = `${user.id}/profil.${uzanti}`;
@@ -97,7 +104,7 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
     .upload(yol, dosya, { upsert: true, contentType: dosya.type });
   if (yuklemeHatasi) {
     console.error('[profil-resmi] yukleme hatasi:', yuklemeHatasi);
-    return { hata: `Yükleme hatası: ${yuklemeHatasi.message}` };
+    return { hata: (await mesajlar()).yuklemeHatasi(yuklemeHatasi.message) };
   }
 
   const {
@@ -110,21 +117,14 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
 
   if (error) {
     console.error('[profil-resmi] guncelleme hatasi:', error);
-    return { hata: `Kayıt hatası: ${error.message}` };
+    return { hata: (await mesajlar()).kayitHatasi(error.message) };
   }
 
   revalidatePath('/', 'layout');
-  return { bilgi: 'Görsel güncellendi.' };
+  return { bilgi: (await mesajlar()).gorselGuncellendi };
 }
 
 export type DisaAktarSonuc = { hata?: string; xlsxTaban64?: string };
-
-const DURUM_METNI: Record<string, string> = {
-  yeterli: 'Yeterli',
-  az: 'Az kaldı',
-  kritik: 'Kritik',
-  yok: 'Yok',
-};
 
 /** Tüm envanteri .xlsx dosyası olarak (base64) döndürür — indirme işlemi tarayıcı tarafında yapılır.
  * CSV yerine gerçek bir Excel dosyası üretiyoruz: Türkçe Windows/Excel virgülü ondalık ayracı
@@ -132,7 +132,9 @@ const DURUM_METNI: Record<string, string> = {
 export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
   const supabase = await createClient();
   const aktif = await aktifGorunumAl();
-  if (!aktif) return { hata: 'Oturum bulunamadı.' };
+  const dil = await dilAl();
+  const metin = sozluk(dil).ayarlar;
+  if (!aktif) return { hata: metin.eylem.oturumYok };
 
   const { data, error } = await supabase
     .from('envanter')
@@ -156,25 +158,9 @@ export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
     etiketHaritasi.set(row.stock_item_id, liste);
   }
 
-  const basliklar = [
-    'MPN',
-    'Üretici',
-    'Açıklama',
-    'Kategori',
-    'Kılıf',
-    'RoHS',
-    'Konum',
-    'Adet',
-    'Min. Adet',
-    'Durum',
-    'Tedarikçi',
-    'Tedarikçi Kodu',
-    'Alış Fiyatı',
-    'Para Birimi',
-    'Datasheet URL',
-    'Etiketler',
-    'Son Güncelleme',
-  ];
+  const basliklar = metin.disaAktar.basliklar;
+  const durumMetni: Record<string, string> = metin.disaAktar.durum;
+  const { evet, hayir } = metin.disaAktar;
 
   const veriSatirlari = satirlar.map((s) => [
     s.mpn,
@@ -182,24 +168,24 @@ export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
     s.aciklama ?? '',
     s.kategori ?? '',
     s.kilif ?? '',
-    s.rohs === true ? 'Evet' : s.rohs === false ? 'Hayır' : '',
+    s.rohs === true ? evet : s.rohs === false ? hayir : '',
     s.konum_adi ?? '',
     s.adet,
     s.min_adet,
-    DURUM_METNI[s.durum] ?? s.durum,
+    durumMetni[s.durum] ?? s.durum,
     s.tedarikci ?? '',
     s.tedarikci_kodu ?? '',
     s.alis_fiyati ?? '',
     s.para_birimi,
     s.datasheet_url ?? '',
     (etiketHaritasi.get(s.stok_id) ?? []).join('; '),
-    s.updated_at ? new Date(s.updated_at).toLocaleString('tr-TR') : '',
+    s.updated_at ? new Date(s.updated_at).toLocaleString(yerel(dil)) : '',
   ]);
 
   const sayfa = XLSX.utils.aoa_to_sheet([basliklar, ...veriSatirlari]);
   sayfa['!cols'] = basliklar.map((b) => ({ wch: Math.max(10, b.length + 2) }));
   const kitap = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(kitap, sayfa, 'Envanter');
+  XLSX.utils.book_append_sheet(kitap, sayfa, metin.disaAktar.sayfaAdi);
 
   const arabellek = XLSX.write(kitap, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   return { xlsxTaban64: arabellek.toString('base64') };
@@ -221,7 +207,7 @@ export async function davetKoduOlustur(): Promise<DavetKoduSonuc> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   for (let deneme = 0; deneme < 5; deneme++) {
     const kod = rastgeleKod();
@@ -232,20 +218,29 @@ export async function davetKoduOlustur(): Promise<DavetKoduSonuc> {
     }
     if (error.code !== '23505') return { hata: error.message };
   }
-  return { hata: 'Kod oluşturulamadı, tekrar dene.' };
+  return { hata: (await mesajlar()).kodOlusturulamadi };
 }
 
 /** Girilen davet koduyla, kodun sahibinin gözlemcisi olur (salt-okunur erişim). */
 export async function davetKoduIleBaglan(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const kod = String(formData.get('kod') ?? '').trim();
-  if (!kod) return { hata: 'Davet kodu gerekli.' };
+  if (!kod) return { hata: (await mesajlar()).davetKoduGerekli };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc('gozlemci_baglan', { p_kod: kod });
-  if (error) return { hata: error.message };
+  if (error) {
+    // gozlemci_baglan() Türkçe exception fırlatıyor (bkz. 0001_init.sql) — bilinenleri çevir.
+    const m = await mesajlar();
+    const bilinen: Record<string, string> = {
+      'Geçersiz davet kodu': m.gecersizDavetKodu,
+      'Kendi davet koduna bağlanamazsın': m.kendiKodun,
+      'Bu hesabı izleyen kişi sayısı sınırına ulaşıldı (en fazla 8).': m.gozlemciSiniri,
+    };
+    return { hata: bilinen[error.message] ?? error.message };
+  }
 
   revalidatePath('/', 'layout');
-  return { bilgi: 'Bağlantı kuruldu.' };
+  return { bilgi: (await mesajlar()).baglantiKuruldu };
 }
 
 /** Gözlemcilik bağlantısını kaldırır — kendi hesabına dönersin. */
@@ -254,13 +249,13 @@ export async function gozlemcilikKaldir(): Promise<EylemDurum> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   const { error } = await supabase.from('profiles').update({ gozlemci_of: null }).eq('id', user.id);
   if (error) return { hata: error.message };
 
   revalidatePath('/', 'layout');
-  return { bilgi: 'Bağlantı kaldırıldı.' };
+  return { bilgi: (await mesajlar()).baglantiKaldirildi };
 }
 
 /** Sahibin, seni izleyen belirli bir hesabı tek taraflı çıkarması. */
@@ -270,7 +265,7 @@ export async function gozlemciyiCikar(gozlemciId: string): Promise<EylemDurum> {
   if (error) return { hata: error.message };
 
   revalidatePath('/ayarlar');
-  return { bilgi: 'Çıkarıldı.' };
+  return { bilgi: (await mesajlar()).cikarildi };
 }
 
 /** Girilen Gemini/Claude API anahtarını küçük bir istekle doğrulayıp listeye
@@ -280,10 +275,10 @@ export async function gozlemciyiCikar(gozlemciId: string): Promise<EylemDurum> {
  * lib/ai.ts). Birden fazla hesaptan anahtar eklenebilir. */
 export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const saglayici = String(formData.get('saglayici') ?? '') as AiSaglayici;
-  if (saglayici !== 'gemini' && saglayici !== 'claude') return { hata: 'Geçersiz sağlayıcı.' };
+  if (saglayici !== 'gemini' && saglayici !== 'claude') return { hata: (await mesajlar()).gecersizSaglayici };
 
   const anahtar = String(formData.get('api_anahtari') ?? '').trim();
-  if (!anahtar) return { hata: 'Bir API anahtarı gir.' };
+  if (!anahtar) return { hata: (await mesajlar()).anahtarGir };
 
   const ad = String(formData.get('ad') ?? '').trim() || null;
 
@@ -292,8 +287,8 @@ export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Pr
   if (!dogrulama.gecerli) {
     return {
       hata: dogrulama.hata
-        ? `Anahtar doğrulanamadı: ${dogrulama.hata}`
-        : 'Anahtar doğrulanamadı — kopyaladığından emin olup tekrar dener misin?',
+        ? (await mesajlar()).anahtarDogrulanamadi(dogrulama.hata)
+        : (await mesajlar()).anahtarDogrulanamadiGenel,
     };
   }
 
@@ -301,7 +296,7 @@ export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Pr
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   const { data: enSonSira } = await supabase
     .from('ai_anahtarlari')
@@ -318,7 +313,7 @@ export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Pr
   if (error) return { hata: error.message };
 
   revalidatePath('/ayarlar');
-  return { bilgi: 'Anahtar doğrulandı ve kaydedildi.' };
+  return { bilgi: (await mesajlar()).anahtarKaydedildi };
 }
 
 /** Kayıtlı bir AI anahtarını kaldırır. */
@@ -328,7 +323,7 @@ export async function aiAnahtarSil(id: string): Promise<EylemDurum> {
   if (error) return { hata: error.message };
 
   revalidatePath('/ayarlar');
-  return { bilgi: 'Kaldırıldı.' };
+  return { bilgi: (await mesajlar()).kaldirildi };
 }
 
 /** Bir anahtarı deneme sırasında bir üste/alta taşır (komşusuyla sira'yı takas eder). */
@@ -337,7 +332,7 @@ export async function aiAnahtarSiradaTasi(id: string, yon: 'yukari' | 'asagi'): 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   const { data: liste, error } = await supabase
     .from('ai_anahtarlari')
@@ -348,7 +343,7 @@ export async function aiAnahtarSiradaTasi(id: string, yon: 'yukari' | 'asagi'): 
 
   const siraliListe = (liste ?? []) as { id: string; sira: number }[];
   const index = siraliListe.findIndex((a) => a.id === id);
-  if (index === -1) return { hata: 'Anahtar bulunamadı.' };
+  if (index === -1) return { hata: (await mesajlar()).anahtarBulunamadi };
 
   const komsuIndex = yon === 'yukari' ? index - 1 : index + 1;
   if (komsuIndex < 0 || komsuIndex >= siraliListe.length) return {};
@@ -376,13 +371,13 @@ export async function aiAnahtarSiradaTasi(id: string, yon: 'yukari' | 'asagi'): 
 export async function haftalikYedekAyarlariniKaydet(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const aktif = formData.get('aktif') === 'on';
   const eposta = String(formData.get('eposta') ?? '').trim() || null;
-  if (eposta && !eposta.includes('@')) return { hata: 'Geçerli bir e-posta adresi gir.' };
+  if (eposta && !eposta.includes('@')) return { hata: (await mesajlar()).gecerliEposta };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: (await mesajlar()).oturumYok };
 
   const { error } = await supabase
     .from('profiles')
@@ -390,5 +385,5 @@ export async function haftalikYedekAyarlariniKaydet(_onceki: EylemDurum, formDat
   if (error) return { hata: error.message };
 
   revalidatePath('/ayarlar');
-  return { bilgi: 'Kaydedildi.' };
+  return { bilgi: (await mesajlar()).kaydedildi };
 }

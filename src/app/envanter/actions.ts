@@ -14,6 +14,10 @@ import { aiIleUrunCek, aiIleAciklamaCevir } from '@/lib/ai';
 import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
 import { TARAYICI_USER_AGENT } from '@/lib/urun-ld-json';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
+import { sozlukAl } from '@/lib/i18n/sunucu';
+import type { Sozluk } from '@/lib/i18n';
+
+type HataMetinleri = Sozluk['envanter']['hata'];
 
 export type EylemDurum = { hata?: string; bilgi?: string; stokId?: string };
 
@@ -47,13 +51,16 @@ const IZINLI_RESIM_TURLERI = ['image/png', 'image/jpeg', 'image/webp'];
 const AZAMI_RESIM_BOYUTU = 2 * 1024 * 1024; // 2 MB
 
 /** Formdan gelen (varsa) parça görselini doğrular; geçersizse hata döner, yoksa null döner. */
-function parcaResmiDogrula(ham: FormDataEntryValue | null): { dosya: File | null; hata?: string } {
+function parcaResmiDogrula(
+  ham: FormDataEntryValue | null,
+  h: HataMetinleri,
+): { dosya: File | null; hata?: string } {
   if (!(ham instanceof File) || ham.size === 0) return { dosya: null };
   if (!IZINLI_RESIM_TURLERI.includes(ham.type)) {
-    return { dosya: null, hata: 'Görsel sadece PNG, JPEG ya da WEBP olabilir.' };
+    return { dosya: null, hata: h.gorselTur };
   }
   if (ham.size > AZAMI_RESIM_BOYUTU) {
-    return { dosya: null, hata: 'Görsel en fazla 2 MB olabilir.' };
+    return { dosya: null, hata: h.gorselBoyut };
   }
   return { dosya: ham };
 }
@@ -64,6 +71,7 @@ async function parcaResminiYukle(
   userId: string,
   partId: string,
   dosya: File,
+  h: HataMetinleri,
 ): Promise<{ url?: string; hata?: string }> {
   const uzanti = dosya.type.split('/')[1];
   const yol = `${userId}/${partId}.${uzanti}`;
@@ -71,7 +79,7 @@ async function parcaResminiYukle(
   const { error: yuklemeHatasi } = await supabase.storage
     .from('parca-resimleri')
     .upload(yol, dosya, { upsert: true, contentType: dosya.type });
-  if (yuklemeHatasi) return { hata: `Görsel yüklenemedi: ${yuklemeHatasi.message}` };
+  if (yuklemeHatasi) return { hata: h.gorselYuklenemedi(yuklemeHatasi.message) };
 
   const {
     data: { publicUrl },
@@ -113,8 +121,9 @@ export async function stokSil(stokId: string): Promise<EylemDurum> {
 }
 
 export async function konumEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const h = (await sozlukAl()).envanter.hata;
   const ad = String(formData.get('ad') ?? '').trim();
-  if (!ad) return { hata: 'Ad zorunlu.' };
+  if (!ad) return { hata: h.adZorunlu };
 
   const kod = String(formData.get('kod') ?? '').trim() || null;
   const tip = String(formData.get('tip') ?? '').trim() || null;
@@ -125,7 +134,7 @@ export async function konumEkle(_onceki: EylemDurum, formData: FormData): Promis
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: h.oturumYok };
 
   const { error } = await supabase.from('locations').insert({
     user_id: user.id,
@@ -143,18 +152,19 @@ export async function konumEkle(_onceki: EylemDurum, formData: FormData): Promis
 }
 
 export async function konumGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const { hata: h, bilgi } = (await sozlukAl()).envanter;
   const konumId = String(formData.get('konum_id') ?? '');
-  if (!konumId) return { hata: 'Geçersiz konum.' };
+  if (!konumId) return { hata: h.gecersizKonum };
 
   const ad = String(formData.get('ad') ?? '').trim();
-  if (!ad) return { hata: 'Ad zorunlu.' };
+  if (!ad) return { hata: h.adZorunlu };
 
   const kod = String(formData.get('kod') ?? '').trim() || null;
   const tip = String(formData.get('tip') ?? '').trim() || null;
   const aciklama = String(formData.get('aciklama') ?? '').trim() || null;
   const parentId = String(formData.get('parent_id') ?? '') || null;
 
-  if (parentId === konumId) return { hata: 'Bir konum kendi üst konumu olamaz.' };
+  if (parentId === konumId) return { hata: h.kendiUstu };
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -165,7 +175,7 @@ export async function konumGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   if (error) return { hata: error.message };
 
   revalidatePath('/envanter');
-  return { bilgi: 'Güncellendi.' };
+  return { bilgi: bilgi.guncellendi };
 }
 
 /** Konumu siler — alt konumları da (parent_id on delete cascade) birlikte silinir. */
@@ -179,8 +189,9 @@ export async function konumSil(konumId: string): Promise<EylemDurum> {
 }
 
 export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const { hata: h, bilgi } = (await sozlukAl()).envanter;
   const mpn = String(formData.get('mpn') ?? '').trim();
-  if (!mpn) return { hata: 'MPN (parça numarası) zorunlu.' };
+  if (!mpn) return { hata: h.mpnZorunlu };
 
   const uretici = String(formData.get('uretici') ?? '').trim() || null;
   const aciklama = String(formData.get('aciklama') ?? '').trim() || null;
@@ -197,20 +208,20 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   const datasheetUrl = String(formData.get('datasheet_url') ?? '').trim() || null;
   const parametreler = metinToParametreler(String(formData.get('parametreler') ?? ''));
   const otomatikResimUrl = String(formData.get('otomatik_resim_url') ?? '').trim() || null;
-  const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'));
+  const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'), h);
   if (resimHatasi) return { hata: resimHatasi };
 
-  if (!Number.isFinite(adet) || adet < 0) return { hata: 'Adet geçersiz.' };
-  if (!Number.isFinite(minAdet) || minAdet < 0) return { hata: 'Minimum seviye geçersiz.' };
+  if (!Number.isFinite(adet) || adet < 0) return { hata: h.adetGecersiz };
+  if (!Number.isFinite(minAdet) || minAdet < 0) return { hata: h.minGecersiz };
   if (alisFiyati !== null && (!Number.isFinite(alisFiyati) || alisFiyati < 0)) {
-    return { hata: 'Alım fiyatı geçersiz.' };
+    return { hata: h.fiyatGecersiz };
   }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: h.oturumYok };
 
   // 1) Ortak katalogda parça var mı? (mpn, üretici) çifti unique index'teki
   // gibi eşleşiyor olmalı — yoksa üretici farklı bir "XL6009" ile aynı
@@ -242,17 +253,17 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
 
     if (ekleHatasi) {
       if (ekleHatasi.code === '23505') {
-        return { hata: `"${mpn}"${uretici ? ` / ${uretici}` : ''} zaten katalogda kayıtlı.` };
+        return { hata: h.katalogdaVar(`"${mpn}"${uretici ? ` / ${uretici}` : ''}`) };
       }
       return { hata: ekleHatasi.message };
     }
     partId = yeni.id;
   }
 
-  if (!partId) return { hata: 'Parça oluşturulamadı.' };
+  if (!partId) return { hata: h.parcaOlusturulamadi };
 
   if (resimDosyasi) {
-    const { url, hata } = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi);
+    const { url, hata } = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi, h);
     if (hata) return { hata };
     await supabase.from('parts').update({ resim_url: url }).eq('id', partId);
   } else if (otomatikResimUrl && mevcut?.id) {
@@ -318,16 +329,17 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   }
 
   revalidatePath('/envanter');
-  return { bilgi: 'Eklendi.', stokId };
+  return { bilgi: bilgi.eklendi, stokId };
 }
 
 export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const { hata: h, bilgi } = (await sozlukAl()).envanter;
   const stokId = String(formData.get('stok_id') ?? '');
   const partId = String(formData.get('part_id') ?? '');
-  if (!stokId || !partId) return { hata: 'Geçersiz kayıt.' };
+  if (!stokId || !partId) return { hata: h.gecersizKayit };
 
   const mpn = String(formData.get('mpn') ?? '').trim();
-  if (!mpn) return { hata: 'MPN (parça numarası) zorunlu.' };
+  if (!mpn) return { hata: h.mpnZorunlu };
 
   const uretici = String(formData.get('uretici') ?? '').trim() || null;
   const aciklama = String(formData.get('aciklama') ?? '').trim() || null;
@@ -343,23 +355,23 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   const datasheetUrl = String(formData.get('datasheet_url') ?? '').trim() || null;
   const parametreler = metinToParametreler(String(formData.get('parametreler') ?? ''));
   const otomatikResimUrl = String(formData.get('otomatik_resim_url') ?? '').trim() || null;
-  const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'));
+  const { dosya: resimDosyasi, hata: resimHatasi } = parcaResmiDogrula(formData.get('resim'), h);
   if (resimHatasi) return { hata: resimHatasi };
 
-  if (!Number.isFinite(minAdet) || minAdet < 0) return { hata: 'Minimum seviye geçersiz.' };
+  if (!Number.isFinite(minAdet) || minAdet < 0) return { hata: h.minGecersiz };
   if (alisFiyati !== null && (!Number.isFinite(alisFiyati) || alisFiyati < 0)) {
-    return { hata: 'Alım fiyatı geçersiz.' };
+    return { hata: h.fiyatGecersiz };
   }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: h.oturumYok };
 
   let resimUrl: string | undefined;
   if (resimDosyasi) {
-    const sonuc = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi);
+    const sonuc = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi, h);
     if (sonuc.hata) return { hata: sonuc.hata };
     resimUrl = sonuc.url;
   } else if (otomatikResimUrl) {
@@ -386,7 +398,7 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
 
   if (parcaHatasi) {
     if (parcaHatasi.code === '23505') {
-      return { hata: `"${mpn}"${uretici ? ` / ${uretici}` : ''} zaten katalogda başka bir parça olarak kayıtlı.` };
+      return { hata: h.katalogdaBaska(`"${mpn}"${uretici ? ` / ${uretici}` : ''}`) };
     }
     return { hata: parcaHatasi.message };
   }
@@ -405,9 +417,7 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
 
   if (stokHatasi) {
     if (stokHatasi.code === '23505') {
-      return {
-        hata: 'Bu parça seçtiğin konumda zaten kayıtlı görünüyor — orada bu parçanın başka bir stok satırı var.',
-      };
+      return { hata: h.ayniKonumda };
     }
     return { hata: stokHatasi.message };
   }
@@ -415,13 +425,14 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   const donus = String(formData.get('donus') ?? '') || '/envanter';
   revalidatePath('/envanter');
   revalidatePath(donus);
-  return { bilgi: 'Güncellendi.' };
+  return { bilgi: bilgi.guncellendi };
 }
 
 /** Parçayı bir projenin BOM'una ekler/günceller; proje yeni ise önce oluşturur. */
 export async function projeyeEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const h = (await sozlukAl()).envanter.hata;
   const partId = String(formData.get('part_id') ?? '');
-  if (!partId) return { hata: 'Geçersiz parça.' };
+  if (!partId) return { hata: h.gecersizParca };
 
   const projeId = String(formData.get('proje_id') ?? '') || null;
   const yeniProjeAdi = String(formData.get('yeni_proje_adi') ?? '').trim();
@@ -429,14 +440,14 @@ export async function projeyeEkle(_onceki: EylemDurum, formData: FormData): Prom
   const referans = String(formData.get('referans') ?? '').trim() || null;
   const donus = String(formData.get('donus') ?? '') || '/envanter';
 
-  if (!projeId && !yeniProjeAdi) return { hata: 'Bir proje seç ya da yeni proje adı gir.' };
-  if (!Number.isFinite(adet) || adet <= 0) return { hata: 'Adet geçersiz.' };
+  if (!projeId && !yeniProjeAdi) return { hata: h.projeSec };
+  if (!Number.isFinite(adet) || adet <= 0) return { hata: h.adetGecersiz };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: h.oturumYok };
 
   let hedefProjeId = projeId;
 
@@ -478,14 +489,15 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   const stokId = String(formData.get('stok_id') ?? '');
   const partId = String(formData.get('part_id') ?? '');
   const kod = String(formData.get('lcsc_kodu') ?? '').trim();
-  if (!stokId || !partId) return { hata: 'Geçersiz kayıt.' };
-  if (!kod) return { hata: 'LCSC kodu gerekli (ör. C25804).' };
+  const h = (await sozlukAl()).envanter.hata;
+  if (!stokId || !partId) return { hata: h.gecersizKayit };
+  if (!kod) return { hata: h.lcscKoduGerekli };
 
   let veri;
   try {
     veri = await lcscKoduGetir(kod);
   } catch (err) {
-    return { hata: err instanceof Error ? err.message : 'LCSC verisi alınamadı.' };
+    return { hata: err instanceof Error ? err.message : h.lcscAlinamadi };
   }
 
   const supabase = await createClient();
@@ -509,9 +521,9 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
         try {
           veri.aciklama = await aiIleAciklamaCevir(anahtarlar, veri.aciklama, kod);
         } catch (err) {
-          const mesaj = err instanceof Error ? err.message : 'bilinmeyen hata';
+          const mesaj = err instanceof Error ? err.message : h.bilinmeyen;
           console.error('lcscdenCek: aciklama cevirisi basarisiz:', err);
-          cevirUyarisi = `LCSC verileri çekildi, ancak açıklama Türkçeye çevrilemedi: ${mesaj}`;
+          cevirUyarisi = h.ceviriUyarisi(mesaj);
         }
       }
     }
@@ -531,9 +543,7 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
     const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);
     if (error) {
       if (error.code === '23505') {
-        return {
-          hata: `LCSC'den gelen üretici ("${veri.uretici}") bu MPN için katalogda başka bir parçada zaten kayıtlı. O parçayla birleştirmek için önce onu düzenleyip kaydı temizlemen gerekiyor.`,
-        };
+        return { hata: h.lcscUreticiCakisma(String(veri.uretici)) };
       }
       return { hata: error.message };
     }
@@ -583,8 +593,9 @@ export type LinkOnizilemesi = { hata?: string; veri?: ModulVerisi; tedarikciAdi?
  * sayfayı yapay zekaya okutup aynı şekilde doldurur. Kaydetmez — formu
  * doldurup kullanıcıya gözden geçirme fırsatı vermek içindir (bkz. ParcaFormu). */
 export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
+  const h = (await sozlukAl()).envanter.hata;
   const temizUrl = url.trim();
-  if (!temizUrl) return { hata: 'Bağlantı gerekli.' };
+  if (!temizUrl) return { hata: h.baglantiGerekli };
 
   const bilinen = bilinenTedarikciTespitEt(temizUrl);
   if (bilinen) {
@@ -593,7 +604,7 @@ export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
       return { veri, tedarikciAdi: bilinen.ad };
     } catch (err) {
       console.error('linkOnizle:', err);
-      return { hata: err instanceof Error ? err.message : 'Çekilemedi.' };
+      return { hata: err instanceof Error ? err.message : h.cekilemedi };
     }
   }
 
@@ -601,35 +612,32 @@ export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
   try {
     ayrikUrl = new URL(temizUrl);
   } catch {
-    return { hata: 'Geçersiz bağlantı.' };
+    return { hata: h.gecersizBaglanti };
   }
-  if (!guvenliDisUrlMi(ayrikUrl)) return { hata: 'Geçersiz bağlantı.' };
+  if (!guvenliDisUrlMi(ayrikUrl)) return { hata: h.gecersizBaglanti };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: h.oturumYok };
 
   const anahtarlar = await aiAnahtarlariGetir(supabase, user.id);
 
   if (anahtarlar.length === 0) {
-    return {
-      hata:
-        'Bu site için hazır destek yok. Ayarlar sayfasından ücretsiz bir Gemini ya da Claude API anahtarı eklersen artık her siteden çekebilirsin.',
-    };
+    return { hata: h.siteDesteklenmiyor };
   }
 
   try {
     const sayfaYaniti = await fetch(ayrikUrl.toString(), { headers: { 'User-Agent': TARAYICI_USER_AGENT } });
-    if (!sayfaYaniti.ok) return { hata: `Sayfa alınamadı (HTTP ${sayfaYaniti.status}).` };
+    if (!sayfaYaniti.ok) return { hata: h.sayfaAlinamadi(sayfaYaniti.status) };
     const html = await sayfaYaniti.text();
 
     const veri = await aiIleUrunCek(anahtarlar, ayrikUrl.toString(), html);
     return { veri, tedarikciAdi: ayrikUrl.hostname.replace(/^www\./, '') };
   } catch (err) {
     console.error('linkOnizle (yapay zeka):', err);
-    return { hata: err instanceof Error ? err.message : 'Çekilemedi.' };
+    return { hata: err instanceof Error ? err.message : h.cekilemedi };
   }
 }
 
@@ -637,13 +645,14 @@ export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
 export async function etiketEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const stokId = String(formData.get('stok_id') ?? '');
   const ad = String(formData.get('etiket_adi') ?? '').trim();
-  if (!stokId || !ad) return { hata: 'Etiket adı gerekli.' };
+  const h = (await sozlukAl()).envanter.hata;
+  if (!stokId || !ad) return { hata: h.etiketAdiGerekli };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  if (!user) return { hata: h.oturumYok };
 
   const { data: mevcutEtiket, error: aramaHatasi } = await supabase
     .from('tags')
@@ -700,12 +709,12 @@ export async function konumDegistir(stokId: string, konumId: string | null): Pro
 
   if (error) {
     if (error.code === '23505') {
-      return { hata: 'Bu parça seçtiğin konumda zaten kayıtlı görünüyor — orada bu parçanın başka bir stok satırı var.' };
+      return { hata: (await sozlukAl()).envanter.hata.ayniKonumda };
     }
     return { hata: error.message };
   }
 
   revalidatePath(`/envanter/${stokId}`);
   revalidatePath('/envanter');
-  return { bilgi: 'Konum güncellendi.' };
+  return { bilgi: (await sozlukAl()).envanter.bilgi.konumGuncellendi };
 }

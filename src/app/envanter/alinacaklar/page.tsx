@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { AlinacaklarListesi, type AlinacakKaydi } from '@/components/alinacaklar-listesi';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,8 @@ export default async function AlinacaklarSayfasi() {
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris');
   const { kullaniciId: hedef, saltOkunur, izlenenAdi } = aktif;
+  const sozlukler = await sozlukAl();
+  const s = sozlukler.envanter.alinacaklar;
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -39,20 +42,21 @@ export default async function AlinacaklarSayfasi() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Envantere dön
+          {sozlukler.ortak.buton.envantereDon}
         </Link>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          Alınacaklar
+          {s.baslik}
         </h1>
         <p style={{ margin: '0 0 8px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          Envanterden bağımsız, hızlı bir alışveriş notu — malzeme adı, adet, not ve
-          varsa tedarikçi linki.
+          {s.aciklama}
         </p>
         <p style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 600 }}>
           {saltOkunur ? (
-            <span style={{ color: 'var(--copper)' }}>İzlediğin depo: {izlenenAdi || 'bağlı hesap'}</span>
+            <span style={{ color: 'var(--copper)' }}>
+              {s.izledigin(izlenenAdi || sozlukler.ortak.ustBar.bagliHesap)}
+            </span>
           ) : (
-            <span style={{ color: 'var(--muted)' }}>Kendi depon</span>
+            <span style={{ color: 'var(--muted)' }}>{s.kendiDepon}</span>
           )}
         </p>
 

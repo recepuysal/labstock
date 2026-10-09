@@ -14,10 +14,12 @@ import {
   konumTipOzeti,
   paraFormatla,
   saatFormatla,
-  sayi,
+  sayiBicimi,
   type EnvanterSatiri,
   type Konum,
 } from '@/lib/types';
+import { sozluk } from '@/lib/i18n';
+import { dilAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +40,9 @@ export default async function EnvanterSayfasi({
   }>;
 }) {
   const { q, konum, kategori, kilif, durum, etiket, sira, gorunum } = await searchParams;
+  const dil = await dilAl();
+  const s = sozluk(dil).envanter.liste;
+  const sayi = sayiBicimi(dil);
   const supabase = await createClient();
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris');
@@ -134,7 +139,7 @@ export default async function EnvanterSayfasi({
     }
   }
   const sayilar = Object.fromEntries(konumToplamSayilari(agac, dogrudanSayilar));
-  const tipOzeti = konumTipOzeti(konumlar);
+  const tipOzeti = konumTipOzeti(konumlar, dil);
 
   const { data: sonHareket } = await supabase
     .from('stock_movements')
@@ -145,9 +150,9 @@ export default async function EnvanterSayfasi({
     .maybeSingle();
 
   const seciliKonum = konum ? konumlar.find((k) => k.id === konum) : undefined;
-  const toplamAdet = satirlar.reduce((t, s) => t + Number(s.adet), 0);
-  const kritik = satirlar.filter((s) => s.durum === 'kritik' || s.durum === 'yok').length;
-  const az = satirlar.filter((s) => s.durum === 'az').length;
+  const toplamAdet = satirlar.reduce((t, r) => t + Number(r.adet), 0);
+  const kritik = satirlar.filter((r) => r.durum === 'kritik' || r.durum === 'yok').length;
+  const az = satirlar.filter((r) => r.durum === 'az').length;
 
   const bosDepo = konumlar.length === 0 && (toplamCesit ?? 0) === 0;
 
@@ -167,17 +172,17 @@ export default async function EnvanterSayfasi({
         <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px 0' }}>
           <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)' }}>
-            Depo / {seciliKonum ? seciliKonum.ad : 'Tüm envanter'}
+            {s.depo} / {seciliKonum ? seciliKonum.ad : s.tumEnvanter}
             {q && ` / "${q}"`}
             {etiket && ` / #${etiket}`}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 5 }}>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-              {seciliKonum ? seciliKonum.ad : 'Tüm envanter'}
+              {seciliKonum ? seciliKonum.ad : s.tumEnvanter}
             </h1>
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-              {satirlar.length} kayıt · {sayi.format(toplamAdet)} adet
-              {satirlar.length === LIMIT && ` (ilk ${LIMIT})`}
+              {s.kayitAdet(satirlar.length, sayi.format(toplamAdet))}
+              {satirlar.length === LIMIT && s.ilk(LIMIT)}
             </span>
           </div>
 
@@ -189,23 +194,21 @@ export default async function EnvanterSayfasi({
         </div>
 
         <div style={{ flex: 1, padding: '14px 20px 20px', overflowY: 'auto' }}>
-          {error && <div className="hata">Liste yüklenemedi: {error.message}</div>}
+          {error && <div className="hata">{s.yuklenemedi} {error.message}</div>}
 
           {!error && bosDepo && (
             <div className="kart" style={{ padding: 28, maxWidth: 560 }}>
-              <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 600 }}>Depon henüz boş</h2>
+              <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 600 }}>{s.bosBaslik}</h2>
               <p style={{ margin: '0 0 18px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
-                {saltOkunur
-                  ? 'İzlediğin depo henüz boş.'
-                  : 'Önce bir konum oluştur (oda, dolap, çekmece — ne istersen) ya da doğrudan ilk parçanı ekleyebilirsin.'}
+                {saltOkunur ? s.bosIzleyen : s.bosAciklama}
               </p>
               {!saltOkunur && (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <Link href="/envanter/konum-ekle" className="btn btn-birincil">
-                    Konum ekle
+                    {s.konumEkle}
                   </Link>
                   <Link href="/envanter/yeni" className="btn">
-                    Parça ekle
+                    {s.parcaEkle}
                   </Link>
                 </div>
               )}
@@ -216,10 +219,10 @@ export default async function EnvanterSayfasi({
             <div className="kart" style={{ padding: 24, maxWidth: 480 }}>
               <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>
                 {q || konum || kategori || kilif || durum
-                  ? 'Bu filtreye uyan parça yok.'
+                  ? s.filtreBos
                   : saltOkunur
-                    ? 'Bu depoda henüz parça yok.'
-                    : 'Bu depoda henüz parça yok — sağ üstten ekleyebilirsin.'}
+                    ? s.depoBosIzleyen
+                    : s.depoBos}
               </p>
             </div>
           )}
@@ -249,14 +252,14 @@ export default async function EnvanterSayfasi({
           }}
         >
           <span className="mn">
-            {toplamCesit ?? 0} çeşit · {sayi.format(toplamAdet)} adet
+            {s.cesitAdet(toplamCesit ?? 0, sayi.format(toplamAdet))}
           </span>
           {kritik > 0 && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span
                 style={{ width: 5, height: 5, borderRadius: 99, background: 'var(--crit-dot)' }}
               />
-              {kritik} kritik
+              {s.kritik(kritik)}
             </span>
           )}
           {az > 0 && (
@@ -264,23 +267,23 @@ export default async function EnvanterSayfasi({
               <span
                 style={{ width: 5, height: 5, borderRadius: 99, background: 'var(--warn-dot)' }}
               />
-              {az} az kaldı
+              {s.azKaldi(az)}
             </span>
           )}
 
           <div style={{ flex: 1 }} />
 
           <span>
-            Toplam depo değeri{' '}
+            {s.depoDegeri}{' '}
             {depoDegeri.size > 0
               ? Array.from(depoDegeri.entries())
-                  .map(([birim, tutar]) => paraFormatla(tutar, birim))
+                  .map(([birim, tutar]) => paraFormatla(tutar, birim, dil))
                   .join(' · ')
               : '—'}
           </span>
 
           <Link href="/envanter/aktiviteler" style={{ color: 'inherit' }}>
-            Son işlem {sonHareket?.created_at ? saatFormatla(sonHareket.created_at) : '—'}
+            {s.sonIslem} {sonHareket?.created_at ? saatFormatla(sonHareket.created_at, dil) : '—'}
           </Link>
       </footer>
     </>

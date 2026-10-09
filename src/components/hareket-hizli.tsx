@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { stokHareket } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function HareketHizli({
   stokId,
@@ -12,6 +13,8 @@ export function HareketHizli({
   adet: number;
   saltOkunur?: boolean;
 }) {
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.hareketHizli;
   const [acikYon, setAcikYon] = useState<1 | -1 | null>(null);
   const [miktar, setMiktar] = useState('1');
   const [hata, setHata] = useState<string | null>(null);
@@ -26,7 +29,7 @@ export function HareketHizli({
   function gonder(yon: 1 | -1) {
     const n = Number(miktar);
     if (!Number.isFinite(n) || n <= 0) {
-      setHata('Geçerli bir miktar gir.');
+      setHata(s.gecersizMiktar);
       return;
     }
     setHata(null);
@@ -45,7 +48,7 @@ export function HareketHizli({
         disabled={saltOkunur || adet <= 0}
         onClick={() => setAcikYon(acikYon === -1 ? null : -1)}
       >
-        − Stok düş
+        {s.stokDus}
       </button>
       <button
         type="button"
@@ -53,7 +56,7 @@ export function HareketHizli({
         disabled={saltOkunur}
         onClick={() => setAcikYon(acikYon === 1 ? null : 1)}
       >
-        + Stok ekle
+        {s.stokEkle}
       </button>
 
       {acikYon && (
@@ -90,10 +93,10 @@ export function HareketHizli({
             disabled={bekliyor}
             onClick={() => gonder(acikYon)}
           >
-            {bekliyor ? '…' : acikYon > 0 ? 'Eklemeyi onayla' : 'Düşüşü onayla'}
+            {bekliyor ? '…' : acikYon > 0 ? s.eklemeyiOnayla : s.dususuOnayla}
           </button>
           <button type="button" className="btn" onClick={kapat} disabled={bekliyor}>
-            Vazgeç
+            {sozlukler.envanter.vazgec}
           </button>
           {hata && <span style={{ fontSize: 11, color: 'var(--crit)' }}>{hata}</span>}
         </div>

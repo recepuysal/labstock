@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { lcscdenCek } from '@/app/envanter/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function LcscCekFormu({
   stokId,
@@ -18,10 +19,13 @@ export function LcscCekFormu({
   const [acik, setAcik] = useState(false);
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(lcscdenCek, {});
   const ilkYuklemeRef = useRef(true);
+  const sz = useSozluk();
+  const s = sz.parca.lcsc;
 
   // Tamamen sorunsuz bir çekmeden sonra (ne hata ne de çeviri uyarısı varsa)
   // popup'ı otomatik kapat — önceden sadece "Vazgeç" ile kapanıyordu. Bir
-  // uyarı varsa (ör. LCSC verileri çekildi ama Türkçe çeviri başarısız oldu)
+  // uyarı varsa (ör. LCSC verileri çekildi ama Türkçe çeviri başarısız oldu —
+  // çeviri sadece arayüz dili Türkçeyken denenir, bkz. lib/ai.ts)
   // kullanıcı görüp kendi kapatsın diye açık bırakılıyor. useActionState'in
   // ilk (mount anındaki) durumunu atlamak için ilkYuklemeRef kullanılıyor,
   // yoksa popup daha hiç açılmadan kapanmış görünürdü.
@@ -36,7 +40,7 @@ export function LcscCekFormu({
   return (
     <div style={{ position: 'relative', display: 'inline-flex' }}>
       <button type="button" className="btn" disabled={saltOkunur} onClick={() => setAcik((a) => !a)}>
-        LCSC&apos;den çek
+        {s.lcscdenCek}
       </button>
 
       {acik && (
@@ -70,10 +74,10 @@ export function LcscCekFormu({
             autoFocus
           />
           <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-            {bekliyor ? 'Çekiliyor…' : 'Çek'}
+            {bekliyor ? s.cekiliyor : s.cek}
           </button>
           <button type="button" className="btn" onClick={() => setAcik(false)} disabled={bekliyor}>
-            Vazgeç
+            {sz.parca.vazgec}
           </button>
           {durum.hata && <span style={{ fontSize: 11.5, color: 'var(--crit)' }}>{durum.hata}</span>}
           {durum.bilgi && <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{durum.bilgi}</span>}

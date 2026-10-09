@@ -6,6 +6,7 @@ import { konumKodu, IZGARA_QR_OLCU, YAZI_OLCU } from '@/lib/etiket';
 import { qrGorseli, etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 import { YazdirButonu } from '@/components/yazdir-butonu';
 import type { Konum } from '@/lib/types';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,8 @@ function yolOlustur(konum: Konum, harita: Map<string, Konum>): string {
 export default async function KonumEtiketleriSayfasi() {
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris');
+  const sozlukler = await sozlukAl();
+  const s = sozlukler.envanter.etiketler;
 
   const supabase = await createClient();
   const { data: konumVerisi } = await supabase
@@ -83,11 +86,11 @@ export default async function KonumEtiketleriSayfasi() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Envantere dön
+          {sozlukler.ortak.buton.envantereDon}
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/ayarlar" className="mn" style={{ fontSize: 11.5, color: 'var(--muted)' }}>
-            Etiket görünümünü ayarla
+            {s.ayarla}
           </Link>
           {etiketler.length > 0 && <YazdirButonu />}
         </div>
@@ -95,17 +98,16 @@ export default async function KonumEtiketleriSayfasi() {
 
       <div className="yazdirma-disi" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px' }}>
-          Konum etiketleri
+          {s.baslik}
         </h1>
         <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          Yazdır, kes, çekmecelere/raflara yapıştır. Bir barkod okuyucuyla taradığında (ya da
-          arama kutusuna elle yapıştırdığında) doğrudan o konumdaki parçalar açılır.
+          {s.aciklama}
         </p>
       </div>
 
       {etiketler.length === 0 ? (
         <div className="kart" style={{ maxWidth: 480, margin: '0 auto', padding: 24 }}>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>Henüz bir konum yok.</p>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>{s.bos}</p>
         </div>
       ) : (
         <div

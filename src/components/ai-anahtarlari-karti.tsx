@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { aiAnahtarEkle, aiAnahtarSil, aiAnahtarSiradaTasi } from '@/app/ayarlar/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
 import type { AiSaglayici } from '@/lib/ai-anahtarlari';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export type AiAnahtarSatiri = {
   id: string;
@@ -21,13 +22,15 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
   const [islemGoren, basla] = useTransition();
   const [islemGorenId, setIslemGorenId] = useState<string | null>(null);
   const router = useRouter();
+  const so = useSozluk();
+  const s = so.ayarlar.ai;
 
   useEffect(() => {
     if (durum.bilgi) setEklemeAcik(false);
   }, [durum.bilgi]);
 
   function sil(id: string) {
-    if (!window.confirm('Bu API anahtarını kaldırmak istediğine emin misin?')) return;
+    if (!window.confirm(s.silOnay)) return;
     setIslemGorenId(id);
     basla(async () => {
       await aiAnahtarSil(id);
@@ -51,11 +54,10 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}
       >
-        YAPAY ZEKA API ANAHTARLARI
+        {s.baslik}
       </div>
       <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-        Direnç.net / Robotistan / Motorobit dışındaki sitelerde "Linkten çek", LCSC açıklamalarının
-        Türkçe çevirisi ve Sohbet asistanı buradaki anahtarlarla çalışır. Birden fazla{' '}
+        {s.aciklamaOnce}{' '}
         <a
           href="https://aistudio.google.com/apikey"
           target="_blank"
@@ -64,7 +66,7 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
         >
           Gemini
         </a>{' '}
-        ve/veya{' '}
+        {s.veya}{' '}
         <a
           href="https://console.anthropic.com/settings/keys"
           target="_blank"
@@ -73,9 +75,7 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
         >
           Claude
         </a>{' '}
-        anahtarı ekleyebilirsin — yukarıdakinden başlanır, o çalışmazsa (kota dolu, geçersiz vb.)
-        otomatik olarak bir alttaki denenir. Sırayı ok tuşlarıyla değiştirebilirsin. Anahtarlar sadece
-        sende kalır, kimseyle paylaşılmaz; kullanım kendi hesabındaki kotandan düşer.
+        {s.aciklamaSonra}
       </p>
 
       {anahtarlar.length > 0 && (
@@ -116,7 +116,7 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
                 style={{ height: 26, width: 26, padding: 0, fontSize: 12 }}
                 onClick={() => tasi(a.id, 'yukari')}
                 disabled={i === 0 || islemGoren}
-                title="Yukarı taşı"
+                title={s.yukariTasi}
               >
                 ↑
               </button>
@@ -126,7 +126,7 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
                 style={{ height: 26, width: 26, padding: 0, fontSize: 12 }}
                 onClick={() => tasi(a.id, 'asagi')}
                 disabled={i === anahtarlar.length - 1 || islemGoren}
-                title="Aşağı taşı"
+                title={s.asagiTasi}
               >
                 ↓
               </button>
@@ -137,7 +137,7 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
                 onClick={() => sil(a.id)}
                 disabled={islemGoren}
               >
-                Kaldır
+                {s.kaldir}
               </button>
             </div>
           ))}
@@ -153,7 +153,7 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
           <input
             className="alan mn"
             name="ad"
-            placeholder="etiket (ops.) — ör. iş hesabı"
+            placeholder={s.adIpucu}
             autoComplete="off"
             style={{ width: 160 }}
           />
@@ -161,23 +161,23 @@ export function AiAnahtarlariKarti({ anahtarlar }: { anahtarlar: AiAnahtarSatiri
             className="alan mn"
             name="api_anahtari"
             type="password"
-            placeholder="API anahtarı"
+            placeholder={s.anahtarIpucu}
             required
             autoComplete="off"
             style={{ flex: 1, minWidth: 160 }}
           />
           <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-            {bekliyor ? 'Doğrulanıyor…' : 'Ekle'}
+            {bekliyor ? s.dogrulaniyor : so.ortak.buton.ekle}
           </button>
           {anahtarlar.length > 0 && (
             <button type="button" className="btn" onClick={() => setEklemeAcik(false)} disabled={bekliyor}>
-              Vazgeç
+              {s.vazgec}
             </button>
           )}
         </form>
       ) : (
         <button type="button" className="btn" onClick={() => setEklemeAcik(true)}>
-          + Anahtar ekle
+          {s.anahtarEkle}
         </button>
       )}
 

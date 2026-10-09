@@ -4,11 +4,13 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { etiketAyarlariniKaydet } from '@/app/ayarlar/actions';
 import type { EtiketAyarlari } from '@/lib/etiket';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function EtiketAyarlariFormu({ baslangic }: { baslangic: EtiketAyarlari }) {
   const [ayarlar, setAyarlar] = useState(baslangic);
   const [kaydediliyor, basla] = useTransition();
   const router = useRouter();
+  const s = useSozluk().ayarlar.etiket;
 
   function guncelle(yeni: Partial<EtiketAyarlari>) {
     const birlesik = { ...ayarlar, ...yeni };
@@ -37,74 +39,74 @@ export function EtiketAyarlariFormu({ baslangic }: { baslangic: EtiketAyarlari }
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 14 }}
       >
-        ETİKET (QR) GÖRÜNÜMÜ
+        {s.baslik}
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <label className="etiket">Şekil</label>
+        <label className="etiket">{s.sekil}</label>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" style={pil(ayarlar.sekil === 'kare')} onClick={() => guncelle({ sekil: 'kare' })}>
-            Kare
+            {s.kare}
           </button>
           <button
             type="button"
             style={pil(ayarlar.sekil === 'yuvarlak')}
             onClick={() => guncelle({ sekil: 'yuvarlak' })}
           >
-            Yuvarlak
+            {s.yuvarlak}
           </button>
         </div>
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <label className="etiket">Boyut (QR/kart)</label>
+        <label className="etiket">{s.boyut}</label>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" style={pil(ayarlar.boyut === 'kucuk')} onClick={() => guncelle({ boyut: 'kucuk' })}>
-            Küçük
+            {s.kucuk}
           </button>
           <button type="button" style={pil(ayarlar.boyut === 'orta')} onClick={() => guncelle({ boyut: 'orta' })}>
-            Orta
+            {s.orta}
           </button>
           <button type="button" style={pil(ayarlar.boyut === 'buyuk')} onClick={() => guncelle({ boyut: 'buyuk' })}>
-            Büyük
+            {s.buyuk}
           </button>
         </div>
       </div>
 
       <div style={{ marginBottom: 14 }}>
-        <label className="etiket">Yazı büyüklüğü</label>
+        <label className="etiket">{s.yaziBuyuklugu}</label>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button
             type="button"
             style={pil(ayarlar.yaziBoyutu === 'kucuk')}
             onClick={() => guncelle({ yaziBoyutu: 'kucuk' })}
           >
-            Küçük
+            {s.kucuk}
           </button>
           <button
             type="button"
             style={pil(ayarlar.yaziBoyutu === 'orta')}
             onClick={() => guncelle({ yaziBoyutu: 'orta' })}
           >
-            Orta
+            {s.orta}
           </button>
           <button
             type="button"
             style={pil(ayarlar.yaziBoyutu === 'buyuk')}
             onClick={() => guncelle({ yaziBoyutu: 'buyuk' })}
           >
-            Büyük
+            {s.buyuk}
           </button>
           <button
             type="button"
             style={pil(ayarlar.yaziBoyutu === 'cok-buyuk')}
             onClick={() => guncelle({ yaziBoyutu: 'cok-buyuk' })}
           >
-            Çok büyük
+            {s.cokBuyuk}
           </button>
         </div>
         <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-          Etikette boşluk kalıyorsa yazıyı büyütmek alanı daha iyi doldurur.
+          {s.yaziIpucu}
         </p>
       </div>
 
@@ -124,7 +126,7 @@ export function EtiketAyarlariFormu({ baslangic }: { baslangic: EtiketAyarlari }
           onChange={(e) => guncelle({ marka: e.target.checked })}
           style={{ width: 15, height: 15, accentColor: 'var(--copper)' }}
         />
-        Etikette &quot;LabStock&quot; ibaresi göster
+        {s.markaGoster}
       </label>
     </div>
   );

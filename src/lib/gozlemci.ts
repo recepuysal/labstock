@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createClient } from './supabase/server';
+import { sozlukAl } from './i18n/sunucu';
 
 export const GORUNUM_COOKIE = 'labstock_gorunum';
 
@@ -41,7 +42,7 @@ export async function aktifGorunumAl(): Promise<AktifGorunum | null> {
     const satir = (Array.isArray(data) ? data[0] : data) as
       | { ad: string | null; resim_url: string | null }
       | undefined;
-    izlenenAdi = satir?.ad ?? 'bağlı hesap';
+    izlenenAdi = satir?.ad ?? (await sozlukAl()).ortak.ustBar.bagliHesap;
     izlenenResim = satir?.resim_url ?? null;
   }
 

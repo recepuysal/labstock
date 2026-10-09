@@ -2,6 +2,9 @@
 // çeviriyor. Resmi API değil, ama normal bir sayfa isteği — LCSC sayfasında
 // arama motorları için zaten yayınladığı yapılandırılmış veriyi okuyoruz.
 
+import { sozluk, type Dil } from './i18n';
+import { dilAl } from './i18n/sunucu';
+
 // LCSC'nin kendi katalog kategorilerine yakın bir eşleme — sırası önemli,
 // ilk eşleşen kazanır; bu yüzden dar/özel anahtarlar geniş olanlardan önce durur.
 const KATEGORI_ANAHTAR: [string, string][] = [
@@ -170,7 +173,8 @@ function rohsBilgisiCikar(html: string): boolean | null {
   }
 }
 
-export async function lcscKoduGetir(kod: string): Promise<LcscVerisi> {
+export async function lcscKoduGetir(kod: string, dil?: Dil): Promise<LcscVerisi> {
+  const s = sozluk(dil ?? (await dilAl())).parca.tedarikci;
   const temizKod = kod.trim().toUpperCase();
   const url = `https://www.lcsc.com/product-detail/_${encodeURIComponent(temizKod)}.html`;
 
@@ -180,7 +184,7 @@ export async function lcscKoduGetir(kod: string): Promise<LcscVerisi> {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
     },
   });
-  if (!yanit.ok) throw new Error(`LCSC sayfası alınamadı (HTTP ${yanit.status}).`);
+  if (!yanit.ok) throw new Error(s.lcscSayfaAlinamadi(yanit.status));
   const html = await yanit.text();
 
   let urun: LdProduct | null = null;
@@ -195,7 +199,7 @@ export async function lcscKoduGetir(kod: string): Promise<LcscVerisi> {
       continue;
     }
   }
-  if (!urun) throw new Error(`"${temizKod}" için LCSC'de ürün bilgisi bulunamadı.`);
+  if (!urun) throw new Error(s.lcscUrunYok(temizKod));
 
   const parametreler: Record<string, string> = {};
   for (const ozellik of urun.additionalProperty ?? []) {

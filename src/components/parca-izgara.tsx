@@ -2,15 +2,21 @@ import Link from 'next/link';
 import { AdetButonlari } from './adet-butonlari';
 import { SatirMenu } from './satir-menu';
 import { RohsRozet } from './rohs-rozet';
-import { DURUM_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
+import { durumEtiketi, sayiBicimi, type EnvanterSatiri } from '@/lib/types';
+import { sozluk } from '@/lib/i18n';
+import { kategoriGoster } from '@/lib/i18n/kategori';
+import { dilAl } from '@/lib/i18n/sunucu';
 
-export function ParcaIzgara({
+export async function ParcaIzgara({
   satirlar,
   saltOkunur,
 }: {
   satirlar: EnvanterSatiri[];
   saltOkunur?: boolean;
 }) {
+  const dil = await dilAl();
+  const t = sozluk(dil).envanter.tablo;
+  const sayi = sayiBicimi(dil);
   return (
     <div
       style={{
@@ -71,7 +77,7 @@ export function ParcaIzgara({
                   padding: '2px 6px',
                 }}
               >
-                {s.kategori}
+                {kategoriGoster(s.kategori, dil)}
               </span>
             )}
             {s.kilif && (
@@ -131,7 +137,7 @@ export function ParcaIzgara({
                   padding: '2px 6px',
                 }}
               >
-                RoHS değil
+                {t.rohsDegil}
               </span>
             )}
           </div>
@@ -143,7 +149,7 @@ export function ParcaIzgara({
               </span>
               <span className={`pill pill-${s.durum}`}>
                 <span className="dot" />
-                {DURUM_ETIKET[s.durum]}
+                {durumEtiketi(s.durum, dil)}
               </span>
             </div>
             <AdetButonlari stokId={s.stok_id} adet={s.adet} saltOkunur={saltOkunur} />

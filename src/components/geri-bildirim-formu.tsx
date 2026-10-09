@@ -3,11 +3,14 @@
 import { useActionState, useEffect, useState } from 'react';
 import { geriBildirimGonder } from '@/app/ayarlar/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function GeriBildirimFormu() {
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(geriBildirimGonder, {});
   const [surum, setSurum] = useState<string | null>(null);
   const [gonderildi, setGonderildi] = useState(false);
+  const so = useSozluk();
+  const s = so.ayarlar.geriBildirim;
 
   useEffect(() => {
     window.electronAPI?.surumAl().then(setSurum);
@@ -23,14 +26,14 @@ export function GeriBildirimFormu() {
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 4 }}
       >
-        GERİ BİLDİRİM
+        {s.baslik}
       </div>
       <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
-        Bir sorun mu buldun, bir önerin mi var? Doğrudan bize yaz.
+        {s.aciklama}
       </p>
 
       {gonderildi ? (
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--ok)' }}>Gönderildi, teşekkürler!</p>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--ok)' }}>{s.gonderildi}</p>
       ) : (
         <form action={gonder}>
           <input type="hidden" name="surum" value={surum ?? ''} />
@@ -41,7 +44,7 @@ export function GeriBildirimFormu() {
             required
             maxLength={4000}
             style={{ height: 'auto', padding: '9px 11px', resize: 'vertical' }}
-            placeholder="Ne düşünüyorsun?"
+            placeholder={s.ipucu}
           />
           {durum.hata && (
             <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--crit)' }}>{durum.hata}</p>
@@ -52,7 +55,7 @@ export function GeriBildirimFormu() {
             disabled={bekliyor}
             style={{ marginTop: 10 }}
           >
-            {bekliyor ? 'Gönderiliyor…' : 'Gönder'}
+            {bekliyor ? s.gonderiliyor : so.ortak.buton.gonder}
           </button>
         </form>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { stokHareket } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function AdetButonlari({
   stokId,
@@ -12,6 +13,7 @@ export function AdetButonlari({
   adet: number;
   saltOkunur?: boolean;
 }) {
+  const s = useSozluk().envanter.satir;
   const [bekliyor, basla] = useTransition();
   const [hata, setHata] = useState<string | null>(null);
   const [bildirim, setBildirim] = useState<{ id: number; delta: number } | null>(null);
@@ -67,7 +69,7 @@ export function AdetButonlari({
         style={{ ...kutu, borderColor: hata ? 'var(--crit)' : 'var(--line)' }}
         disabled={saltOkunur || bekliyor || adet <= 0}
         onClick={() => calistir(-1)}
-        aria-label="Bir adet düş"
+        aria-label={s.birAdetDus}
       >
         <svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
           <line x1="5" y1="12" x2="19" y2="12" />
@@ -78,7 +80,7 @@ export function AdetButonlari({
         style={kutu}
         disabled={saltOkunur || bekliyor}
         onClick={() => calistir(1)}
-        aria-label="Bir adet ekle"
+        aria-label={s.birAdetEkle}
       >
         <svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
           <line x1="12" y1="5" x2="12" y2="19" />

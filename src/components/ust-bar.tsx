@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { Marka } from './marka';
 import { AramaKutusu } from './arama-kutusu';
 import { GorunumSecici } from './gorunum-secici';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
-export function UstBar({
+export async function UstBar({
   bas,
   resimUrl,
   saltOkunur,
@@ -17,6 +18,7 @@ export function UstBar({
   gozlemciOf?: string | null;
   izlenenAdi?: string | null;
 }) {
+  const s = (await sozlukAl()).ortak;
   return (
     <header
       style={{
@@ -41,22 +43,22 @@ export function UstBar({
       <div style={{ flex: 1 }} />
 
       {gozlemciOf && (
-        <GorunumSecici izleniyor={Boolean(saltOkunur)} izlenenAdi={izlenenAdi || 'bağlı hesap'} />
+        <GorunumSecici izleniyor={Boolean(saltOkunur)} izlenenAdi={izlenenAdi || s.ustBar.bagliHesap} />
       )}
 
-      <Link href="/envanter/sohbet" className="btn" title="Sohbet">
+      <Link href="/envanter/sohbet" className="btn" title={s.ustBar.sohbet}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
-        Sohbet
+        {s.ustBar.sohbet}
       </Link>
 
-      <Link href="/envanter/alinacaklar" className="btn" title="Alınacaklar">
+      <Link href="/envanter/alinacaklar" className="btn" title={s.ustBar.alinacaklar}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 11l3 3L22 4" />
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
         </svg>
-        Alınacaklar
+        {s.ustBar.alinacaklar}
       </Link>
 
       {saltOkunur ? (
@@ -65,7 +67,7 @@ export function UstBar({
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Parça ekle
+          {s.ustBar.parcaEkle}
         </span>
       ) : (
         <Link href="/envanter/yeni" className="btn btn-birincil">
@@ -73,14 +75,14 @@ export function UstBar({
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Parça ekle
+          {s.ustBar.parcaEkle}
         </Link>
       )}
 
       <Link
         href="/ayarlar"
-        title="Ayarlar"
-        aria-label="Ayarlar"
+        title={s.ustBar.ayarlar}
+        aria-label={s.ustBar.ayarlar}
         style={{
           width: 32,
           height: 32,
@@ -101,8 +103,8 @@ export function UstBar({
 
       <Link
         href="/ayarlar/profil"
-        title={saltOkunur ? `${izlenenAdi} — izlediğin depo` : bas ? `${bas} — profil` : 'Profil'}
-        aria-label="Profil"
+        title={saltOkunur ? `${izlenenAdi} — ${s.ustBar.izledigin}` : bas ? `${bas} — ${s.ustBar.profil}` : s.ustBar.profil}
+        aria-label={s.ustBar.profil}
         className="mn"
         style={{
           width: 32,

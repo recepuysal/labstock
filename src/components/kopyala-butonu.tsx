@@ -1,16 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function KopyalaButonu({
   metin,
-  baslik = 'Kopyala',
+  baslik,
   boyut = 13,
 }: {
   metin: string;
   baslik?: string;
   boyut?: number;
 }) {
+  const s = useSozluk().ortak.buton;
   const [kopyalandi, setKopyalandi] = useState(false);
 
   async function kopyala() {
@@ -27,7 +29,7 @@ export function KopyalaButonu({
     <button
       type="button"
       onClick={kopyala}
-      title={kopyalandi ? 'Kopyalandı' : baslik}
+      title={kopyalandi ? s.kopyalandi : (baslik ?? s.kopyala)}
       style={{
         border: 'none',
         background: 'none',

@@ -2,17 +2,23 @@ import Link from 'next/link';
 import { AdetButonlari } from './adet-butonlari';
 import { SatirMenu } from './satir-menu';
 import { RohsRozet } from './rohs-rozet';
-import { DURUM_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
+import { durumEtiketi, sayiBicimi, type EnvanterSatiri } from '@/lib/types';
+import { sozluk } from '@/lib/i18n';
+import { kategoriGoster } from '@/lib/i18n/kategori';
+import { dilAl } from '@/lib/i18n/sunucu';
 
 const SUTUNLAR = '30px minmax(0,1fr) 122px 88px 96px 82px 150px 60px 30px';
 
-export function ParcaTablosu({
+export async function ParcaTablosu({
   satirlar,
   saltOkunur,
 }: {
   satirlar: EnvanterSatiri[];
   saltOkunur?: boolean;
 }) {
+  const dil = await dilAl();
+  const t = sozluk(dil).envanter.tablo;
+  const sayi = sayiBicimi(dil);
   return (
     <div className="kart" style={{ overflow: 'hidden' }}>
       <div
@@ -32,12 +38,12 @@ export function ParcaTablosu({
         }}
       >
         <div />
-        <div>Parça</div>
-        <div>Kategori</div>
-        <div>Kılıf</div>
-        <div>Konum</div>
-        <div style={{ textAlign: 'right' }}>Adet</div>
-        <div>Min/Durum</div>
+        <div>{t.parca}</div>
+        <div>{t.kategori}</div>
+        <div>{t.kilif}</div>
+        <div>{t.konum}</div>
+        <div style={{ textAlign: 'right' }}>{t.adet}</div>
+        <div>{t.minDurum}</div>
         <div />
         <div />
       </div>
@@ -95,12 +101,12 @@ export function ParcaTablosu({
             )}
           </div>
 
-          <div style={{ fontSize: 12, color: 'var(--ink-2)' }}>{s.kategori ?? '—'}</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-2)' }}>{s.kategori ? kategoriGoster(s.kategori, dil) : '—'}</div>
           <div className="mn" style={{ fontSize: 11.5, color: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 5 }}>
             {s.kilif ?? '—'}
             {s.rohs === true && <RohsRozet boyut={13} />}
             {s.rohs === false && (
-              <span title="RoHS değil" style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--crit-dot)', flexShrink: 0 }} />
+              <span title={t.rohsDegil} style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--crit-dot)', flexShrink: 0 }} />
             )}
           </div>
 
@@ -120,7 +126,7 @@ export function ParcaTablosu({
                 {s.konum_kodu ?? s.konum_adi}
               </span>
             ) : (
-              <span style={{ fontSize: 11.5, color: 'var(--muted-2)' }}>konumsuz</span>
+              <span style={{ fontSize: 11.5, color: 'var(--muted-2)' }}>{t.konumsuz}</span>
             )}
           </div>
 
@@ -133,7 +139,7 @@ export function ParcaTablosu({
             </span>
             <span className={`pill pill-${s.durum}`}>
               <span className="dot" />
-              {DURUM_ETIKET[s.durum]}
+              {durumEtiketi(s.durum, dil)}
             </span>
           </div>
 

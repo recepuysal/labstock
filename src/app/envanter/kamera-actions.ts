@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 /* Kamera sayımı (telefon kamerası + bilgisayardaki görüntü işleme servisi) için sunucu eylemleri.
  * Masaüstü uygulamasındaki kamera istasyonu (kamera-istasyonu.tsx) telefondan gelen istekleri bunlarla yanıtlar.
@@ -43,9 +44,10 @@ function konumMetni(kod: string | null, ad: string | null): string | null {
 
 /** QR'dan okunan stok kalemi (LSTK:P:<stokId>) için telefonda gösterilecek bilgi. */
 export async function kameraStokBilgisi(stokId: string): Promise<KameraParca | KameraHata> {
-  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: 'Geçersiz QR kodu' };
+  const h = (await sozlukAl()).kamera.hata;
+  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: h.gecersizQr };
   const { supabase, user } = await kullanici();
-  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+  if (!user) return { ok: false, hata: h.oturumYok };
 
   const { data, error } = await supabase
     .from('envanter')
@@ -54,7 +56,7 @@ export async function kameraStokBilgisi(stokId: string): Promise<KameraParca | K
     .eq('user_id', user.id)
     .maybeSingle();
   if (error) return { ok: false, hata: error.message };
-  if (!data) return { ok: false, hata: 'Bu parça senin deponda yok' };
+  if (!data) return { ok: false, hata: h.parcaYok };
 
   return {
     ok: true,
@@ -69,9 +71,11 @@ export async function kameraStokBilgisi(stokId: string): Promise<KameraParca | K
 
 /** QR'dan okunan konumdaki (LSTK:K:<konumId>) parçalar — telefonda hangisini sayacağını seçmek için. */
 export async function kameraKonumParcalari(konumId: string): Promise<KameraKonum | KameraHata> {
-  if (typeof konumId !== 'string' || !UUID.test(konumId)) return { ok: false, hata: 'Geçersiz QR kodu' };
+  const s = (await sozlukAl()).kamera;
+  const h = s.hata;
+  if (typeof konumId !== 'string' || !UUID.test(konumId)) return { ok: false, hata: h.gecersizQr };
   const { supabase, user } = await kullanici();
-  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+  if (!user) return { ok: false, hata: h.oturumYok };
 
   const { data: konum, error: konumHata } = await supabase
     .from('locations')
@@ -80,7 +84,7 @@ export async function kameraKonumParcalari(konumId: string): Promise<KameraKonum
     .eq('user_id', user.id)
     .maybeSingle();
   if (konumHata) return { ok: false, hata: konumHata.message };
-  if (!konum) return { ok: false, hata: 'Bu konum senin deponda yok' };
+  if (!konum) return { ok: false, hata: h.konumYok };
 
   const { data, error } = await supabase
     .from('envanter')
@@ -94,7 +98,7 @@ export async function kameraKonumParcalari(konumId: string): Promise<KameraKonum
   return {
     ok: true,
     konumId: konum.id,
-    konumAdi: konumMetni(konum.kod, konum.ad) ?? 'Konum',
+    konumAdi: konumMetni(konum.kod, konum.ad) ?? s.konum,
     parcalar: (data ?? []).map((s) => ({ stokId: s.stok_id, mpn: s.mpn, aciklama: s.aciklama, adet: Number(s.adet) })),
   };
 }
@@ -106,11 +110,12 @@ export type KameraArama = {
 
 /** QR etiketi olmayan parçalar için: telefonda ad / MPN / açıklamaya göre arama. */
 export async function kameraParcaAra(sorgu: string): Promise<KameraArama | KameraHata> {
+  const h = (await sozlukAl()).kamera.hata;
   // PostgREST filtresinde anlamı olan karakterleri at (virgül, parantez, joker karakterler)
   const temiz = typeof sorgu === 'string' ? sorgu.replace(/[,()%*\\]/g, ' ').trim().slice(0, 60) : '';
   if (temiz.length < 2) return { ok: true, parcalar: [] };
   const { supabase, user } = await kullanici();
-  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+  if (!user) return { ok: false, hata: h.oturumYok };
 
   const desen = `%${temiz}%`;
   const { data, error } = await supabase
@@ -151,12 +156,13 @@ export async function kameraTedarikciEtiketi(
   mpn: string,
   iz: string,
 ): Promise<KameraEtiketBilgisi | KameraHata> {
+  const h = (await sozlukAl()).kamera.hata;
   const kod = typeof tedarikciKodu === 'string' ? tedarikciKodu.replace(/[^A-Za-z0-9-]/g, '').slice(0, 40) : '';
   const mpnTemiz = typeof mpn === 'string' ? mpn.replace(/[,()%*\\]/g, '').trim().slice(0, 80) : '';
-  if (!kod && !mpnTemiz) return { ok: false, hata: 'Etikette parça kodu yok' };
-  if (typeof iz !== 'string' || !ETIKET_IZI.test(iz)) return { ok: false, hata: 'Geçersiz etiket' };
+  if (!kod && !mpnTemiz) return { ok: false, hata: h.etikettePKoduYok };
+  if (typeof iz !== 'string' || !ETIKET_IZI.test(iz)) return { ok: false, hata: h.gecersizEtiket };
   const { supabase, user } = await kullanici();
-  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+  if (!user) return { ok: false, hata: h.oturumYok };
 
   const kosullar = [kod && `tedarikci_kodu.ilike.${kod}`, mpnTemiz && `mpn.ilike.${mpnTemiz}`].filter(Boolean).join(',');
   const { data, error } = await supabase
@@ -199,12 +205,13 @@ export async function kameraStokGiris(
   kaynak: string,
   zorla = false,
 ): Promise<KameraGirisSonucu | KameraHata> {
-  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: 'Geçersiz parça' };
-  if (!Number.isInteger(adet) || adet <= 0 || adet > MAKS_ADET) return { ok: false, hata: 'Geçersiz adet' };
-  if (typeof iz !== 'string' || !ETIKET_IZI.test(iz)) return { ok: false, hata: 'Geçersiz etiket' };
+  const h = (await sozlukAl()).kamera.hata;
+  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: h.gecersizParca };
+  if (!Number.isInteger(adet) || adet <= 0 || adet > MAKS_ADET) return { ok: false, hata: h.gecersizAdet };
+  if (typeof iz !== 'string' || !ETIKET_IZI.test(iz)) return { ok: false, hata: h.gecersizEtiket };
   const kaynakTemiz = typeof kaynak === 'string' ? kaynak.replace(/[^\p{L}\p{N} ._×-]/gu, '').slice(0, 60) : '';
   const { supabase, user } = await kullanici();
-  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+  if (!user) return { ok: false, hata: h.oturumYok };
 
   if (!zorla) {
     const { data: once } = await supabase
@@ -214,7 +221,7 @@ export async function kameraStokGiris(
       .ilike('aciklama', `%${izAciklamasi(iz)}%`)
       .limit(1)
       .maybeSingle();
-    if (once) return { ok: false, hata: 'Bu etiket daha önce işlenmiş' };
+    if (once) return { ok: false, hata: h.etiketIslenmis };
   }
 
   const { data: kalem, error } = await supabase
@@ -224,7 +231,7 @@ export async function kameraStokGiris(
     .eq('user_id', user.id)
     .maybeSingle();
   if (error) return { ok: false, hata: error.message };
-  if (!kalem) return { ok: false, hata: 'Bu parça senin deponda yok' };
+  if (!kalem) return { ok: false, hata: h.parcaYok };
 
   const { data: yeni, error: rpcHata } = await supabase.rpc('stok_hareket', {
     p_stok_id: stokId,
@@ -241,10 +248,11 @@ export async function kameraStokGiris(
 /** Kamera ile sayılan adedi stoğa İŞLER: adedi `sayilan`a ayarlar, farkı "Sayım" hareketi olarak kaydeder.
  * Mutlak değer olduğu için aynı istek iki kez gelse bile ikincisi fark 0 olur, bir şey değişmez. */
 export async function kameraSayimUygula(stokId: string, sayilan: number): Promise<KameraSayimSonucu | KameraHata> {
-  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: 'Geçersiz parça' };
-  if (!Number.isInteger(sayilan) || sayilan < 0 || sayilan > MAKS_ADET) return { ok: false, hata: 'Geçersiz adet' };
+  const h = (await sozlukAl()).kamera.hata;
+  if (typeof stokId !== 'string' || !UUID.test(stokId)) return { ok: false, hata: h.gecersizParca };
+  if (!Number.isInteger(sayilan) || sayilan < 0 || sayilan > MAKS_ADET) return { ok: false, hata: h.gecersizAdet };
   const { supabase, user } = await kullanici();
-  if (!user) return { ok: false, hata: 'LabStock\'ta oturum açık değil' };
+  if (!user) return { ok: false, hata: h.oturumYok };
 
   const { data: kalem, error } = await supabase
     .from('envanter')
@@ -253,7 +261,7 @@ export async function kameraSayimUygula(stokId: string, sayilan: number): Promis
     .eq('user_id', user.id)
     .maybeSingle();
   if (error) return { ok: false, hata: error.message };
-  if (!kalem) return { ok: false, hata: 'Bu parça senin deponda yok' };
+  if (!kalem) return { ok: false, hata: h.parcaYok };
 
   const eski = Number(kalem.adet);
   const delta = sayilan - eski;

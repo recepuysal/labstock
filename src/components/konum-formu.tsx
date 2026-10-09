@@ -4,7 +4,8 @@ import { useActionState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { konumEkle, konumGuncelle, type EylemDurum } from '@/app/envanter/actions';
-import { KONUM_TIPLERI } from '@/lib/types';
+import { KONUM_TIPLERI, konumTipiGoster } from '@/lib/types';
+import { useDil, useSozluk } from '@/lib/i18n/istemci';
 
 export type KonumBaslangic = {
   id: string;
@@ -22,6 +23,9 @@ type Props = {
 };
 
 export function KonumFormu({ ustler, mod = 'ekle', baslangic }: Props) {
+  const dil = useDil();
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.konumFormu;
   const duzenle = mod === 'duzenle';
   const eylem = duzenle ? konumGuncelle : konumEkle;
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(eylem, {});
@@ -46,7 +50,7 @@ export function KonumFormu({ ustler, mod = 'ekle', baslangic }: Props) {
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="ad">
-          Ad *
+          {s.ad}
         </label>
         <input
           className="alan"
@@ -55,26 +59,26 @@ export function KonumFormu({ ustler, mod = 'ekle', baslangic }: Props) {
           required
           autoFocus
           defaultValue={baslangic?.ad}
-          placeholder="Dolap A"
+          placeholder={s.adOrnek}
         />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
         <div>
           <label className="etiket" htmlFor="kod">
-            Kod
+            {s.kod}
           </label>
           <input className="alan mn" id="kod" name="kod" defaultValue={baslangic?.kod ?? undefined} placeholder="A" />
         </div>
         <div>
           <label className="etiket" htmlFor="tip">
-            Tip
+            {s.tip}
           </label>
           <select className="alan" id="tip" name="tip" defaultValue={baslangic?.tip ?? ''}>
-            <option value="">seçilmedi</option>
+            <option value="">{s.secilmedi}</option>
             {KONUM_TIPLERI.map((t) => (
               <option key={t} value={t}>
-                {t}
+                {konumTipiGoster(t, dil)}
               </option>
             ))}
           </select>
@@ -83,10 +87,10 @@ export function KonumFormu({ ustler, mod = 'ekle', baslangic }: Props) {
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="parent_id">
-          Üst konum
+          {s.ustKonum}
         </label>
         <select className="alan" id="parent_id" name="parent_id" defaultValue={baslangic?.parent_id ?? ''}>
-          <option value="">yok (en üst seviye)</option>
+          <option value="">{s.ustYok}</option>
           {ustler.map((u) => (
             <option key={u.id} value={u.id}>
               {u.etiket}
@@ -97,23 +101,23 @@ export function KonumFormu({ ustler, mod = 'ekle', baslangic }: Props) {
 
       <div style={{ marginBottom: 22 }}>
         <label className="etiket" htmlFor="aciklama">
-          Açıklama
+          {s.aciklama}
         </label>
         <input
           className="alan"
           id="aciklama"
           name="aciklama"
           defaultValue={baslangic?.aciklama ?? undefined}
-          placeholder="SMD pasif"
+          placeholder={s.aciklamaOrnek}
         />
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-          {bekliyor ? 'Kaydediliyor…' : duzenle ? 'Güncelle' : 'Kaydet'}
+          {bekliyor ? sozlukler.ortak.buton.kaydediliyor : duzenle ? s.guncelle : sozlukler.ortak.buton.kaydet}
         </button>
         <Link href="/envanter" className="btn">
-          Vazgeç
+          {sozlukler.envanter.vazgec}
         </Link>
       </div>
     </form>

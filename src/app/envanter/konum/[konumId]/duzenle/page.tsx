@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { KonumFormu, type KonumBaslangic } from '@/components/konum-formu';
 import { agacKur, konumSecenekleri, type Konum, type KonumDugumu } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ export default async function KonumDuzenleSayfasi({ params }: { params: Promise<
   const konumlar = (konumVerisi ?? []) as Konum[];
   const hedef = konumlar.find((k) => k.id === konumId);
   if (!hedef) notFound();
+  const s = (await sozlukAl()).envanter.konumFormu;
 
   const agac = agacKur(konumlar);
   const budanmisAgac = altAgaciCikar(agac, konumId);
@@ -47,10 +49,10 @@ export default async function KonumDuzenleSayfasi({ params }: { params: Promise<
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          Konumu düzenle
+          {s.duzenleBaslik}
         </h1>
         <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          {hedef.ad} — konum bilgilerini güncelle.
+          {s.duzenleAciklama(hedef.ad)}
         </p>
         <KonumFormu ustler={ustler} mod="duzenle" baslangic={baslangic} />
       </div>

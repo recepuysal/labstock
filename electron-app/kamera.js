@@ -21,6 +21,12 @@ const TIP_KARE = 1; // JPEG kare
 const TIP_FOTO = 2; // tam çözünürlüklü foto
 const TIP_H264 = 3; // H.264 kare
 
+// Kullanıcıya görünen metinler (dil: LabStock'un dili, bkz. main.js)
+const METINLER = {
+  tr: { portKullanimda: (port) => `${port} portu kullanımda (başka bir kamera programı açık olabilir)` },
+  en: { portKullanimda: (port) => `Port ${port} is in use (another camera program may be open)` },
+};
+
 /** Bu bilgisayarın yerel ağdaki IP'si (varsayılan rotanın çıktığı arayüz). */
 function yerelIp() {
   return new Promise((coz) => {
@@ -46,13 +52,16 @@ function yedekIp() {
 }
 
 class KameraSunucusu {
-  /** @param {{ ayarKlasoru: string, sayfaYolu: string, olay: (tur: string, veri: any) => void, log?: (m: string) => void, port?: number }} p */
-  constructor({ ayarKlasoru, sayfaYolu, olay, log, port = PORT }) {
+  /** @param {{ ayarKlasoru: string, sayfaYolu: string, olay: (tur: string, veri: any) => void, log?: (m: string) => void, port?: number, dil?: () => 'tr' | 'en' }} p */
+  constructor({ ayarKlasoru, sayfaYolu, olay, log, port = PORT, dil }) {
     this.port = port;
     this.ayarYolu = path.join(ayarKlasoru, 'kamera.json');
     this.sayfaYolu = sayfaYolu;
     this.olay = olay;
     this.log = log || (() => {});
+    this.dil = () => (dil && dil() === 'en' ? 'en' : 'tr');
+    this.sayfa = null;
+    this.govdeOnbellek = null;
     this.sunucu = null;
     this.wss = null;
     this.telefon = null;
@@ -115,6 +124,27 @@ class KameraSunucusu {
     return a.sertifika;
   }
 
+  /** Telefon sayfasının sürümü: sayfa ya da dil değişince telefon kendini yeniler. */
+  surum(dil = this.dil()) {
+    return crypto.createHash('md5').update(this.sayfa || '').update(dil).digest('hex').slice(0, 8);
+  }
+
+  /** Telefona giden sayfa: sürüm ve dil yerleştirilmiş. Dil telefona buradan gider (telefon
+   * başka bir cihaz; LabStock'un çerezini göremez). */
+  govde() {
+    const dil = this.dil();
+    if (!this.govdeOnbellek || this.govdeOnbellek.dil !== dil) {
+      const html = this.sayfa.replace('__SURUM__', this.surum(dil)).replace('__DIL__', dil);
+      this.govdeOnbellek = { dil, veri: Buffer.from(html, 'utf8') };
+    }
+    return this.govdeOnbellek.veri;
+  }
+
+  /** LabStock'un dili değişti: bağlı telefon yeni sürümü görüp sayfayı yeni dille yeniler. */
+  dilDegisti() {
+    if (this.sayfa) this.gonder({ surum: this.surum() });
+  }
+
   durum() {
     const acik = !!this.sunucu;
     return {
@@ -131,13 +161,12 @@ class KameraSunucusu {
     if (this.sunucu) return this.durum();
     this.ip = await yerelIp();
     const s = await this.sertifika(this.ip);
-    const sayfa = fs.readFileSync(this.sayfaYolu, 'utf8');
-    const surum = crypto.createHash('md5').update(sayfa).digest('hex').slice(0, 8);
-    const govde = Buffer.from(sayfa.replace('__SURUM__', surum), 'utf8');
-    this.surum = surum;
+    this.sayfa = fs.readFileSync(this.sayfaYolu, 'utf8');
+    this.govdeOnbellek = null;
 
     const sunucu = https.createServer({ cert: s.cert, key: s.private || s.key }, (istek, yanit) => {
       if (istek.method === 'GET' && (istek.url === '/' || istek.url.startsWith('/?'))) {
+        const govde = this.govde();
         yanit.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Length': govde.length,
@@ -173,7 +202,7 @@ class KameraSunucusu {
     }).catch((e) => {
       this.wss.close();
       this.wss = null;
-      throw new Error(e.code === 'EADDRINUSE' ? `${this.port} portu kullanımda (başka bir kamera programı açık olabilir)` : e.message);
+      throw new Error(e.code === 'EADDRINUSE' ? METINLER[this.dil()].portKullanimda(this.port) : e.message);
     });
     this.sunucu = sunucu;
     this.log(`[kamera] sunucu açıldı: https://${this.ip}:${this.port}`);
@@ -185,7 +214,7 @@ class KameraSunucusu {
     if (this.telefon) this.telefon.close(4002, 'baska telefon baglandi'); // tek telefon
     this.telefon = ws;
     this.log(`[kamera] telefon bağlandı: ${uzak}`);
-    ws.send(JSON.stringify({ surum: this.surum }));
+    ws.send(JSON.stringify({ surum: this.surum() }));
     this.olay('durum', this.durum());
 
     ws.on('message', (veri, ikili) => {

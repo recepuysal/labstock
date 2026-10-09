@@ -6,6 +6,7 @@ import { stokKodu, ETIKET_OLCU, YAZI_OLCU } from '@/lib/etiket';
 import { qrGorseli, etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 import { YazdirButonu } from '@/components/yazdir-butonu';
 import type { EnvanterSatiri } from '@/lib/types';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
   const olcu = ETIKET_OLCU[ayarlar.boyut];
   const yazi = YAZI_OLCU[ayarlar.yaziBoyutu];
   const yuvarlak = ayarlar.sekil === 'yuvarlak';
+  const sz = (await sozlukAl()).parca.etiketSayfasi;
 
   // Yuvarlak etiket: çap sadece QR'a göre değil, altındaki MPN/marka satırlarının
   // gerçek yüksekliğine göre de hesaplanmalı — yoksa içerik daireyi taşırıp
@@ -67,19 +69,18 @@ export default async function ParcaEtiketSayfasi({ params }: { params: Promise<{
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Parçaya dön
+          {sz.parcayaDon}
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/ayarlar" className="mn" style={{ fontSize: 11.5, color: 'var(--muted)' }}>
-            Etiket görünümünü ayarla
+            {sz.gorunumAyarla}
           </Link>
           <YazdirButonu />
         </div>
       </div>
 
       <p className="yazdirma-disi" style={{ maxWidth: 620, margin: '0 auto 16px', fontSize: 12.5, color: 'var(--muted)' }}>
-        Yazdırıp parçanın kutusuna/çekmecesine yapıştır. Bir barkod okuyucuyla (ya da uygulamadaki
-        arama kutusuna elle yapıştırarak) taradığında doğrudan bu parçanın sayfası açılır.
+        {sz.aciklama}
       </p>
 
       <div style={{ display: 'flex', justifyContent: 'center' }}>

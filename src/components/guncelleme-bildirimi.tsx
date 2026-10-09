@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export type GuncellemeDurumu =
   | { tip: 'mevcut'; versiyon: string; notlar?: string | null }
@@ -38,6 +39,8 @@ declare global {
 export function GuncellemeBildirimi() {
   const [durum, setDurum] = useState<GuncellemeDurumu | null>(null);
   const [kapandi, setKapandi] = useState(false);
+  const so = useSozluk();
+  const s = so.ayarlar.guncelleme;
 
   useEffect(() => {
     const api = window.electronAPI;
@@ -103,20 +106,21 @@ export function GuncellemeBildirimi() {
             className="mn"
             style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: hazirMi ? 'var(--ok)' : 'var(--copper)' }}
           >
-            {hazirMi ? 'GÜNCELLEME HAZIR' : 'GÜNCELLEME'}
+            {hazirMi ? s.hazirBaslik : s.baslik}
           </div>
 
           {durum.tip === 'mevcut' && (
             <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)' }}>
-              Yeni bir sürüm var: <span className="mn">v{durum.versiyon}</span>
+              {s.yeniSurum} <span className="mn">v{durum.versiyon}</span>
             </p>
           )}
           {durum.tip === 'ilerleme' && (
-            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)' }}>İndiriliyor…</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)' }}>{s.indiriliyor}</p>
           )}
           {durum.tip === 'hazir' && (
             <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)' }}>
-              <span className="mn">v{durum.versiyon}</span> indirildi.
+              <span className="mn">v{durum.versiyon}</span>
+              {s.indirildiSonek}
             </p>
           )}
 
@@ -126,7 +130,7 @@ export function GuncellemeBildirimi() {
         </div>
 
         {durum.tip !== 'ilerleme' && (
-          <button type="button" onClick={() => setKapandi(true)} aria-label="Kapat" className="bildirim-kapat">
+          <button type="button" onClick={() => setKapandi(true)} aria-label={so.ortak.buton.kapat} className="bildirim-kapat">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -141,7 +145,7 @@ export function GuncellemeBildirimi() {
           style={{ width: '100%', height: 32, fontSize: 12.5, marginTop: 12 }}
           onClick={() => window.electronAPI?.guncellemeyiIndir()}
         >
-          İndir
+          {s.indir}
         </button>
       )}
 
@@ -168,7 +172,7 @@ export function GuncellemeBildirimi() {
             />
           </div>
           <div className="mn" style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'right' }}>
-            %{durum.yuzde}
+            {s.yuzde(durum.yuzde)}
           </div>
         </>
       )}
@@ -180,7 +184,7 @@ export function GuncellemeBildirimi() {
           style={{ width: '100%', height: 32, fontSize: 12.5, marginTop: 12 }}
           onClick={() => window.electronAPI?.guncellemeyiKur()}
         >
-          Yeniden başlat ve kur
+          {s.kur}
         </button>
       )}
     </div>

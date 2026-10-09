@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'rea
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { stokSil } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function SatirMenu({
   stokId,
@@ -14,6 +15,8 @@ export function SatirMenu({
   mpn: string;
   saltOkunur?: boolean;
 }) {
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.satir;
   const [acik, setAcik] = useState(false);
   const [bekliyor, basla] = useTransition();
   const dugmeRef = useRef<HTMLButtonElement>(null);
@@ -47,7 +50,7 @@ export function SatirMenu({
 
   function sil() {
     setAcik(false);
-    if (!window.confirm(`"${mpn}" stoktan tamamen silinsin mi? Bu işlem geri alınamaz.`)) return;
+    if (!window.confirm(s.silOnay(mpn))) return;
     basla(async () => {
       await stokSil(stokId);
     });
@@ -72,7 +75,7 @@ export function SatirMenu({
         type="button"
         onClick={() => setAcik((a) => !a)}
         disabled={saltOkunur || bekliyor}
-        aria-label="İşlemler"
+        aria-label={s.islemler}
         aria-haspopup="menu"
         aria-expanded={acik}
         style={{
@@ -122,7 +125,7 @@ export function SatirMenu({
               onClick={() => setAcik(false)}
               style={{ ...menuOge, color: 'var(--ink-2)' }}
             >
-              Düzenle
+              {sozlukler.ortak.buton.duzenle}
             </Link>
             <button
               type="button"
@@ -130,7 +133,7 @@ export function SatirMenu({
               onClick={sil}
               style={{ ...menuOge, color: 'var(--crit)', borderTop: '1px solid var(--line-soft)' }}
             >
-              Sil
+              {sozlukler.ortak.buton.sil}
             </button>
           </div>,
           document.body,

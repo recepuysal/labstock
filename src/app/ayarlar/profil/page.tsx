@@ -6,6 +6,7 @@ import { ProfilResmiFormu } from '@/components/profil-resmi-formu';
 import { cikisYap } from '@/app/auth-actions';
 import { basHarfleri } from '@/lib/types';
 import { GozlemcilikKarti } from '@/components/gozlemcilik-karti';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,9 @@ export default async function ProfilSayfasi() {
 
   if (!user) redirect('/giris');
 
+  const so = await sozlukAl();
+  const s = so.ayarlar.profil;
+
   const { data: profil } = await supabase
     .from('profiles')
     .select('ad, telefon, sirket_adi, sirket_adresi, resim_url, gozlemci_of')
@@ -27,7 +31,7 @@ export default async function ProfilSayfasi() {
   if (profil?.gozlemci_of) {
     const { data } = await supabase.rpc('gozlemci_hedef_bilgisi');
     const satir = (Array.isArray(data) ? data[0] : data) as { ad: string | null } | undefined;
-    hedefAdi = satir?.ad ?? 'bağlı hesap';
+    hedefAdi = satir?.ad ?? so.ortak.ustBar.bagliHesap;
   }
 
   const etiket = profil?.ad || user.email || '';
@@ -51,13 +55,13 @@ export default async function ProfilSayfasi() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Envantere dön
+          {so.ortak.buton.envantereDon}
         </Link>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          Profil
+          {s.baslik}
         </h1>
         <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          Kişisel ve şirket bilgilerin — ileride etiket/rapor gibi çıktılarda kullanılacak.
+          {s.aciklama}
         </p>
 
         <div className="kart" style={{ padding: 20, marginBottom: 16 }}>
@@ -78,7 +82,7 @@ export default async function ProfilSayfasi() {
 
         <form action={cikisYap} style={{ marginTop: 16 }}>
           <button type="submit" className="btn" style={{ width: '100%' }}>
-            Çıkış yap
+            {s.cikisYap}
           </button>
         </form>
       </div>

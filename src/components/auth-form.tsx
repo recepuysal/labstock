@@ -4,6 +4,8 @@ import { useActionState, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Marka } from './marka';
 import { kodDogrula, kodYenidenGonder, type AuthDurum } from '@/app/auth-actions';
+import { DilSecici } from './dil-secici';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 const EPOSTA_ANAHTARI = 'labstock-son-eposta';
 const HATIRLA_ANAHTARI = 'labstock-beni-hatirla';
@@ -20,6 +22,7 @@ type Props = {
 export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
   const [durum, gonder, bekliyor] = useActionState<AuthDurum, FormData>(eylem, {});
   const kayit = mod === 'kayit';
+  const s = useSozluk().ayarlar.auth;
 
   const [eposta, setEposta] = useState('');
   const [sifre, setSifre] = useState('');
@@ -105,10 +108,12 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
 
           <form action={kodGonder} className="kart" style={{ padding: 22 }}>
             <h1 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 600, letterSpacing: '-0.4px' }}>
-              E-postanı doğrula
+              {s.dogrulaBaslik}
             </h1>
             <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-              <strong>{durum.kodBekleniyor}</strong> adresine 6 haneli bir doğrulama kodu gönderdik.
+              {s.kodGonderildiOnce}
+              <strong>{durum.kodBekleniyor}</strong>
+              {s.kodGonderildiSonra}
             </p>
 
             {kodDurum.hata && (
@@ -121,7 +126,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
 
             <div style={{ marginBottom: 20 }}>
               <label className="etiket" htmlFor="kod">
-                Doğrulama kodu
+                {s.dogrulamaKodu}
               </label>
               <input
                 className="alan mn"
@@ -142,7 +147,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               disabled={kodBekliyor}
               style={{ width: '100%', height: 40, marginBottom: 10 }}
             >
-              {kodBekliyor ? 'Onaylanıyor…' : 'Onayla'}
+              {kodBekliyor ? s.onaylaniyor : s.onayla}
             </button>
 
             <button
@@ -152,7 +157,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               disabled={yenidenGonderiliyor}
               style={{ width: '100%', height: 36 }}
             >
-              {yenidenGonderiliyor ? 'Gönderiliyor…' : 'Kodu tekrar gönder'}
+              {yenidenGonderiliyor ? s.gonderiliyor : s.koduTekrarGonder}
             </button>
             {yenidenMesaj && (
               <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--muted)', textAlign: 'center' }}>
@@ -166,10 +171,14 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
                 onClick={() => setGeriDon(true)}
                 style={{ background: 'none', border: 'none', padding: 0, color: 'var(--copper)', cursor: 'pointer', font: 'inherit' }}
               >
-                Farklı e-posta ile dene
+                {s.farkliEposta}
               </button>
             </p>
           </form>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+            <DilSecici />
+          </div>
         </div>
       </main>
     );
@@ -192,12 +201,10 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
 
         <form action={gonder} className="kart" style={{ padding: 22 }}>
           <h1 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 600, letterSpacing: '-0.4px' }}>
-            {kayit ? 'Hesap oluştur' : 'Giriş yap'}
+            {kayit ? s.kayitBaslik : s.girisBaslik}
           </h1>
           <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)' }}>
-            {kayit
-              ? 'Kendi deponu kur, parçalarını ve konumlarını yönet.'
-              : 'Depona devam etmek için giriş yap.'}
+            {kayit ? s.kayitAciklama : s.girisAciklama}
           </p>
 
           {durum.hata && (
@@ -223,7 +230,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
           {kayit && (
             <div style={{ marginBottom: 14 }}>
               <label className="etiket" htmlFor="ad">
-                Ad
+                {s.ad}
               </label>
               <input className="alan" id="ad" name="ad" autoComplete="name" placeholder="Recep" />
             </div>
@@ -232,14 +239,14 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
           {kayit && (
             <div style={{ marginBottom: 14 }}>
               <label className="etiket" htmlFor="davet_kodu">
-                Davet kodu (varsa)
+                {s.davetKodu}
               </label>
               <input
                 className="alan mn"
                 id="davet_kodu"
                 name="davet_kodu"
                 autoComplete="off"
-                placeholder="birinin envanterini izlemek için"
+                placeholder={s.davetKoduIpucu}
                 style={{ textTransform: 'uppercase' }}
               />
             </div>
@@ -247,7 +254,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
 
           <div style={{ marginBottom: 14 }}>
             <label className="etiket" htmlFor="eposta">
-              E-posta
+              {s.eposta}
             </label>
             <input
               className="alan"
@@ -256,7 +263,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               type="email"
               required
               autoComplete="email"
-              placeholder="ornek@eposta.com"
+              placeholder={s.epostaIpucu}
               value={eposta}
               onChange={epostaDegisti}
             />
@@ -264,7 +271,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
 
           <div style={{ marginBottom: kayit ? 20 : 14 }}>
             <label className="etiket" htmlFor="sifre">
-              Şifre
+              {s.sifre}
             </label>
             <input
               className="alan"
@@ -274,7 +281,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               required
               minLength={kayit ? 8 : undefined}
               autoComplete={kayit ? 'new-password' : 'current-password'}
-              placeholder={kayit ? 'en az 8 karakter' : '••••••••'}
+              placeholder={kayit ? s.sifreIpucuKayit : '••••••••'}
               {...(kayit ? {} : { value: sifre, onChange: sifreDegisti })}
             />
           </div>
@@ -297,7 +304,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
                 onChange={hatirlaDegisti}
                 style={{ width: 15, height: 15, accentColor: 'var(--copper)' }}
               />
-              Beni hatırla
+              {s.beniHatirla}
             </label>
           )}
 
@@ -309,7 +316,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
             disabled={bekliyor}
             style={{ width: '100%', height: 40 }}
           >
-            {bekliyor ? 'Bekle…' : kayit ? 'Hesap oluştur' : 'Giriş yap'}
+            {bekliyor ? s.bekle : kayit ? s.kayitBaslik : s.girisBaslik}
           </button>
 
           <p
@@ -322,15 +329,19 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
           >
             {kayit ? (
               <>
-                Hesabın var mı? <Link href="/giris">Giriş yap</Link>
+                {s.hesabinVarMi} <Link href="/giris">{s.girisBaslik}</Link>
               </>
             ) : (
               <>
-                Hesabın yok mu? <Link href="/kayit">Hesap oluştur</Link>
+                {s.hesabinYokMu} <Link href="/kayit">{s.kayitBaslik}</Link>
               </>
             )}
           </p>
         </form>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <DilSecici />
+        </div>
       </div>
     </main>
   );

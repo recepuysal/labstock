@@ -3,11 +3,14 @@
 import { useActionState, useRef, useState } from 'react';
 import { profilResmiYukle } from '@/app/ayarlar/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function ProfilResmiFormu({ mevcutResim, bas }: { mevcutResim: string | null; bas: string }) {
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(profilResmiYukle, {});
   const [onizleme, setOnizleme] = useState<string | null>(null);
   const girdi = useRef<HTMLInputElement>(null);
+  const so = useSozluk();
+  const s = so.ayarlar.profil;
 
   function dosyaSecildi(e: React.ChangeEvent<HTMLInputElement>) {
     const dosya = e.target.files?.[0];
@@ -54,14 +57,14 @@ export function ProfilResmiFormu({ mevcutResim, bas }: { mevcutResim: string | n
         />
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" className="btn" onClick={() => girdi.current?.click()}>
-            Görsel seç
+            {s.gorselSec}
           </button>
           <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-            {bekliyor ? 'Yükleniyor…' : 'Yükle'}
+            {bekliyor ? so.ortak.buton.yukleniyor : s.yukle}
           </button>
         </div>
         <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--muted-2)' }}>
-          Kendi fotoğrafın ya da şirket logon — en fazla 2 MB.
+          {s.resimIpucu}
         </p>
         {durum.hata && <p style={{ margin: '6px 0 0', fontSize: 11.5, color: 'var(--crit)' }}>{durum.hata}</p>}
         {durum.bilgi && <p style={{ margin: '6px 0 0', fontSize: 11.5, color: 'var(--ok)' }}>{durum.bilgi}</p>}

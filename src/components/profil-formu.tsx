@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { profilGuncelle } from '@/app/ayarlar/actions';
 import type { EylemDurum } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 type Baslangic = {
   eposta: string;
@@ -14,6 +15,8 @@ type Baslangic = {
 
 export function ProfilFormu({ baslangic }: { baslangic: Baslangic }) {
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(profilGuncelle, {});
+  const so = useSozluk();
+  const s = so.ayarlar.profil;
 
   return (
     <form action={gonder} className="kart" style={{ padding: 22 }}>
@@ -38,7 +41,7 @@ export function ProfilFormu({ baslangic }: { baslangic: Baslangic }) {
       )}
 
       <div style={{ marginBottom: 16 }}>
-        <label className="etiket">E-posta</label>
+        <label className="etiket">{s.eposta}</label>
         <div className="alan" style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)' }}>
           {baslangic.eposta}
         </div>
@@ -46,14 +49,14 @@ export function ProfilFormu({ baslangic }: { baslangic: Baslangic }) {
 
       <div style={{ marginBottom: 22 }}>
         <label className="etiket" htmlFor="ad">
-          Ad
+          {s.ad}
         </label>
         <input
           className="alan"
           id="ad"
           name="ad"
           defaultValue={baslangic.ad ?? undefined}
-          placeholder="Recep Uysal"
+          placeholder={s.adOrnek}
         />
       </div>
 
@@ -69,50 +72,50 @@ export function ProfilFormu({ baslangic }: { baslangic: Baslangic }) {
           textTransform: 'uppercase',
         }}
       >
-        Şirket bilgileri
+        {s.sirketBilgileri}
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="sirket_adi">
-          Şirket adı
+          {s.sirketAdi}
         </label>
         <input
           className="alan"
           id="sirket_adi"
           name="sirket_adi"
           defaultValue={baslangic.sirket_adi ?? undefined}
-          placeholder="Atölye Elektronik Ltd. Şti."
+          placeholder={s.sirketOrnek}
         />
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="sirket_adresi">
-          Şirket adresi
+          {s.sirketAdresi}
         </label>
         <input
           className="alan"
           id="sirket_adresi"
           name="sirket_adresi"
           defaultValue={baslangic.sirket_adresi ?? undefined}
-          placeholder="Adres"
+          placeholder={s.adresIpucu}
         />
       </div>
 
       <div style={{ marginBottom: 22 }}>
         <label className="etiket" htmlFor="telefon">
-          Telefon
+          {s.telefon}
         </label>
         <input
           className="alan mn"
           id="telefon"
           name="telefon"
           defaultValue={baslangic.telefon ?? undefined}
-          placeholder="+90 5xx xxx xx xx"
+          placeholder={s.telefonOrnek}
         />
       </div>
 
       <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-        {bekliyor ? 'Kaydediliyor…' : 'Kaydet'}
+        {bekliyor ? so.ortak.buton.kaydediliyor : so.ortak.buton.kaydet}
       </button>
     </form>
   );

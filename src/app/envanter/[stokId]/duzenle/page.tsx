@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ParcaFormu, type ParcaBaslangic } from '@/components/parca-formu';
 import { agacKur, konumSecenekleri, type EnvanterSatiri, type Konum } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,14 +61,16 @@ export default async function ParcaDuzenleSayfasi({
     resim_url: s.resim_url,
   };
 
+  const sz = (await sozlukAl()).parca.duzenle;
+
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          Parçayı düzenle
+          {sz.baslik}
         </h1>
         <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          {s.mpn} — katalog ve stok bilgilerini güncelle.
+          {sz.aciklama(s.mpn)}
         </p>
         <ParcaFormu konumlar={konumlar} mod="duzenle" baslangic={baslangic} donus={donus} />
       </div>

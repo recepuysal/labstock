@@ -12,6 +12,8 @@ import {
   kameraTedarikciEtiketi,
 } from '@/app/envanter/kamera-actions';
 import { TIP_FOTO, TIP_H264, TIP_KARE, TIP_RESIM, type KameraAPI, type KameraDurumu } from '@/lib/kamera';
+import { doldur, sozluk } from '@/lib/i18n';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 /* Telefon kamerasıyla sayım istasyonu (sadece masaüstü uygulamasında).
  *
@@ -52,8 +54,13 @@ function kameraApi(): KameraAPI | null {
   return window.electronAPI?.kamera ?? null;
 }
 
+/** Sayım kütüphanesinin (public/kamera/sayim.js) Türkçe uyarısı; telefona seçili dilde gider. */
+const UYARI_TR = sozluk('tr').kamera.telefon.parcalarDegiyor;
+
 export function KameraIstasyonu() {
   const router = useRouter();
+  const k = useSozluk().kamera;
+  const ks = k.istasyon;
   const [api, setApi] = useState<KameraAPI | null>(null);
   const [durum, setDurum] = useState<KameraDurumu | null>(null);
   const [hata, setHata] = useState<string | null>(null);
@@ -106,7 +113,7 @@ export function KameraIstasyonu() {
   const dokunuldu = useCallback(
     (m: { amac: string; yok?: boolean; alan?: number; x?: number; y?: number; kac?: number }) => {
       if (m.yok || !m.alan) {
-        api?.gonder({ dokunHata: 'Dokunduğun yerde bir nesne bulunamadı; tekrar dene' });
+        api?.gonder({ dokunHata: k.telefon.nesneYok });
         return;
       }
       if (m.amac === 'olcek') {
@@ -117,7 +124,7 @@ export function KameraIstasyonu() {
         bekleyenOlcekRef.current = null;
         olcekGonder();
         birimUygula(seciliStokRef.current); // kayıtlı mm² artık kullanılabilir
-        api?.gonder({ bilgiMesaj: `Ölçek alındı: ${b.ad} (${olcekRef.current.pxMm.toFixed(1)} piksel/mm)` });
+        api?.gonder({ bilgiMesaj: doldur(k.telefon.olcekAlindi, { ad: b.ad, pxMm: olcekRef.current.pxMm.toFixed(1) }) });
       } else if (m.amac === 'ogret') {
         const o = olcekRef.current;
         const stok = seciliStokRef.current;
@@ -129,11 +136,11 @@ export function KameraIstasyonu() {
         } else {
           // Ölçek yok: alan bu kamera yüksekliği için piksel olarak kullanılır (kaydedilmez)
           workerRef.current?.postMessage({ tur: 'birim', mm2: null, px: m.alan });
-          api?.gonder({ birim: { kaynak: 'oturum', mm2: null }, bilgiMesaj: 'Öğretildi (ölçek olmadığı için sadece bu sayımda geçerli)' });
+          api?.gonder({ birim: { kaynak: 'oturum', mm2: null }, bilgiMesaj: k.telefon.ogretildiOlceksiz });
         }
       }
     },
-    [api, olcekGonder, birimUygula],
+    [api, olcekGonder, birimUygula, k],
   );
 
   // ---- Worker (görüntü işleme)
@@ -144,7 +151,7 @@ export function KameraIstasyonu() {
       const m = e.data;
       switch (m.tur) {
         case 'sayim':
-          api.gonder({ sayim: { adet: m.adet, sabit: m.sabit, uyari: m.uyari ?? null } });
+          api.gonder({ sayim: { adet: m.adet, sabit: m.sabit, uyari: m.uyari === UYARI_TR ? k.telefon.parcalarDegiyor : (m.uyari ?? null) } });
           setSonAdet({ adet: m.adet, sabit: !!m.sabit });
           break;
         case 'resim': {
@@ -190,7 +197,7 @@ export function KameraIstasyonu() {
     };
     workerRef.current = w;
     return w;
-  }, [api, birimUygula, dokunuldu, olcekGonder]);
+  }, [api, birimUygula, dokunuldu, olcekGonder, k]);
 
   const workerKapat = useCallback(() => {
     workerRef.current?.terminate();
@@ -233,7 +240,7 @@ export function KameraIstasyonu() {
           bekleyenOlcekRef.current = {
             tip: o.tip === 'kare' ? 'kare' : 'daire',
             mm: Number(o.mm),
-            ad: String(o.ad ?? 'Referans').slice(0, 30),
+            ad: String(o.ad ?? k.telefon.referans).slice(0, 30),
           };
           break;
         case 'olcek_sifirla':
@@ -245,7 +252,7 @@ export function KameraIstasyonu() {
           const ol = olcekRef.current;
           const mm2 = Number(o.en) * Number(o.boy);
           if (!ol || !(mm2 > 0)) {
-            telefona({ dokunHata: 'Önce ölçek ayarla' });
+            telefona({ dokunHata: k.telefon.onceOlcek });
             break;
           }
           const stok = seciliStokRef.current;
@@ -269,9 +276,9 @@ export function KameraIstasyonu() {
           const r = await kameraStokGiris(String(o.stokId), Number(o.adet), String(o.iz), String(o.kaynak ?? ''), !!o.zorla);
           telefona({ girisSonuc: r });
           if (r.ok) {
-            toast('ETİKETTEN GİRİŞ', `${r.mpn}: ${r.eski} → ${r.yeni}`);
+            toast(k.toast.etikettenGiris, `${r.mpn}: ${r.eski} → ${r.yeni}`);
             router.refresh();
-          } else toast('ETİKETTEN GİRİŞ YAPILAMADI', r.hata, true);
+          } else toast(k.toast.etikettenGirisHata, r.hata, true);
           break;
         }
         case 'yeni_parca': {
@@ -284,15 +291,15 @@ export function KameraIstasyonu() {
           const r = await kameraSayimUygula(String(o.stokId), Number(o.adet));
           telefona({ islendi: r });
           if (r.ok) {
-            toast('KAMERA SAYIMI', r.degisti ? `${r.mpn}: ${r.eski} → ${r.yeni}` : `${r.mpn}: ${r.yeni} (değişmedi)`);
+            toast(k.toast.kameraSayimi, r.degisti ? `${r.mpn}: ${r.eski} → ${r.yeni}` : doldur(k.toast.degismedi, { mpn: r.mpn, yeni: r.yeni }));
             birimUygula(null);
             router.refresh();
-          } else toast('KAMERA SAYIMI YAZILAMADI', r.hata, true);
+          } else toast(k.toast.kameraSayimiHata, r.hata, true);
           break;
         }
       }
     },
-    [telefona, toast, router, birimUygula, olcekGonder],
+    [telefona, toast, router, birimUygula, olcekGonder, k],
   );
 
   // ---- Masaüstü API'si var mı (web sürümünde ve eski masaüstü sürümlerinde yok)
@@ -351,14 +358,14 @@ export function KameraIstasyonu() {
     setIslem(false);
     setDurum(r);
     if (!r.ok) {
-      setHata(r.hata ?? 'Başlatılamadı');
+      setHata(r.hata ?? ks.baslatilamadi);
       workerKapat();
       return;
     }
     try {
       localStorage.setItem(ACIK_ANAHTARI, '1');
     } catch {}
-  }, [api, workerAc, workerKapat]);
+  }, [api, workerAc, workerKapat, ks]);
 
   const kapat = useCallback(async () => {
     if (!api) return;
@@ -393,15 +400,15 @@ export function KameraIstasyonu() {
 
   const anahtariYenile = useCallback(async () => {
     if (!api) return;
-    if (!confirm('Eşleşme sıfırlansın mı? Bağlı telefonlar QR kodu yeniden okutmak zorunda kalacak.')) return;
+    if (!confirm(ks.eslesmeSifirlansinMi)) return;
     setDurum(await api.anahtariYenile());
-  }, [api]);
+  }, [api, ks]);
 
   if (!api) return null;
 
   const acik = !!durum?.acik;
   const telefon = !!durum?.telefon;
-  const etiket = !acik ? 'Telefon kamerası' : !telefon ? 'Telefon bekleniyor' : mod === 'sayim' ? 'Telefon bağlı · Sayım' : 'Telefon bağlı';
+  const etiket = !acik ? ks.dugme.kapali : !telefon ? ks.dugme.bekleniyor : mod === 'sayim' ? ks.dugme.bagliSayim : ks.dugme.bagli;
   const nokta = !acik ? '#9ca3af' : telefon ? '#22c55e' : '#eab308';
 
   return (
@@ -410,7 +417,7 @@ export function KameraIstasyonu() {
         type="button"
         className="kart"
         onClick={() => setPanel((p) => !p)}
-        title="Telefon kamerasıyla QR okuma ve parça sayımı"
+        title={ks.dugme.ipucu}
         style={{
           position: 'fixed',
           left: 16,
@@ -455,8 +462,8 @@ export function KameraIstasyonu() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <strong style={{ fontSize: 14 }}>Telefon kamerası</strong>
-            <button type="button" onClick={() => setPanel(false)} aria-label="Kapat" className="bildirim-kapat">
+            <strong style={{ fontSize: 14 }}>{ks.baslik}</strong>
+            <button type="button" onClick={() => setPanel(false)} aria-label={ks.kapat} className="bildirim-kapat">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
@@ -466,11 +473,10 @@ export function KameraIstasyonu() {
           {!acik && (
             <>
               <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.5 }}>
-                Telefonun kamerasıyla QR etiketi okut, masaya döktüğün parçaları say ve tek dokunuşla stoğa işle. Telefon ve
-                bilgisayar aynı Wi-Fi&apos;da olmalı.
+                {ks.aciklama}
               </p>
               <button type="button" className="btn btn-birincil" onClick={ac} disabled={islem} style={{ width: '100%' }}>
-                {islem ? 'Açılıyor…' : 'Aç'}
+                {islem ? ks.aciliyor : ks.ac}
               </button>
               {hata && <p style={{ margin: '10px 0 0', fontSize: 12, color: '#dc2626' }}>{hata}</p>}
             </>
@@ -479,17 +485,23 @@ export function KameraIstasyonu() {
           {acik && !telefon && (
             <>
               {qr && (
-                <img src={qr} alt="Telefon için eşleşme QR kodu" width={220} height={220} style={{ display: 'block', margin: '0 auto 10px', borderRadius: 8, background: '#fff' }} />
+                <img src={qr} alt={ks.qrAlt} width={220} height={220} style={{ display: 'block', margin: '0 auto 10px', borderRadius: 8, background: '#fff' }} />
               )}
               <ol style={{ margin: '0 0 10px', paddingLeft: 18, fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.55 }}>
-                <li>Telefonun kamerasıyla bu QR kodu okut.</li>
-                <li>&quot;Bu bağlantı gizli değil&quot; uyarısında: <em>Ayrıntılar → bu web sitesini ziyaret et</em>.</li>
+                <li>{ks.adim1}</li>
                 <li>
-                  İstersen Safari&apos;de <em>Paylaş → Ana Ekrana Ekle</em> de; sonraki seferler ana ekrandan açarsın.
+                  {ks.adim2On}
+                  <em>{ks.adim2Vurgu}</em>
+                  {ks.adim2Son}
+                </li>
+                <li>
+                  {ks.adim3On}
+                  <em>{ks.adim3Vurgu}</em>
+                  {ks.adim3Son}
                 </li>
               </ol>
               <p style={{ margin: '0 0 10px', fontSize: 11.5, color: 'var(--ink-2)', opacity: 0.8 }}>
-                Windows güvenlik duvarı sorarsa LabStock&apos;a özel ağlarda izin ver. Adres: {durum?.ip}:{durum?.port}
+                {doldur(ks.guvenlikDuvari, { adres: `${durum?.ip}:${durum?.port}` })}
               </p>
             </>
           )}
@@ -498,18 +510,18 @@ export function KameraIstasyonu() {
             <>
               <div style={{ position: 'relative', background: '#000', borderRadius: 8, overflow: 'hidden', marginBottom: 10, minHeight: 120 }}>
                 {onizleme ? (
-                  <img src={onizleme} alt="Telefon kamerası önizleme" style={{ display: 'block', width: '100%', maxHeight: 360, objectFit: 'contain' }} />
+                  <img src={onizleme} alt={ks.onizlemeAlt} style={{ display: 'block', width: '100%', maxHeight: 360, objectFit: 'contain' }} />
                 ) : (
-                  <div style={{ color: '#aaa', fontSize: 12, padding: 40, textAlign: 'center' }}>Telefonda yayını başlat</div>
+                  <div style={{ color: '#aaa', fontSize: 12, padding: 40, textAlign: 'center' }}>{ks.yayiniBaslat}</div>
                 )}
                 {mod === 'sayim' && sonAdet && (
                   <div style={{ position: 'absolute', left: 8, top: 8, background: 'rgba(0,0,0,0.65)', color: sonAdet.sabit ? '#facc15' : '#fff', borderRadius: 8, padding: '4px 10px', fontWeight: 700, fontSize: 20 }}>
-                    {sonAdet.adet} adet
+                    {doldur(ks.adet, { adet: sonAdet.adet })}
                   </div>
                 )}
               </div>
               <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--ink-2)' }}>
-                {mod === 'sayim' ? 'Sayım modu: telefondan QR okut ya da parça ara, sabitle, LabStock\'a yaz.' : 'Kamera modu. Telefonda “Sayım”a geç.'}
+                {mod === 'sayim' ? ks.sayimModu : ks.kameraModu}
                 {istat?.fps ? ` · ${Math.round(istat.fps)} fps` : ''}
                 {istat?.kamera ? ` · ${istat.kamera}` : ''}
               </p>
@@ -519,10 +531,10 @@ export function KameraIstasyonu() {
           {acik && (
             <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
               <button type="button" className="btn" onClick={kapat}>
-                Kapat
+                {ks.kapat}
               </button>
               <button type="button" onClick={anahtariYenile} style={{ background: 'none', border: 0, color: 'var(--ink-2)', fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer' }}>
-                Eşleşmeyi sıfırla
+                {ks.eslesmeyiSifirla}
               </button>
             </div>
           )}
@@ -543,7 +555,7 @@ export function KameraIstasyonu() {
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4 }}>{t.metin}</p>
               </div>
-              <button type="button" onClick={() => setToastlar((cur) => cur.filter((x) => x.id !== t.id))} aria-label="Bildirimi kapat" className="bildirim-kapat">
+              <button type="button" onClick={() => setToastlar((cur) => cur.filter((x) => x.id !== t.id))} aria-label={ks.bildirimiKapat} className="bildirim-kapat">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>

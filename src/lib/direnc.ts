@@ -4,6 +4,8 @@
 
 import { ldJsonUrunGetir } from './urun-ld-json';
 import { urunAciklamasiniAyristir } from './urun-parametre-cikar';
+import { sozluk, type Dil } from './i18n';
+import { dilAl } from './i18n/sunucu';
 
 export type ModulVerisi = {
   isim: string | null;
@@ -19,23 +21,25 @@ export type ModulVerisi = {
 
 const IZINLI_HOSTLAR = new Set(['direnc.net', 'www.direnc.net']);
 
-function direncUrlDogrula(url: string): string {
+function direncUrlDogrula(url: string, dil: Dil): string {
+  const s = sozluk(dil).parca.tedarikci;
   let ayrik: URL;
   try {
     ayrik = new URL(url);
   } catch {
-    throw new Error('Geçersiz bağlantı.');
+    throw new Error(s.gecersizBaglanti);
   }
   if (!IZINLI_HOSTLAR.has(ayrik.hostname)) {
-    throw new Error('Sadece direnc.net ürün bağlantıları kabul edilir.');
+    throw new Error(s.sadeceSite('direnc.net'));
   }
   return ayrik.toString();
 }
 
-export async function direncUrldenCek(url: string): Promise<ModulVerisi> {
-  const guvenliUrl = direncUrlDogrula(url);
-  const urun = await ldJsonUrunGetir(guvenliUrl);
-  if (!urun) throw new Error('Bu sayfada ürün bilgisi bulunamadı.');
+export async function direncUrldenCek(url: string, dil?: Dil): Promise<ModulVerisi> {
+  const d = dil ?? (await dilAl());
+  const guvenliUrl = direncUrlDogrula(url, d);
+  const urun = await ldJsonUrunGetir(guvenliUrl, d);
+  if (!urun) throw new Error(sozluk(d).parca.tedarikci.urunBulunamadi);
 
   const resimler = Array.isArray(urun.image) ? urun.image : urun.image ? [urun.image] : [];
   const fiyatSayi = urun.offers?.price != null ? Number(urun.offers.price) : null;

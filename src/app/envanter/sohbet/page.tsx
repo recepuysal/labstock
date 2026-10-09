@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { SohbetEkrani } from '@/components/sohbet-ekrani';
+import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SohbetSayfasi() {
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris');
+  const sz = await sozlukAl();
 
   return (
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '20px 20px 0' }}>
@@ -39,11 +41,11 @@ export default async function SohbetSayfasi() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Envantere dön
+            {sz.ortak.buton.envantereDon}
           </Link>
           {aktif.saltOkunur && (
             <span className="mn" style={{ fontSize: 11.5, color: 'var(--copper)' }}>
-              İzlediğin depo: {aktif.izlenenAdi || 'bağlı hesap'}
+              {sz.parca.sohbet.izledigin(aktif.izlenenAdi || sz.ortak.ustBar.bagliHesap)}
             </span>
           )}
         </div>

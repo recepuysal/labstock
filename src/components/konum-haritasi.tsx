@@ -1,4 +1,6 @@
-import type { Konum } from '@/lib/types';
+import { konumTipiGoster, type Konum } from '@/lib/types';
+import { sozluk, yerel } from '@/lib/i18n';
+import { dilAl } from '@/lib/i18n/sunucu';
 
 function ataZinciri(konum: Konum, harita: Map<string, Konum>): Konum[] {
   const zincir: Konum[] = [];
@@ -10,7 +12,7 @@ function ataZinciri(konum: Konum, harita: Map<string, Konum>): Konum[] {
   return zincir;
 }
 
-export function KonumHaritasi({
+export async function KonumHaritasi({
   konumlar,
   konumId,
   sayilar,
@@ -19,6 +21,9 @@ export function KonumHaritasi({
   konumId: string | null;
   sayilar: Record<string, number>;
 }) {
+  const dil = await dilAl();
+  const sozlukler = sozluk(dil);
+  const s = sozlukler.envanter.konumHaritasi;
   if (!konumId) {
     return (
       <div className="kart" style={{ padding: 16 }}>
@@ -26,10 +31,10 @@ export function KonumHaritasi({
           className="mn"
           style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)' }}
         >
-          KONUM
+          {s.baslik}
         </div>
         <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--muted)' }}>
-          Bu stok kalemi bir konuma atanmamış.
+          {s.atanmamis}
         </p>
       </div>
     );
@@ -46,7 +51,12 @@ export function KonumHaritasi({
 
   const ebeveyn = buradaki.parent_id ? harita.get(buradaki.parent_id) : undefined;
   const dolu = kardesler.filter((k) => (sayilar[k.id] ?? 0) > 0).length;
-  const cocukTipi = kardesler.find((k) => k.tip)?.tip?.toLowerCase() ?? 'konum';
+  const ornekTip = kardesler.find((k) => k.tip)?.tip;
+  const cocukTipi = ornekTip
+    ? konumTipiGoster(ornekTip, dil, kardesler.length).toLocaleLowerCase(yerel(dil))
+    : kardesler.length === 1
+      ? sozlukler.envanter.konumGenel
+      : sozlukler.envanter.konumGenelCogul;
 
   return (
     <div className="kart" style={{ padding: 16 }}>
@@ -54,7 +64,7 @@ export function KonumHaritasi({
         className="mn"
         style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)' }}
       >
-        KONUM
+        {s.baslik}
       </div>
 
       <div className="mn" style={{ fontSize: 22, fontWeight: 600, marginTop: 6 }}>
@@ -103,7 +113,7 @@ export function KonumHaritasi({
           </div>
 
           <div style={{ fontSize: 10.5, color: 'var(--muted-2)', marginTop: 8 }}>
-            {ebeveyn?.ad} · {kardesler.length} {cocukTipi} · {dolu} dolu
+            {s.ozet(ebeveyn?.ad ?? '', kardesler.length, cocukTipi, dolu)}
           </div>
         </>
       )}

@@ -200,8 +200,8 @@
 
   <div id="bos">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.55-2.28A1 1 0 0 1 21 8.62v6.76a1 1 0 0 1-1.45.9L15 14"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
-   <h1>Yayın kapalı</h1>
-   <p>Görüntüyü bilgisayara göndermek için alttaki kırmızı düğmeye dokun.</p>
+   <h1 data-t="yayinKapali">Yayın kapalı</h1>
+   <p data-t="yayinKapaliNot">Görüntüyü bilgisayara göndermek için alttaki kırmızı düğmeye dokun.</p>
    <div class="adres" id="adres"></div>
   </div>
   <img id="sayimResim" alt="">
@@ -209,11 +209,11 @@
 
   <header class="ust">
    <div class="hap" id="bagHap"><span class="nokta"></span><span id="bagYazi">Bağlanıyor</span></div>
-   <div class="hap canli gizli" id="canliHap"><span class="nokta"></span>CANLI</div>
+   <div class="hap canli gizli" id="canliHap"><span class="nokta"></span><span data-t="canli">CANLI</span></div>
    <div class="bosluk"></div>
-   <div class="mod" id="modSecici"><button data-mod="kamera" class="on">Kamera</button><button data-mod="sayim">Sayım</button></div>
+   <div class="mod" id="modSecici"><button data-mod="kamera" class="on" data-t="kamera">Kamera</button><button data-mod="sayim" data-t="sayim">Sayım</button></div>
    <div class="bosluk"></div>
-   <button class="ikon" id="ayarBtn" aria-label="Ayarlar">
+   <button class="ikon" id="ayarBtn" aria-label="Ayarlar" data-ta="ayarlar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
    </button>
   </header>
@@ -223,7 +223,7 @@
    <div class="sk-giris gizli" id="skGiris"></div>
    <div class="sk-ust" id="skUst"></div>
    <div class="sk-cipler" id="skCipler"></div>
-   <div class="sk-ara gizli" id="skAraKutu"><input id="skAra" type="search" placeholder="QR yoksa: parça ara (ad, MPN)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>
+   <div class="sk-ara gizli" id="skAraKutu"><input id="skAra" type="search" placeholder="QR yoksa: parça ara (ad, MPN)" data-tp="araYer" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>
    <div class="sk-liste gizli" id="skListe"></div>
    <div class="sk-sayi" id="skSayi"><b id="skAdet">–</b><span id="skNot">sayılıyor</span><span class="fark esit gizli" id="skFark"></span></div>
    <div class="sk-dugmeler" id="skDugmeler"></div>
@@ -232,47 +232,47 @@
  </main>
 
  <footer class="alt">
-  <label class="yan" id="fotoBtn" aria-label="Tam çözünürlüklü foto çek">
+  <label class="yan" id="fotoBtn" aria-label="Tam çözünürlüklü foto çek" data-ta="fotoCek">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.4-2h7l1.4 2h1.6A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.6"/></svg>
    <input id="foto" type="file" accept="image/*" capture="environment" hidden>
   </label>
-  <button id="kayit" aria-label="Canlı yayını başlat / durdur"><span></span></button>
-  <button class="yan" id="cevir" aria-label="Kamerayı çevir">
+  <button id="kayit" aria-label="Canlı yayını başlat / durdur" data-ta="yayinDugme"><span></span></button>
+  <button class="yan" id="cevir" aria-label="Kamerayı çevir" data-ta="kameraCevir">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></svg>
   </button>
  </footer>
 </div>
 
 <div id="perde"></div>
-<section id="panel" aria-label="Ayarlar">
+<section id="panel" aria-label="Ayarlar" data-ta="ayarlar">
  <div class="tutamak"></div>
- <div class="panel-bas"><h2>Ayarlar</h2><button class="tamam" id="kapat">Bitti</button></div>
+ <div class="panel-bas"><h2 data-t="ayarlar">Ayarlar</h2><button class="tamam" id="kapat" data-t="bitti">Bitti</button></div>
 
- <div class="grup"><label>Kamera</label>
-  <div class="seg" data-hedef="kamera"><button data-d="environment">Arka</button><button data-d="user">Ön</button></div></div>
- <div class="grup"><label>Çözünürlük <i>30 fps</i></label>
+ <div class="grup"><label data-t="kamera">Kamera</label>
+  <div class="seg" data-hedef="kamera"><button data-d="environment" data-t="arka">Arka</button><button data-d="user" data-t="on">Ön</button></div></div>
+ <div class="grup"><label><span data-t="cozunurluk">Çözünürlük</span> <i>30 fps</i></label>
   <div class="seg" data-hedef="coz"><button data-d="1280x720">720p</button><button data-d="1920x1080">1080p</button><button data-d="3840x2160">4K</button></div></div>
- <div class="grup"><label>Aktarım <i id="formatNot">H.264 önerilir</i></label>
-  <div class="seg" data-hedef="format"><button data-d="h264">H.264 video</button><button data-d="jpeg">JPEG kareler</button></div></div>
- <div class="grup" id="bitGrup"><label>Bit hızı <i>yüksek = daha net, daha çok Wi-Fi</i></label>
-  <div class="seg" data-hedef="bit"><button data-d="0">Oto</button><button data-d="4">4</button><button data-d="8">8</button><button data-d="12">12</button><button data-d="20">20</button></div></div>
- <div class="grup gizli" id="kaliteGrup"><label>JPEG kalitesi</label>
-  <div class="seg" data-hedef="kalite"><button data-d="0.6">%60</button><button data-d="0.75">%75</button><button data-d="0.85">%85</button><button data-d="0.95">%95</button></div></div>
+ <div class="grup"><label><span data-t="aktarim">Aktarım</span> <i id="formatNot" data-t="h264Oneri">H.264 önerilir</i></label>
+  <div class="seg" data-hedef="format"><button data-d="h264">H.264 video</button><button data-d="jpeg" data-t="jpegKareler">JPEG kareler</button></div></div>
+ <div class="grup" id="bitGrup"><label><span data-t="bitHizi">Bit hızı</span> <i data-t="bitNot">yüksek = daha net, daha çok Wi-Fi</i></label>
+  <div class="seg" data-hedef="bit"><button data-d="0" data-t="oto">Oto</button><button data-d="4">4</button><button data-d="8">8</button><button data-d="12">12</button><button data-d="20">20</button></div></div>
+ <div class="grup gizli" id="kaliteGrup"><label data-t="jpegKalite">JPEG kalitesi</label>
+  <div class="seg" data-hedef="kalite"><button data-d="0.6" data-t="y60">%60</button><button data-d="0.75" data-t="y75">%75</button><button data-d="0.85" data-t="y85">%85</button><button data-d="0.95" data-t="y95">%95</button></div></div>
 
  <div class="bilgi">
-  <div><span>Bilgisayar</span><span id="bAdres">-</span></div>
-  <div><span>Kamera</span><span id="bKamera">-</span></div>
-  <div><span>Kodlayıcı</span><span id="bKodlayici">-</span></div>
-  <div><span>Kare boyutu</span><span id="bKare">-</span></div>
-  <div><span>Atlanan kare</span><span id="bAtlanan">-</span></div>
+  <div><span data-t="bilgisayar">Bilgisayar</span><span id="bAdres">-</span></div>
+  <div><span data-t="kamera">Kamera</span><span id="bKamera">-</span></div>
+  <div><span data-t="kodlayici">Kodlayıcı</span><span id="bKodlayici">-</span></div>
+  <div><span data-t="kareBoyutu">Kare boyutu</span><span id="bKare">-</span></div>
+  <div><span data-t="atlananKare">Atlanan kare</span><span id="bAtlanan">-</span></div>
  </div>
 </section>
 
-<section id="olcekPanel" class="panel-alt" aria-label="Ölçek">
+<section id="olcekPanel" class="panel-alt" aria-label="Ölçek" data-ta="olcek">
  <div class="tutamak"></div>
- <div class="panel-bas"><h2 id="opBaslik">Ölçek</h2><button class="tamam" id="opKapat">Kapat</button></div>
+ <div class="panel-bas"><h2 id="opBaslik" data-t="olcek">Ölçek</h2><button class="tamam" id="opKapat" data-t="kapat">Kapat</button></div>
  <div id="opOlcek">
-  <div class="grup"><label>Referans: madeni para</label>
+  <div class="grup"><label data-t="refPara">Referans: madeni para</label>
    <div class="secenekler" id="paralar">
     <button data-ad="1 TL" data-mm="26.15">1 TL<small>26,15 mm</small></button>
     <button data-ad="50 Kr" data-mm="23.85">50 Kr<small>23,85 mm</small></button>
@@ -280,21 +280,21 @@
     <button data-ad="10 Kr" data-mm="18.5">10 Kr<small>18,5 mm</small></button>
     <button data-ad="5 Kr" data-mm="17.5">5 Kr<small>17,5 mm</small></button>
    </div></div>
-  <div class="grup"><label>Başka bir referans</label>
-   <div class="mm-satir"><input id="opCap" type="number" inputmode="decimal" placeholder="Yuvarlak: çap (mm)"><button id="opCapTamam">Seç</button></div>
-   <div class="mm-satir"><input id="opKenar" type="number" inputmode="decimal" placeholder="Kare: kenar (mm)"><button id="opKenarTamam">Seç</button></div>
-   <div class="not">Seçtikten sonra resimde referansa dokun. Referans masada kalabilir, sayılmaz (mavi halka). Kamerayı sabit tut; yükseklik değişirse ölçeği yeniden al.</div>
+  <div class="grup"><label data-t="baskaRef">Başka bir referans</label>
+   <div class="mm-satir"><input id="opCap" type="number" inputmode="decimal" placeholder="Yuvarlak: çap (mm)" data-tp="capYer"><button id="opCapTamam" data-t="sec">Seç</button></div>
+   <div class="mm-satir"><input id="opKenar" type="number" inputmode="decimal" placeholder="Kare: kenar (mm)" data-tp="kenarYer"><button id="opKenarTamam" data-t="sec">Seç</button></div>
+   <div class="not" data-t="refNot">Seçtikten sonra resimde referansa dokun. Referans masada kalabilir, sayılmaz (mavi halka). Kamerayı sabit tut; yükseklik değişirse ölçeği yeniden al.</div>
   </div>
-  <div class="grup"><button class="sk-cip" id="opOlcekSifirla">Ölçeği kaldır</button></div>
+  <div class="grup"><button class="sk-cip" id="opOlcekSifirla" data-t="olcekKaldir">Ölçeği kaldır</button></div>
  </div>
  <div id="opBirim">
-  <div class="grup"><label>Tek parçaya dokunarak öğret</label>
-   <button class="sk-cip" id="opOgret" style="height:40px;width:100%;justify-content:center">Resimde tek bir parçaya dokun</button>
-   <div class="not">Diğerlerine değmeyen, tek duran bir parça seç. Ölçek varsa boyut bu parça için kaydedilir; sonraki sayımlarda tahmine gerek kalmaz.</div></div>
-  <div class="grup"><label>Ya da boyutunu gir (üstten görünen, mm)</label>
-   <div class="mm-satir"><input id="opEn" type="number" inputmode="decimal" placeholder="En"><input id="opBoy" type="number" inputmode="decimal" placeholder="Boy"><button id="opBoyutTamam">Kaydet</button></div>
-   <div class="not">Ölçek gerekir. Bacaklar sayılmaz; sadece gövdenin eni ve boyu.</div></div>
-  <div class="grup"><button class="sk-cip" id="opBirimSifirla">Otomatik tahmine dön</button></div>
+  <div class="grup"><label data-t="ogretBaslik">Tek parçaya dokunarak öğret</label>
+   <button class="sk-cip" id="opOgret" style="height:40px;width:100%;justify-content:center" data-t="ogretDugme">Resimde tek bir parçaya dokun</button>
+   <div class="not" data-t="ogretNot">Diğerlerine değmeyen, tek duran bir parça seç. Ölçek varsa boyut bu parça için kaydedilir; sonraki sayımlarda tahmine gerek kalmaz.</div></div>
+  <div class="grup"><label data-t="boyutBaslik">Ya da boyutunu gir (üstten görünen, mm)</label>
+   <div class="mm-satir"><input id="opEn" type="number" inputmode="decimal" placeholder="En" data-tp="en"><input id="opBoy" type="number" inputmode="decimal" placeholder="Boy" data-tp="boy"><button id="opBoyutTamam" data-t="kaydet">Kaydet</button></div>
+   <div class="not" data-t="boyutNot">Ölçek gerekir. Bacaklar sayılmaz; sadece gövdenin eni ve boyu.</div></div>
+  <div class="grup"><button class="sk-cip" id="opBirimSifirla" data-t="otomatigeDon">Otomatik tahmine dön</button></div>
  </div>
 </section>
 
@@ -312,6 +312,122 @@
 const $=id=>document.getElementById(id);
 const v=$('v'), c=$('c'), ctx=c.getContext('2d');
 const SURUM='__SURUM__';          // PC'deki sayfa değişince telefon kendini yeniler
+// Dil: telefon başka bir cihaz, LabStock'un dil çerezini göremez. Bilgisayar sayfayı verirken
+// buraya LabStock'un dilini ('tr' | 'en') yazar (bkz. electron-app/kamera.js govde()).
+const DIL=('__DIL__'==='en')? 'en' : 'tr';
+const METINLER={
+ tr:{
+  baslik:'LabStock Kamera', yerel:'tr-TR',
+  // sabit arayüz (data-t / data-ta / data-tp)
+  yayinKapali:'Yayın kapalı', yayinKapaliNot:'Görüntüyü bilgisayara göndermek için alttaki kırmızı düğmeye dokun.',
+  canli:'CANLI', kamera:'Kamera', sayim:'Sayım', ayarlar:'Ayarlar', araYer:'QR yoksa: parça ara (ad, MPN)',
+  fotoCek:'Tam çözünürlüklü foto çek', yayinDugme:'Canlı yayını başlat / durdur', kameraCevir:'Kamerayı çevir',
+  bitti:'Bitti', arka:'Arka', on:'Ön', cozunurluk:'Çözünürlük', aktarim:'Aktarım', h264Oneri:'H.264 önerilir',
+  jpegKareler:'JPEG kareler', bitHizi:'Bit hızı', bitNot:'yüksek = daha net, daha çok Wi-Fi', oto:'Oto',
+  jpegKalite:'JPEG kalitesi', y60:'%60', y75:'%75', y85:'%85', y95:'%95',
+  bilgisayar:'Bilgisayar', kodlayici:'Kodlayıcı', kareBoyutu:'Kare boyutu', atlananKare:'Atlanan kare',
+  olcek:'Ölçek', kapat:'Kapat', refPara:'Referans: madeni para', baskaRef:'Başka bir referans',
+  capYer:'Yuvarlak: çap (mm)', kenarYer:'Kare: kenar (mm)', sec:'Seç',
+  refNot:'Seçtikten sonra resimde referansa dokun. Referans masada kalabilir, sayılmaz (mavi halka). Kamerayı sabit tut; yükseklik değişirse ölçeği yeniden al.',
+  olcekKaldir:'Ölçeği kaldır', ogretBaslik:'Tek parçaya dokunarak öğret', ogretDugme:'Resimde tek bir parçaya dokun',
+  ogretNot:'Diğerlerine değmeyen, tek duran bir parça seç. Ölçek varsa boyut bu parça için kaydedilir; sonraki sayımlarda tahmine gerek kalmaz.',
+  boyutBaslik:'Ya da boyutunu gir (üstten görünen, mm)', en:'En', boy:'Boy', kaydet:'Kaydet',
+  boyutNot:'Ölçek gerekir. Bacaklar sayılmaz; sadece gövdenin eni ve boyu.', otomatigeDon:'Otomatik tahmine dön',
+  // bağlantı
+  bagli:'Bağlı', baglantiYok:'Bağlantı yok', baglaniyor:'Bağlanıyor', h264Yok:'bu tarayıcıda H.264 yok',
+  eslesmeYok:'Eşleşme yok', eslesmeYokNot:"LabStock'ta Telefon kamerası'nı açıp ekrandaki QR kodu bu telefonla okut",
+  eslesmeGecersiz:'Eşleşme geçersiz', eslesmeGecersizNot:"Eşleşme geçersiz: LabStock'taki QR kodu yeniden okut",
+  baskaTelefon:'Başka telefon bağlı', baskaTelefonNot:"LabStock'a başka bir telefon bağlandı",
+  // sayım kartı
+  parcaBilgisi:'Parça bilgisi alınıyor…', parca:'Parça', adet:'adet',
+  sistemde:(adet,birim)=>`Sistemde <b>${adet}</b> ${birim}`, parcayiKaldir:'Parçayı kaldır',
+  cekmece:'Çekmece', parcaSecNot:'Sayılacak parçayı seç',
+  ipucu:'QR etiketini kameraya göster ya da aşağıya parçanın adını yaz',
+  konumdaParcaYok:'Bu konumda parça yok', eslesenYok:'Eşleşen parça yok',
+  adetSabit:'adet (sabit)', sayiliyor:'sayılıyor', adetCanli:'adet · canlı', ayni:'aynı',
+  kamerayiBaslat:'Kamerayı başlat', sabitle:'Sabitle', tamCozunurluk:'Tam çözünürlükte sayılıyor…',
+  labstockAcikDegil:'Bilgisayarda LabStock açık değil', yaziliyor:'Yazılıyor…', parcaSecDugme:'Parça seç',
+  labstockKapali:'LabStock kapalı', labstockaYaz:"LabStock'a yaz", tekrar:'Tekrar',
+  qrGoster:'QR etiketini göster ya da parçanın adını yaz',
+  // ölçek ve parça boyu
+  parcaBoyu:'Parça boyu', gecerliOlcu:'Geçerli bir ölçü gir', resimdeDokun:ad=>`Resimde ${ad}'ye dokun`,
+  mmReferans:mm=>`${mm} mm referans`, mmKare:mm=>`${mm} mm kare`, tekParcayaDokun:'Resimde tek duran bir parçaya dokun',
+  enBoyGir:'En ve boyu mm olarak gir', onceOlcek:'Önce ölçek ayarla (madeni para vb.)',
+  goruntuYok:'Görüntü henüz gelmedi, biraz bekle', iceDokun:'Görüntünün içine dokun', olculuyor:'Ölçülüyor…',
+  referansaDokun:'Referansa dokun…', olcekYok:'📏 Ölçek yok', parcayaDokun:'Parçaya dokun…',
+  boyutOto:'⬚ Boyut: otomatik', kayitli:' (kayıtlı)', boyutOturum:'⬚ Boyut: bu oturum',
+  // tedarikçi etiketi
+  etiketi:kaynak=>`${kaynak} etiketi`, araniyor:"LabStock'ta aranıyor…", aranamadi:'Aranamadı',
+  dahaOnce:tarih=>`⚠ Bu etiket ${tarih} tarihinde işlenmiş`, ekle:(adet,yine)=>`${yine?'Yine de ':''}+${adet} ekle`,
+  labstocktaYok:"Bu parça LabStock'ta yok.", yeniParcaAc:'Bilgisayarda yeni parça olarak aç',
+  yeniParcaAcildi:'Bilgisayarda yeni parça formu açıldı',
+  // bilgisayardan gelen sonuçlar
+  secildi:mpn=>mpn+' seçildi', parcaBulunamadi:'Parça bulunamadı', konumBulunamadi:'Konum bulunamadı',
+  aramaYapilamadi:'Arama yapılamadı', etiketiKaldir:'Ekledikten sonra etiketi masadan kaldır; yoksa parça diye sayılır',
+  eklendi:'Eklendi: ', eklenemedi:'Eklenemedi: ', yazildi:"LabStock'a yazıldı: ",
+  sayimTuttu:yeni=>`Sayım tuttu: ${yeni} (değişiklik yok)`, yazilamadi:'yazılamadı',
+  // kamera ve yayın
+  ayarDegisti:'Ayar bilgisayardan değişti', kameraAcilamadi:'Kamera açılamadı: ',
+  h264Baslamadi:'H.264 başlamadı, JPEG kullanılıyor', hazirlaniyor:'hazırlanıyor', saniyede:'/sn',
+  yayinDurdu:'Yayın durduruldu', onKamera:'Ön kamera', arkaKamera:'Arka kamera',
+  fotoBaglantiYok:'Bağlantı yok, foto gönderilemedi', fotoGonderiliyor:mb=>`Foto gönderiliyor (${mb} MB)…`,
+ },
+ en:{
+  baslik:'LabStock Camera', yerel:'en-US',
+  yayinKapali:'Stream off', yayinKapaliNot:'Tap the red button below to send video to your computer.',
+  canli:'LIVE', kamera:'Camera', sayim:'Count', ayarlar:'Settings', araYer:'No QR? Search parts (name, MPN)',
+  fotoCek:'Take a full-resolution photo', yayinDugme:'Start / stop live stream', kameraCevir:'Flip camera',
+  bitti:'Done', arka:'Back', on:'Front', cozunurluk:'Resolution', aktarim:'Transfer', h264Oneri:'H.264 recommended',
+  jpegKareler:'JPEG frames', bitHizi:'Bitrate', bitNot:'higher = sharper, more Wi-Fi', oto:'Auto',
+  jpegKalite:'JPEG quality', y60:'60%', y75:'75%', y85:'85%', y95:'95%',
+  bilgisayar:'Computer', kodlayici:'Encoder', kareBoyutu:'Frame size', atlananKare:'Dropped frames',
+  olcek:'Scale', kapat:'Close', refPara:'Reference: coin', baskaRef:'Other reference',
+  capYer:'Round: diameter (mm)', kenarYer:'Square: side (mm)', sec:'Select',
+  refNot:'After selecting, tap the reference in the image. It can stay on the table and is not counted (blue ring). Keep the camera steady; if its height changes, set the scale again.',
+  olcekKaldir:'Remove scale', ogretBaslik:'Teach by tapping a single part', ogretDugme:'Tap a single part in the image',
+  ogretNot:'Pick a part standing on its own, not touching others. With a scale set, the size is saved for this part, so later counts need no estimate.',
+  boyutBaslik:'Or enter its size (top view, mm)', en:'Width', boy:'Length', kaydet:'Save',
+  boyutNot:'Requires a scale. Leads are not included; just the body width and length.', otomatigeDon:'Back to automatic estimate',
+  bagli:'Connected', baglantiYok:'No connection', baglaniyor:'Connecting', h264Yok:'H.264 not available in this browser',
+  eslesmeYok:'Not paired', eslesmeYokNot:'In LabStock, open Phone camera and scan the on-screen QR code with this phone',
+  eslesmeGecersiz:'Invalid pairing', eslesmeGecersizNot:'Invalid pairing: scan the QR code in LabStock again',
+  baskaTelefon:'Another phone connected', baskaTelefonNot:'Another phone has connected to LabStock',
+  parcaBilgisi:'Fetching part info…', parca:'Part', adet:'pcs',
+  sistemde:(adet,birim)=>`In stock: <b>${adet}</b> ${birim}`, parcayiKaldir:'Clear part',
+  cekmece:'Drawer', parcaSecNot:'Choose the part to count',
+  ipucu:'Show a QR label to the camera or type the part name below',
+  konumdaParcaYok:'No parts in this location', eslesenYok:'No matching parts',
+  adetSabit:'pcs (locked)', sayiliyor:'counting', adetCanli:'pcs · live', ayni:'same',
+  kamerayiBaslat:'Start camera', sabitle:'Lock', tamCozunurluk:'Counting at full resolution…',
+  labstockAcikDegil:'LabStock is not open on the computer', yaziliyor:'Saving…', parcaSecDugme:'Select part',
+  labstockKapali:'LabStock closed', labstockaYaz:'Save to LabStock', tekrar:'Recount',
+  qrGoster:'Show the QR label or type the part name',
+  parcaBoyu:'Part size', gecerliOlcu:'Enter a valid size', resimdeDokun:ad=>`Tap the ${ad} in the image`,
+  mmReferans:mm=>`${mm} mm reference`, mmKare:mm=>`${mm} mm square`, tekParcayaDokun:'Tap a part standing on its own in the image',
+  enBoyGir:'Enter width and length in mm', onceOlcek:'Set a scale first (coin etc.)',
+  goruntuYok:'No image yet, wait a moment', iceDokun:'Tap inside the image', olculuyor:'Measuring…',
+  referansaDokun:'Tap the reference…', olcekYok:'📏 No scale', parcayaDokun:'Tap the part…',
+  boyutOto:'⬚ Size: auto', kayitli:' (saved)', boyutOturum:'⬚ Size: this session',
+  etiketi:kaynak=>`${kaynak} label`, araniyor:'Searching LabStock…', aranamadi:'Search failed',
+  dahaOnce:tarih=>`⚠ This label was already processed on ${tarih}`, ekle:(adet,yine)=>`${yine?'Add +'+adet+' anyway':'Add +'+adet}`,
+  labstocktaYok:'This part is not in LabStock.', yeniParcaAc:'Open as a new part on the computer',
+  yeniParcaAcildi:'New part form opened on the computer',
+  secildi:mpn=>mpn+' selected', parcaBulunamadi:'Part not found', konumBulunamadi:'Location not found',
+  aramaYapilamadi:'Search failed', etiketiKaldir:'After adding, remove the label from the table, or it will be counted as a part',
+  eklendi:'Added: ', eklenemedi:'Could not add: ', yazildi:'Saved to LabStock: ',
+  sayimTuttu:yeni=>`Count matches: ${yeni} (no change)`, yazilamadi:'could not save',
+  ayarDegisti:'Settings changed from the computer', kameraAcilamadi:'Could not open camera: ',
+  h264Baslamadi:'H.264 did not start, using JPEG', hazirlaniyor:'preparing', saniyede:'/s',
+  yayinDurdu:'Stream stopped', onKamera:'Front camera', arkaKamera:'Back camera',
+  fotoBaglantiYok:'No connection, photo not sent', fotoGonderiliyor:mb=>`Sending photo (${mb} MB)…`,
+ },
+};
+const T=METINLER[DIL];
+document.documentElement.lang=DIL;
+document.title=T.baslik;
+document.querySelectorAll('[data-t]').forEach(e=>{ e.textContent=T[e.dataset.t]; });
+document.querySelectorAll('[data-ta]').forEach(e=>{ e.setAttribute('aria-label', T[e.dataset.ta]); });
+document.querySelectorAll('[data-tp]').forEach(e=>{ e.placeholder=T[e.dataset.tp]; });
 // LabStock'taki QR, adresi #k=<anahtar> ile verir. Anahtar adreste kalır: "Ana Ekrana Ekle" denince
 // uygulama da anahtarla açılır (iOS'ta ana ekran uygulamasının depolaması Safari'den ayrıdır).
 const ANAHTAR=(location.hash.match(/k=([A-Za-z0-9_-]+)/)||[])[1]||null;
@@ -344,7 +460,7 @@ window.onunhandledrejection=e=>pcyeYaz('hata', e.reason);
 
 function baglantiGoster(durum){   // 'bagli' | 'kopuk' | 'bekliyor'
   const h=$('bagHap'); h.className='hap '+(durum==='bekliyor'?'':durum);
-  $('bagYazi').textContent= durum==='bagli'? 'Bağlı' : durum==='kopuk'? 'Bağlantı yok' : 'Bağlanıyor';
+  $('bagYazi').textContent= durum==='bagli'? T.bagli : durum==='kopuk'? T.baglantiYok : T.baglaniyor;
 }
 
 function arayuzGuncelle(){
@@ -381,7 +497,7 @@ function cip(etiket, deger, sinif=''){ return `<span class="cip ${sinif}"><b>${d
 if(!H264_VAR){
   $('format').value='jpeg';
   document.querySelector('[data-hedef=format] [data-d=h264]').disabled=true;
-  $('formatNot').textContent='bu tarayıcıda H.264 yok';
+  $('formatNot').textContent=T.h264Yok;
 }
 $('adres').textContent=location.host;
 $('bAdres').textContent=location.host;
@@ -409,7 +525,7 @@ function olayGonder(o){ try{ if(ws && ws.readyState===1) ws.send(JSON.stringify(
 function yerlestir(el, html){ if(el._html!==html){ el._html=html; el.innerHTML=html; return true; } return false; }
 
 function parcaSec(stokId){
-  olayGonder({olay:'sec', stokId}); mesaj('Parça bilgisi alınıyor…',1500);
+  olayGonder({olay:'sec', stokId}); mesaj(T.parcaBilgisi,1500);
   sayim.arama=null; $('skAra').value=''; $('skAra').blur();
 }
 
@@ -418,17 +534,17 @@ function kartCiz(){
   const ls=`<span class="ls ${sayim.labstock?'bagli':'kopuk'}"><span class="nokta"></span>LabStock</span>`;
   const p=sayim.parca;
   if(p){
-    if(yerlestir($('skUst'), `<div class="sk-parca"><div class="sk-mpn">${kac(p.mpn||'Parça')}</div>
-      <div class="sk-alt">Sistemde <b>${kac(p.adet)}</b> ${kac(p.birim||'adet')}${p.konum? ' · '+kac(p.konum):''}</div></div>${ls}
-      <button class="sk-x" id="skTemizle" aria-label="Parçayı kaldır">${IKON_X}</button>`))
+    if(yerlestir($('skUst'), `<div class="sk-parca"><div class="sk-mpn">${kac(p.mpn||T.parca)}</div>
+      <div class="sk-alt">${T.sistemde(kac(p.adet), kac(!p.birim || p.birim==='adet'? T.adet : p.birim))}${p.konum? ' · '+kac(p.konum):''}</div></div>${ls}
+      <button class="sk-x" id="skTemizle" aria-label="${kac(T.parcayiKaldir)}">${IKON_X}</button>`))
       $('skTemizle').onclick=()=>{ sayim.parca=null; sayim.konum=null; olayGonder({olay:'parca_birak'}); kartCiz(); };
   }else if(sayim.konum){
-    if(yerlestir($('skUst'), `<div class="sk-parca"><div class="sk-mpn">${kac(sayim.konum.konumAdi||'Çekmece')}</div>
-      <div class="sk-alt">Sayılacak parçayı seç</div></div>${ls}
-      <button class="sk-x" id="skTemizle" aria-label="Kapat">${IKON_X}</button>`))
+    if(yerlestir($('skUst'), `<div class="sk-parca"><div class="sk-mpn">${kac(sayim.konum.konumAdi||T.cekmece)}</div>
+      <div class="sk-alt">${kac(T.parcaSecNot)}</div></div>${ls}
+      <button class="sk-x" id="skTemizle" aria-label="${kac(T.kapat)}">${IKON_X}</button>`))
       $('skTemizle').onclick=()=>{ sayim.konum=null; kartCiz(); };
   }else{
-    yerlestir($('skUst'), `<div class="sk-ipucu" style="flex:1">${IKON_QR}<span>QR etiketini kameraya göster ya da aşağıya parçanın adını yaz</span></div>${ls}`);
+    yerlestir($('skUst'), `<div class="sk-ipucu" style="flex:1">${IKON_QR}<span>${kac(T.ipucu)}</span></div>${ls}`);
   }
   // Çekmecedeki parçalar listesi
   $('skAraKutu').classList.toggle('gizli', !!(p || sayim.konum));
@@ -436,9 +552,9 @@ function kartCiz(){
   const satir=x=>`<button data-id="${kac(x.stokId)}"><span><b>${kac(x.mpn)}</b><small>${kac([x.aciklama,x.konum].filter(Boolean).join(' · '))}</small></span><span>${kac(x.adet)}</span></button>`;
   let lhtml=null;
   if(!p && sayim.konum && sayim.konum.parcalar)
-    lhtml= sayim.konum.parcalar.length? sayim.konum.parcalar.map(satir).join('') : '<div class="sk-alt" style="padding:6px 2px">Bu konumda parça yok</div>';
+    lhtml= sayim.konum.parcalar.length? sayim.konum.parcalar.map(satir).join('') : `<div class="sk-alt" style="padding:6px 2px">${kac(T.konumdaParcaYok)}</div>`;
   else if(!p && sayim.arama)
-    lhtml= sayim.arama.parcalar.length? sayim.arama.parcalar.map(satir).join('') : '<div class="sk-alt" style="padding:6px 2px">Eşleşen parça yok</div>';
+    lhtml= sayim.arama.parcalar.length? sayim.arama.parcalar.map(satir).join('') : `<div class="sk-alt" style="padding:6px 2px">${kac(T.eslesenYok)}</div>`;
   liste.classList.toggle('gizli', lhtml===null);
   if(lhtml!==null && yerlestir(liste, lhtml))
     liste.querySelectorAll('button').forEach(b=>b.onclick=()=>parcaSec(b.dataset.id));
@@ -447,30 +563,30 @@ function kartCiz(){
   const a=sayim.adet;
   $('skAdet').textContent= a===null? '–' : a;
   $('skSayi').classList.toggle('sabit', sayim.sabit);
-  $('skNot').textContent= sayim.uyari? '⚠ '+sayim.uyari : sayim.sabit? 'adet (sabit)' : a===null? 'sayılıyor' : 'adet · canlı';
+  $('skNot').textContent= sayim.uyari? '⚠ '+sayim.uyari : sayim.sabit? T.adetSabit : a===null? T.sayiliyor : T.adetCanli;
   $('skNot').style.color= sayim.uyari? 'var(--sari)' : '';
   const f=$('skFark');
   if(p && a!==null){
     const d=a-Number(p.adet);
-    f.className='fark '+(d>0?'arti':d<0?'eksi':'esit'); f.textContent= d===0? 'aynı' : (d>0?'+':'')+d;
+    f.className='fark '+(d>0?'arti':d<0?'eksi':'esit'); f.textContent= d===0? T.ayni : (d>0?'+':'')+d;
   }else f.className='fark esit gizli';
 
   // Düğmeler
   const dg=$('skDugmeler');
   if(!calisiyor){
-    if(yerlestir(dg, `<button class="ana" id="skBasla">Kamerayı başlat</button>`)) $('skBasla').onclick=basla;
+    if(yerlestir(dg, `<button class="ana" id="skBasla">${kac(T.kamerayiBaslat)}</button>`)) $('skBasla').onclick=basla;
   }else if(!sayim.sabit){
-    if(yerlestir(dg, `<button class="ana" id="skSabitle" ${a===null?'disabled':''}>Sabitle</button>`))
-      $('skSabitle').onclick=()=>{ olayGonder({olay:'sabitle'}); mesaj('Tam çözünürlükte sayılıyor…',1500); };
+    if(yerlestir(dg, `<button class="ana" id="skSabitle" ${a===null?'disabled':''}>${kac(T.sabitle)}</button>`))
+      $('skSabitle').onclick=()=>{ olayGonder({olay:'sabitle'}); mesaj(T.tamCozunurluk,1500); };
   }else{
     // Yazılamıyorsa nedeni düğmenin üstünde yazsın (pasif düğme tek başına bir şey anlatmıyor)
     // Parça seçilmemişse düğme arama kutusuna götürür; LabStock kapalıysa ya da yazılıyorsa pasif
-    const neden= !p? null : !sayim.labstock? 'Bilgisayarda LabStock açık değil' : sayim.yaziliyor? 'Yazılıyor…' : null;
-    const yazi= sayim.yaziliyor? 'Yazılıyor…' : !p? 'Parça seç' : !sayim.labstock? 'LabStock kapalı' : "LabStock'a yaz";
-    if(yerlestir(dg, `<button id="skTekrar">Tekrar</button><button class="yaz" id="skYaz" ${neden?'disabled':''}>${yazi}</button>`)){
+    const neden= !p? null : !sayim.labstock? T.labstockAcikDegil : sayim.yaziliyor? T.yaziliyor : null;
+    const yazi= sayim.yaziliyor? T.yaziliyor : !p? T.parcaSecDugme : !sayim.labstock? T.labstockKapali : T.labstockaYaz;
+    if(yerlestir(dg, `<button id="skTekrar">${kac(T.tekrar)}</button><button class="yaz" id="skYaz" ${neden?'disabled':''}>${kac(yazi)}</button>`)){
       $('skTekrar').onclick=()=>{ sayim.sabit=false; olayGonder({olay:'coz'}); kartCiz(); };
       $('skYaz').onclick=()=>{
-        if(!sayim.parca){ $('skAra').focus(); mesaj('QR etiketini göster ya da parçanın adını yaz',2500); return; }
+        if(!sayim.parca){ $('skAra').focus(); mesaj(T.qrGoster,2500); return; }
         onayla();
       };
     }
@@ -498,7 +614,7 @@ function onayla(){
 function olcekPanel(ac, bolum){
   $('olcekPanel').classList.toggle('acik', ac); $('perde').classList.toggle('acik', ac);
   if(bolum){ $('opOlcek').classList.toggle('gizli', bolum!=='olcek'); $('opBirim').classList.toggle('gizli', bolum!=='birim');
-    $('opBaslik').textContent= bolum==='olcek'? 'Ölçek' : 'Parça boyu'; }
+    $('opBaslik').textContent= bolum==='olcek'? T.olcek : T.parcaBoyu; }
 }
 $('opKapat').onclick=()=>olcekPanel(false);
 $('perde').addEventListener('click',()=>olcekPanel(false));
@@ -506,15 +622,15 @@ function dokunmaBekle(amac, metin){
   sayim.dokunAmac=amac; document.body.classList.add('dokunma'); olcekPanel(false); mesaj(metin, 6000); kartCiz();
 }
 function olcekSec(tip, mm, ad){
-  if(!(mm>0)){ mesaj('Geçerli bir ölçü gir',2000); return; }
+  if(!(mm>0)){ mesaj(T.gecerliOlcu,2000); return; }
   olayGonder({olay:'olcek_baslat', tip, mm, ad});
-  dokunmaBekle('olcek', `Resimde ${ad}'ye dokun`);
+  dokunmaBekle('olcek', T.resimdeDokun(ad));
 }
 document.querySelectorAll('#paralar button').forEach(b=>b.onclick=()=>olcekSec('daire', +b.dataset.mm, b.dataset.ad));
-$('opCapTamam').onclick=()=>olcekSec('daire', +$('opCap').value, `${$('opCap').value} mm referans`);
-$('opKenarTamam').onclick=()=>olcekSec('kare', +$('opKenar').value, `${$('opKenar').value} mm kare`);
+$('opCapTamam').onclick=()=>olcekSec('daire', +$('opCap').value, T.mmReferans($('opCap').value));
+$('opKenarTamam').onclick=()=>olcekSec('kare', +$('opKenar').value, T.mmKare($('opKenar').value));
 $('opOlcekSifirla').onclick=()=>{ olayGonder({olay:'olcek_sifirla'}); olcekPanel(false); };
-$('opOgret').onclick=()=>dokunmaBekle('ogret','Resimde tek duran bir parçaya dokun');
+$('opOgret').onclick=()=>dokunmaBekle('ogret',T.tekParcayaDokun);
 function isaretleriTemizle(){ document.querySelectorAll('.isaret').forEach(e=>e.remove()); }
 function isaretKoy(clientX, clientY){
   const r=$('ekran').getBoundingClientRect(), d=document.createElement('div');
@@ -522,8 +638,8 @@ function isaretKoy(clientX, clientY){
 }
 $('opBoyutTamam').onclick=()=>{
   const en=+$('opEn').value, boy=+$('opBoy').value;
-  if(!(en>0 && boy>0)){ mesaj('En ve boyu mm olarak gir',2000); return; }
-  if(!sayim.olcek){ mesaj('Önce ölçek ayarla (madeni para vb.)',3000); return; }
+  if(!(en>0 && boy>0)){ mesaj(T.enBoyGir,2000); return; }
+  if(!sayim.olcek){ mesaj(T.onceOlcek,3000); return; }
   olayGonder({olay:'birim_elle', en, boy}); olcekPanel(false);
 };
 $('opBirimSifirla').onclick=()=>{ olayGonder({olay:'birim_sifirla'}); olcekPanel(false); };
@@ -536,23 +652,23 @@ $('ekran').addEventListener('pointerup',e=>{
   const resimVar=img.classList.contains('var') && img.naturalWidth>0;
   const el= resimVar? img : v;
   const iw= resimVar? img.naturalWidth : v.videoWidth, ih= resimVar? img.naturalHeight : v.videoHeight;
-  if(!iw||!ih){ mesaj('Görüntü henüz gelmedi, biraz bekle',2500); return; }
+  if(!iw||!ih){ mesaj(T.goruntuYok,2500); return; }
   const r=el.getBoundingClientRect();
   const o=Math.min(r.width/iw, r.height/ih), gw=iw*o, gh=ih*o;
   const x=(e.clientX-r.left-(r.width-gw)/2)/gw, y=(e.clientY-r.top-(r.height-gh)/2)/gh;
-  if(x<0||x>1||y<0||y>1){ mesaj('Görüntünün içine dokun',2000); return; }
+  if(x<0||x>1||y<0||y>1){ mesaj(T.iceDokun,2000); return; }
   e.preventDefault();
   isaretleriTemizle(); isaretKoy(e.clientX, e.clientY); setTimeout(isaretleriTemizle, 2500);
   olayGonder({olay:'dokun', x, y, amac:sayim.dokunAmac});
-  mesaj('Ölçülüyor…', 3000);
+  mesaj(T.olculuyor, 3000);
   sayim.dokunAmac=null; document.body.classList.remove('dokunma'); kartCiz();
 });
 
 function ciplerCiz(){
   const o=sayim.olcek, b=sayim.birim;
-  const olcekYazi= sayim.dokunAmac==='olcek'? 'Referansa dokun…' : o? `📏 ${kac(o.ad)}` : '📏 Ölçek yok';
-  const birimYazi= sayim.dokunAmac==='ogret'? 'Parçaya dokun…' :
-    !b? '⬚ Boyut: otomatik' : b.mm2? `⬚ ${b.mm2.toFixed(b.mm2<10?1:0)} mm²${b.kaynak==='kayitli'?' (kayıtlı)':''}` : '⬚ Boyut: bu oturum';
+  const olcekYazi= sayim.dokunAmac==='olcek'? kac(T.referansaDokun) : o? `📏 ${kac(o.ad)}` : kac(T.olcekYok);
+  const birimYazi= sayim.dokunAmac==='ogret'? kac(T.parcayaDokun) :
+    !b? kac(T.boyutOto) : b.mm2? `⬚ ${b.mm2.toFixed(b.mm2<10?1:0)} mm²${b.kaynak==='kayitli'?kac(T.kayitli):''}` : kac(T.boyutOturum);
   const olcekBekliyor=sayim.dokunAmac==='olcek';
   const html=`<button class="sk-cip ${olcekBekliyor?'bekliyor':o?'ayarli':''}" id="cipOlcek">${olcekYazi}</button>`+
     `<button class="sk-cip ${sayim.dokunAmac==='ogret'?'bekliyor':b?'ayarli':''}" id="cipBirim">${birimYazi}</button>`;
@@ -567,17 +683,17 @@ function girisCiz(){
   const g=sayim.giris, kutu=$('skGiris');
   kutu.classList.toggle('gizli', !g);
   if(!g){ yerlestir(kutu,''); return; }
-  const bas=`<div class="bas">📦 <span>${kac(g.kaynak)} etiketi · <b>${kac(g.kod)}</b> · +${kac(g.adet)}</span>
-    <span style="flex:1"></span><button class="sk-x" id="girisKapat" aria-label="Kapat">${IKON_X}</button></div>
+  const bas=`<div class="bas">📦 <span>${kac(T.etiketi(g.kaynak))} · <b>${kac(g.kod)}</b> · +${kac(g.adet)}</span>
+    <span style="flex:1"></span><button class="sk-x" id="girisKapat" aria-label="${kac(T.kapat)}">${IKON_X}</button></div>
     <div class="sk-alt" style="margin-top:2px">${kac(g.mpn||'')}</div>`;
   let govde='';
-  if(g.yukleniyor) govde='<div class="not">LabStock\'ta aranıyor…</div>';
-  else if(!g.ok) govde=`<div class="uyar">${kac(g.hata||'Aranamadı')}</div>`;
+  if(g.yukleniyor) govde=`<div class="not">${kac(T.araniyor)}</div>`;
+  else if(!g.ok) govde=`<div class="uyar">${kac(g.hata||T.aranamadi)}</div>`;
   else{
-    const once= g.dahaOnce? `<div class="uyar">⚠ Bu etiket ${new Date(g.dahaOnce).toLocaleString('tr-TR')} tarihinde işlenmiş</div>` : '';
+    const once= g.dahaOnce? `<div class="uyar">${kac(T.dahaOnce(new Date(g.dahaOnce).toLocaleString(T.yerel)))}</div>` : '';
     if(g.bulunanlar.length) govde= once + '<div class="satirlar">' + g.bulunanlar.map(x=>
-      `<button class="ekle" data-id="${kac(x.stokId)}"><span>${g.dahaOnce?'Yine de ':''}+${kac(g.adet)} ekle<small>${kac(x.mpn)}${x.konum?' · '+kac(x.konum):''}</small></span><span>${kac(x.adet)} → ${kac(x.adet+g.adet)}</span></button>`).join('') + '</div>';
-    else govde= once + `<div class="not">Bu parça LabStock'ta yok.</div><div class="satirlar"><button class="ikincil" id="girisYeni">Bilgisayarda yeni parça olarak aç</button></div>`;
+      `<button class="ekle" data-id="${kac(x.stokId)}"><span>${kac(T.ekle(g.adet, !!g.dahaOnce))}<small>${kac(x.mpn)}${x.konum?' · '+kac(x.konum):''}</small></span><span>${kac(x.adet)} → ${kac(x.adet+g.adet)}</span></button>`).join('') + '</div>';
+    else govde= once + `<div class="not">${kac(T.labstocktaYok)}</div><div class="satirlar"><button class="ikincil" id="girisYeni">${kac(T.yeniParcaAc)}</button></div>`;
   }
   if(yerlestir(kutu, bas+govde)){
     $('girisKapat').onclick=()=>{ sayim.giris=null; kartCiz(); };
@@ -586,7 +702,7 @@ function girisCiz(){
       sayim.giris={...g, yukleniyor:true}; kartCiz();
     });
     const yeni=$('girisYeni');
-    if(yeni) yeni.onclick=()=>{ olayGonder({olay:'yeni_parca', kod:g.kod, mpn:g.mpn, adet:g.adet}); mesaj('Bilgisayarda yeni parça formu açıldı',3000); sayim.giris=null; kartCiz(); };
+    if(yeni) yeni.onclick=()=>{ olayGonder({olay:'yeni_parca', kod:g.kod, mpn:g.mpn, adet:g.adet}); mesaj(T.yeniParcaAcildi,3000); sayim.giris=null; kartCiz(); };
   }
 }
 
@@ -596,15 +712,15 @@ function sayimMesaji(m){
   if(m.sayim){ if(!(sayim.sabit && !m.sayim.sabit)){ sayim.adet=m.sayim.adet; sayim.sabit=!!m.sayim.sabit; sayim.uyari=m.sayim.uyari||null; } }
   if(m.qr){ if(navigator.vibrate) navigator.vibrate(30); }
   if(m.parca){
-    if(m.parca.ok){ sayim.parca=m.parca; sayim.konum=null; mesaj(m.parca.mpn+' seçildi',1500); }
-    else mesaj(m.parca.hata||'Parça bulunamadı',3500);
+    if(m.parca.ok){ sayim.parca=m.parca; sayim.konum=null; mesaj(T.secildi(m.parca.mpn),1500); }
+    else mesaj(m.parca.hata||T.parcaBulunamadi,3500);
   }
   if(m.konum){
     if(m.konum.ok){ sayim.konum=m.konum; sayim.parca=null; }
-    else mesaj(m.konum.hata||'Konum bulunamadı',3500);
+    else mesaj(m.konum.hata||T.konumBulunamadi,3500);
   }
   if(m.arama){
-    if(!m.arama.ok) mesaj(m.arama.hata||'Arama yapılamadı',3000);
+    if(!m.arama.ok) mesaj(m.arama.hata||T.aramaYapilamadi,3000);
     else if(m.arama.q===$('skAra').value.trim()) sayim.arama=m.arama;
   }
   if(m.labstock) sayim.labstock=!!m.labstock.bagli;
@@ -613,24 +729,24 @@ function sayimMesaji(m){
   if(m.dokunHata) mesaj(m.dokunHata,3500);
   if(m.bilgiMesaj) mesaj(m.bilgiMesaj,3500);
   if(m.giris){
-    if(!sayim.giris && !m.giris.yukleniyor) mesaj('Ekledikten sonra etiketi masadan kaldır; yoksa parça diye sayılır',4000);
+    if(!sayim.giris && !m.giris.yukleniyor) mesaj(T.etiketiKaldir,4000);
     sayim.giris=m.giris; if(navigator.vibrate) navigator.vibrate(30);
   }
   if(m.girisSonuc){
     const r=m.girisSonuc;
-    if(r.ok){ mesaj(`Eklendi: ${r.mpn} ${r.eski} → ${r.yeni}`,4000); sayim.giris=null; if(navigator.vibrate) navigator.vibrate([40,60,40]); }
-    else{ mesaj('Eklenemedi: '+(r.hata||''),5000); if(sayim.giris) sayim.giris={...sayim.giris, yukleniyor:false}; }
+    if(r.ok){ mesaj(`${T.eklendi}${r.mpn} ${r.eski} → ${r.yeni}`,4000); sayim.giris=null; if(navigator.vibrate) navigator.vibrate([40,60,40]); }
+    else{ mesaj(T.eklenemedi+(r.hata||''),5000); if(sayim.giris) sayim.giris={...sayim.giris, yukleniyor:false}; }
   }
   if(m.islendi){
     sayim.yaziliyor=false;
     const r=m.islendi;
     if(r.ok){
-      mesaj(r.degisti? `LabStock'a yazıldı: ${r.eski} → ${r.yeni}` : `Sayım tuttu: ${r.yeni} (değişiklik yok)`, 4000);
+      mesaj(r.degisti? `${T.yazildi}${r.eski} → ${r.yeni}` : T.sayimTuttu(r.yeni), 4000);
       // Yazıldı: sıradaki parça için seçimi temizle (QR göster ya da ara ekranına dön)
       sayim.parca=null; sayim.konum=null; sayim.arama=null; $('skAra').value='';
       sayim.sabit=false; olayGonder({olay:'coz'});
       if(navigator.vibrate) navigator.vibrate([40,60,40]);
-    }else mesaj('LabStock: '+(r.hata||'yazılamadı'),5000);
+    }else mesaj('LabStock: '+(r.hata||T.yazilamadi),5000);
   }
   if(MOD==='sayim') kartCiz();
 }
@@ -644,8 +760,8 @@ function resimGeldi(buf){
 
 // ---- WebSocket: tek kalıcı bağlantı, koparsa 1 sn sonra yeniden bağlan
 function baglan(){
-  if(!ANAHTAR){ baglantiGoster('kopuk'); $('bagYazi').textContent='Eşleşme yok';
-    mesaj("LabStock'ta Telefon kamerası'nı açıp ekrandaki QR kodu bu telefonla okut", 60000); return; }
+  if(!ANAHTAR){ baglantiGoster('kopuk'); $('bagYazi').textContent=T.eslesmeYok;
+    mesaj(T.eslesmeYokNot, 60000); return; }
   ws=new WebSocket(`wss://${location.host}/ws?k=${encodeURIComponent(ANAHTAR)}`);
   ws.binaryType='arraybuffer';
   ws.onopen=()=>{
@@ -655,10 +771,10 @@ function baglan(){
   };
   ws.onclose=e=>{
     baglantiGoster('kopuk'); bekleyen=[];
-    if(e.code===4001){ $('bagYazi').textContent='Eşleşme geçersiz';
-      mesaj("Eşleşme geçersiz: LabStock'taki QR kodu yeniden okut", 60000); return; }
-    if(e.code===4002){ $('bagYazi').textContent='Başka telefon bağlı';
-      mesaj('LabStock\'a başka bir telefon bağlandı', 8000); return; }
+    if(e.code===4001){ $('bagYazi').textContent=T.eslesmeGecersiz;
+      mesaj(T.eslesmeGecersizNot, 60000); return; }
+    if(e.code===4002){ $('bagYazi').textContent=T.baskaTelefon;
+      mesaj(T.baskaTelefonNot, 8000); return; }
     setTimeout(baglan,1000);
   };
   ws.onmessage=e=>{
@@ -688,7 +804,7 @@ function ayarUygula(a){
   if('format' in a) kodlayiciKapat();
   if(calisiyor && ('kamera' in a || 'coz' in a)) basla();
   arayuzGuncelle();
-  mesaj('Ayar bilgisayardan değişti');
+  mesaj(T.ayarDegisti);
 }
 
 // ---- Kamera
@@ -698,7 +814,7 @@ async function basla(){
   try{
     akis=await navigator.mediaDevices.getUserMedia({audio:false,
       video:{facingMode:{exact:$('kamera').value},width:{ideal:w},height:{ideal:h},frameRate:{ideal:30}}});
-  }catch(e){ mesaj('Kamera açılamadı: '+e.message, 5000); pcyeYaz('hata','Kamera açılamadı: '+e); arayuzGuncelle(); return; }
+  }catch(e){ mesaj(T.kameraAcilamadi+e.message, 5000); pcyeYaz('hata','Kamera açılamadı: '+e); arayuzGuncelle(); return; }
   v.srcObject=akis; await v.play();
   try{ kilit=await navigator.wakeLock.request('screen'); }catch(e){}
   calisiyor=true; baslamaZamani=sonGonderim=performance.now(); arayuzGuncelle();
@@ -806,7 +922,7 @@ function h264Kare(){
     if(!hazirlaniyor){
       hazirlaniyor=true; kodlayiciKapat();
       kodlayiciHazirla(w,h,bit)
-        .catch(e=>{ mesaj('H.264 başlamadı, JPEG kullanılıyor', 4000); pcyeYaz('hata','H.264: '+e); $('format').value='jpeg'; arayuzGuncelle(); })
+        .catch(e=>{ mesaj(T.h264Baslamadi, 4000); pcyeYaz('hata','H.264: '+e); $('format').value='jpeg'; arayuzGuncelle(); })
         .finally(()=>{ hazirlaniyor=false; });
     }
     return;
@@ -904,21 +1020,21 @@ setInterval(()=>{
       cip('Mbit/s', ist.mbps)+
       cip(fmt==='h264'?'H.264':'JPEG', kisa);
     $('bKamera').textContent=ist.kamera;
-    $('bKodlayici').textContent= fmt==='h264'? (kodAyar? `${kodAyar.codec} · ${(kodAyar.bit/1e6).toFixed(1)} Mbit/s` : 'hazırlanıyor') : `JPEG ${$('kalite').value}`;
+    $('bKodlayici').textContent= fmt==='h264'? (kodAyar? `${kodAyar.codec} · ${(kodAyar.bit/1e6).toFixed(1)} Mbit/s` : T.hazirlaniyor) : `JPEG ${$('kalite').value}`;
     $('bKare').textContent=`${ist.kb} KB`;
-    $('bAtlanan').textContent=`${ist.atlanan} /sn`;
+    $('bAtlanan').textContent=`${ist.atlanan} ${T.saniyede}`;
   }
   if(ws && ws.readyState===1 && calisiyor) ws.send(JSON.stringify(ist));
   say={gonderilen:0, atlanan:0, bayt:0, rtt:[]};
 },1000);
 
 // ---- Olaylar
-$('kayit').onclick=()=>{ if(calisiyor){ durdur(); mesaj('Yayın durduruldu'); } else basla(); };
+$('kayit').onclick=()=>{ if(calisiyor){ durdur(); mesaj(T.yayinDurdu); } else basla(); };
 $('cevir').onclick=()=>{
   const k=$('kamera'); k.value= k.value==='user'? 'environment' : 'user';
   $('cevir').classList.remove('donuyor'); void $('cevir').offsetWidth; $('cevir').classList.add('donuyor');
   k.dispatchEvent(new Event('change')); arayuzGuncelle();
-  mesaj(k.value==='user'? 'Ön kamera' : 'Arka kamera', 1200);
+  mesaj(k.value==='user'? T.onKamera : T.arkaKamera, 1200);
 };
 // Yayın sürerken kamera veya çözünürlük değişirse yeni ayarla yeniden başlat
 ['kamera','coz'].forEach(id=>$(id).onchange=()=>{ if(calisiyor) basla(); });
@@ -927,8 +1043,8 @@ $('format').onchange=()=>{ kodlayiciKapat(); bekleyen=[]; };
 $('foto').onchange=e=>{
   const f=e.target.files[0]; e.target.value='';
   if(!f) return;
-  if(!ws || ws.readyState!==1){ mesaj('Bağlantı yok, foto gönderilemedi'); return; }
-  mesaj('Foto gönderiliyor ('+(f.size/1048576).toFixed(1)+' MB)…', 8000);
+  if(!ws || ws.readyState!==1){ mesaj(T.fotoBaglantiYok); return; }
+  mesaj(T.fotoGonderiliyor((f.size/1048576).toFixed(1)), 8000);
   ws.send(new Blob([new Uint8Array([TIP_FOTO]), f]));
 };
 // Sekme arka plana geçince kamerayı bırak, geri gelince devam et

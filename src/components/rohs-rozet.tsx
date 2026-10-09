@@ -1,4 +1,7 @@
-export function RohsRozet({ boyut = 14, renk = 'var(--ok-dot)' }: { boyut?: number; renk?: string }) {
+import { sozlukAl } from '@/lib/i18n/sunucu';
+
+export async function RohsRozet({ boyut = 14, renk = 'var(--ok-dot)' }: { boyut?: number; renk?: string }) {
+  const baslik = (await sozlukAl()).envanter.tablo.rohsUyumlu;
   return (
     <svg
       viewBox="0 0 20 20"
@@ -6,9 +9,9 @@ export function RohsRozet({ boyut = 14, renk = 'var(--ok-dot)' }: { boyut?: numb
       height={boyut}
       fill="none"
       style={{ color: renk, flexShrink: 0 }}
-      aria-label="RoHS uyumlu"
+      aria-label={baslik}
     >
-      <title>RoHS uyumlu</title>
+      <title>{baslik}</title>
       <path
         fill="currentColor"
         d="M15.662 18.797a1.9 1.9 0 0 1-.763-.148 1.3 1.3 0 0 1-.523-.418 1.1 1.1 0 0 1-.197-.622h.597q.03.302.246.51.22.204.64.204.4 0 .627-.197a.65.65 0 0 0 .234-.517.58.58 0 0 0-.135-.4.86.86 0 0 0-.339-.234 5 5 0 0 0-.547-.172 5 5 0 0 1-.683-.222 1.13 1.13 0 0 1-.437-.344q-.18-.24-.179-.64 0-.35.179-.622.179-.27.498-.418.327-.148.745-.148.603 0 .985.302.387.3.436.8h-.615a.65.65 0 0 0-.258-.431q-.228-.19-.603-.19-.351-.001-.573.184-.22.178-.221.504 0 .234.129.382.135.147.326.228.197.073.548.172.424.117.683.234.258.11.443.35.184.235.184.64 0 .315-.166.591a1.2 1.2 0 0 1-.492.45 1.6 1.6 0 0 1-.77.172"

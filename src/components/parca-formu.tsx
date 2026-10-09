@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { parcaEkle, parcaGuncelle, linkOnizle, type EylemDurum } from '@/app/envanter/actions';
 import { parametrelerToMetin } from '@/lib/types';
+import { useDil, useSozluk } from '@/lib/i18n/istemci';
+import { kategoriGoster } from '@/lib/i18n/kategori';
 
 // LCSC'nin kendi katalog kategorilerine yakın, daha ayrıntılı bir liste —
 // LCSC'den çekilen parçalar da bu kategorilere eşleniyor (bkz. src/lib/lcsc.ts).
+// Değerler veritabanına Türkçe gider; sadece görünen ad arayüz diline çevrilir.
 const KATEGORILER = [
   'Direnç',
   'Potansiyometre',
@@ -99,6 +102,9 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
   const [surum, setSurum] = useState(0);
   const [cekDurumu, setCekDurumu] = useState<'bos' | 'cekiliyor' | 'basarili' | 'basarisiz'>('bos');
   const [cekHatasi, setCekHatasi] = useState<string | null>(null);
+  const dil = useDil();
+  const sz = useSozluk();
+  const s = sz.parca.form;
 
   useEffect(() => {
     if (durum.bilgi) {
@@ -125,7 +131,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
     const sonuc = await linkOnizle(url);
     if (!sonuc.veri) {
       setCekDurumu('basarisiz');
-      setCekHatasi(sonuc.hata ?? 'Çekilemedi.');
+      setCekHatasi(sonuc.hata ?? s.cekilemedi);
       return;
     }
 
@@ -197,7 +203,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <label className="etiket">Parça görseli</label>
+          <label className="etiket">{s.parcaGorseli}</label>
           <input
             ref={resimGirdi}
             type="file"
@@ -207,10 +213,10 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
             style={{ display: 'none' }}
           />
           <button type="button" className="btn" onClick={() => resimGirdi.current?.click()}>
-            Görsel seç
+            {s.gorselSec}
           </button>
           <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-            PNG, JPEG ya da WEBP — en fazla 2 MB.
+            {s.gorselBilgi}
           </p>
         </div>
       </div>
@@ -219,7 +225,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="datasheet_url">
-          Ürün linki / Datasheet
+          {s.urunLinki}
         </label>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input
@@ -229,16 +235,16 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
             name="datasheet_url"
             type="url"
             defaultValue={baslangic?.datasheet_url ?? undefined}
-            placeholder="https://www.direnc.net/... , robotistan.com/... ya da motorobit.com/..."
+            placeholder={s.linkPlaceholder}
             style={{ flex: 1 }}
           />
           <button type="button" className="btn" onClick={linktenCekTikla} disabled={cekDurumu === 'cekiliyor'}>
-            {cekDurumu === 'cekiliyor' ? 'Çekiliyor…' : 'Linkten çek'}
+            {cekDurumu === 'cekiliyor' ? s.cekiliyor : s.linktenCek}
           </button>
         </div>
         {cekDurumu === 'basarili' && (
           <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--ok)' }}>
-            Çekildi — aşağıdaki alanları kontrol edip kaydedebilirsin.
+            {s.cekildi}
           </p>
         )}
         {cekDurumu === 'basarisiz' && (
@@ -246,16 +252,14 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
         )}
         {cekDurumu === 'bos' && (
           <p style={{ margin: '6px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-            Direnç.net / Robotistan / Motorobit ürün linki yapıştırıp "Linkten çek" ile aşağıdaki alanları otomatik
-            doldurabilirsin. Ayarlar'dan ücretsiz bir Gemini API anahtarı eklersen bu, herhangi bir satıcının ürün
-            linkinde de çalışır.
+            {s.linkBilgi}
           </p>
         )}
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="mpn">
-          MPN — parça numarası *
+          {s.mpn}
         </label>
         <input
           key={`mpn-${surum}`}
@@ -272,7 +276,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
         <div>
           <label className="etiket" htmlFor="uretici">
-            Üretici
+            {s.uretici}
           </label>
           <input
             key={`uretici-${surum}`}
@@ -285,7 +289,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
         </div>
         <div>
           <label className="etiket" htmlFor="kilif">
-            Kılıf
+            {s.kilif}
           </label>
           <input
             className="alan mn"
@@ -299,7 +303,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="aciklama">
-          Açıklama
+          {s.aciklama}
         </label>
         <input
           key={`aciklama-${surum}`}
@@ -307,14 +311,14 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
           id="aciklama"
           name="aciklama"
           defaultValue={dolgu?.aciklama ?? baslangic?.aciklama ?? undefined}
-          placeholder="Direnç 10 kΩ ±1% 1/8 W"
+          placeholder={s.aciklamaPlaceholder}
         />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
         <div>
           <label className="etiket" htmlFor="kategori">
-            Kategori
+            {s.kategori}
           </label>
           <select
             key={`kategori-${surum}`}
@@ -323,17 +327,17 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
             name="kategori"
             defaultValue={dolgu?.kategori ?? baslangic?.kategori ?? ''}
           >
-            <option value="">seçilmedi</option>
+            <option value="">{s.secilmedi}</option>
             {KATEGORILER.map((k) => (
               <option key={k} value={k}>
-                {k}
+                {kategoriGoster(k, dil)}
               </option>
             ))}
           </select>
         </div>
         <div>
           <label className="etiket" htmlFor="konum_id">
-            Konum
+            {s.konum}
           </label>
           <select
             className="alan"
@@ -341,7 +345,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
             name="konum_id"
             defaultValue={baslangic?.konum_id ?? ''}
           >
-            <option value="">konumsuz</option>
+            <option value="">{s.konumsuz}</option>
             {konumlar.map((k) => (
               <option key={k.id} value={k.id}>
                 {k.etiket}
@@ -353,7 +357,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
 
       <div style={{ marginBottom: 16 }}>
         <label className="etiket" htmlFor="rohs">
-          Uyumluluk
+          {s.uyumluluk}
         </label>
         <select
           className="alan"
@@ -361,16 +365,16 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
           name="rohs"
           defaultValue={baslangic?.rohs === true ? 'evet' : baslangic?.rohs === false ? 'hayir' : ''}
         >
-          <option value="">Bilinmiyor</option>
-          <option value="evet">RoHS uyumlu</option>
-          <option value="hayir">RoHS değil</option>
+          <option value="">{s.bilinmiyor}</option>
+          <option value="evet">{sz.parca.rohsUyumlu}</option>
+          <option value="hayir">{sz.parca.rohsDegil}</option>
         </select>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 22 }}>
         {duzenle ? (
           <div>
-            <label className="etiket">Adet</label>
+            <label className="etiket">{s.adet}</label>
             <div
               className="alan mn"
               style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)' }}
@@ -378,13 +382,13 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
               {baslangic!.adet}
             </div>
             <p style={{ margin: '4px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-              Adet burada değişmez — listedeki +/− ile ayarlanır.
+              {s.adetDegismez}
             </p>
           </div>
         ) : (
           <div>
             <label className="etiket" htmlFor="adet">
-              Adet
+              {s.adet}
             </label>
             <input
               className="alan mn"
@@ -399,7 +403,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
         )}
         <div>
           <label className="etiket" htmlFor="min_adet">
-            Minimum seviye
+            {s.minSeviye}
           </label>
           <input
             className="alan mn"
@@ -416,7 +420,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 22 }}>
         <div>
           <label className="etiket" htmlFor="tedarikci">
-            Tedarikçi
+            {s.tedarikci}
           </label>
           <input
             key={`tedarikci-${surum}`}
@@ -429,7 +433,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
         </div>
         <div>
           <label className="etiket" htmlFor="tedarikci_kodu">
-            Tedarikçi kodu
+            {s.tedarikciKodu}
           </label>
           <input
             key={`tedarikci_kodu-${surum}`}
@@ -445,7 +449,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 14, marginBottom: 22 }}>
         <div>
           <label className="etiket" htmlFor="alis_fiyati">
-            Son alım fiyatı
+            {s.sonAlimFiyati}
           </label>
           <input
             key={`alis_fiyati-${surum}`}
@@ -461,7 +465,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
         </div>
         <div>
           <label className="etiket" htmlFor="para_birimi">
-            Birim
+            {s.birim}
           </label>
           <select
             key={`para_birimi-${surum}`}
@@ -479,7 +483,7 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
 
       <div style={{ marginBottom: 22 }}>
         <label className="etiket" htmlFor="parametreler">
-          Parametreler
+          {s.parametreler}
         </label>
         <textarea
           key={`parametreler-${surum}`}
@@ -489,19 +493,19 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus, ilkDolgu,
           rows={4}
           style={{ height: 'auto', padding: '9px 11px', resize: 'vertical' }}
           defaultValue={parametrelerToMetin(dolgu?.parametreler ?? baslangic?.parametreler)}
-          placeholder={'Çekirdek: ARM Cortex-M3\nFrekans: 72 MHz\nFlash: 64 KB'}
+          placeholder={s.parametrelerPlaceholder}
         />
         <p style={{ margin: '4px 0 0', fontSize: 10.5, color: 'var(--muted-2)' }}>
-          Her satıra bir tane: "Anahtar: Değer".
+          {s.parametrelerBilgi}
         </p>
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="btn btn-birincil" type="submit" disabled={bekliyor}>
-          {bekliyor ? 'Kaydediliyor…' : duzenle ? 'Güncelle' : 'Kaydet'}
+          {bekliyor ? sz.ortak.buton.kaydediliyor : duzenle ? s.guncelle : sz.ortak.buton.kaydet}
         </button>
         <Link href={donus || '/envanter'} className="btn">
-          Vazgeç
+          {sz.parca.vazgec}
         </Link>
       </div>
     </form>

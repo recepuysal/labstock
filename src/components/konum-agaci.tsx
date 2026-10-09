@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { KonumDugumu } from '@/lib/types';
 import { KonumSatirMenu } from './konum-satir-menu';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 function Dugum({
   dugum,
@@ -20,6 +21,7 @@ function Dugum({
   sayilar: Record<string, number>;
   saltOkunur?: boolean;
 }) {
+  const s = useSozluk().envanter.agac;
   const [acik, setAcik] = useState(true);
   const secili = seciliId === dugum.id;
   const varCocuk = dugum.cocuklar.length > 0;
@@ -41,7 +43,7 @@ function Dugum({
         <button
           type="button"
           onClick={() => setAcik((a) => !a)}
-          aria-label={acik ? 'Daralt' : 'Genişlet'}
+          aria-label={acik ? s.daralt : s.genislet}
           style={{
             width: 8 + derinlik * 14 + 12,
             flexShrink: 0,
@@ -132,6 +134,8 @@ export function KonumAgaci({
   tipOzeti?: string;
   saltOkunur?: boolean;
 }) {
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.agac;
   const tumu = new URLSearchParams();
   if (arama) tumu.set('q', arama);
 
@@ -156,7 +160,7 @@ export function KonumAgaci({
           margin: '2px 0 6px',
         }}
       >
-        DEPO
+        {s.depo}
       </div>
 
       <Link
@@ -174,7 +178,7 @@ export function KonumAgaci({
           background: seciliId ? 'transparent' : 'var(--copper-soft)',
         }}
       >
-        Tüm envanter
+        {sozlukler.envanter.liste.tumEnvanter}
         <span className="mn" style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--muted-2)' }}>
           {toplam}
         </span>
@@ -194,7 +198,7 @@ export function KonumAgaci({
 
       {agac.length === 0 && (
         <p style={{ fontSize: 11.5, color: 'var(--muted-2)', padding: '10px 8px', lineHeight: 1.5 }}>
-          Henüz konum yok.
+          {s.konumYok}
         </p>
       )}
 
@@ -214,7 +218,7 @@ export function KonumAgaci({
             opacity: 0.5,
           }}
         >
-          + Konum ekle
+          {s.konumEkle}
         </span>
       ) : (
         <Link
@@ -231,7 +235,7 @@ export function KonumAgaci({
             color: 'var(--muted)',
           }}
         >
-          + Konum ekle
+          {s.konumEkle}
         </Link>
       )}
 
@@ -253,7 +257,7 @@ export function KonumAgaci({
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
           <rect x="6" y="14" width="12" height="8" />
         </svg>
-        Etiketleri yazdır
+        {s.etiketleriYazdir}
       </Link>
 
       {tipOzeti && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 type ToastOge = { id: number; metin: string };
 
@@ -14,8 +15,10 @@ export function AlinacaklarBildirimi({
   izlenenAdi: string | null;
   izleyenler: { id: string; ad: string }[];
 }) {
+  const s = useSozluk().envanter.alinacaklar;
   const [toastlar, setToastlar] = useState<ToastOge[]>([]);
   const sayacRef = useRef(0);
+  const birIzleyicin = s.birIzleyicin;
 
   useEffect(() => {
     const supabase = createClient();
@@ -35,7 +38,7 @@ export function AlinacaklarBildirimi({
           const satir = payload.new as { olusturan?: string; malzeme_adi?: string };
           if (!satir?.malzeme_adi || !satir.olusturan || satir.olusturan === benimId) return;
 
-          let kim = 'Bir izleyicin';
+          let kim = birIzleyicin;
           if (satir.olusturan === hedef && izlenenAdi) {
             kim = izlenenAdi;
           } else {
@@ -53,7 +56,7 @@ export function AlinacaklarBildirimi({
       iptal = true;
       supabase.removeChannel(kanal);
     };
-  }, [hedef, izlenenAdi, izleyenler]);
+  }, [hedef, izlenenAdi, izleyenler, birIzleyicin]);
 
   if (toastlar.length === 0) return null;
 
@@ -109,7 +112,7 @@ export function AlinacaklarBildirimi({
               className="mn"
               style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--copper)' }}
             >
-              ALINACAKLARA EKLENDİ
+              {s.bildirimBaslik}
             </div>
             <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4 }}>{t.metin}</p>
           </div>
@@ -117,7 +120,7 @@ export function AlinacaklarBildirimi({
           <button
             type="button"
             onClick={() => setToastlar((cur) => cur.filter((x) => x.id !== t.id))}
-            aria-label="Bildirimi kapat"
+            aria-label={s.bildirimKapat}
             className="bildirim-kapat"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">

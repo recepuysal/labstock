@@ -4,8 +4,11 @@ import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'rea
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { konumSil } from '@/app/envanter/actions';
+import { useSozluk } from '@/lib/i18n/istemci';
 
 export function KonumSatirMenu({ konumId, ad }: { konumId: string; ad: string }) {
+  const sozlukler = useSozluk();
+  const s = sozlukler.envanter.agac;
   const [acik, setAcik] = useState(false);
   const [bekliyor, basla] = useTransition();
   const dugmeRef = useRef<HTMLButtonElement>(null);
@@ -36,11 +39,7 @@ export function KonumSatirMenu({ konumId, ad }: { konumId: string; ad: string })
 
   function sil() {
     setAcik(false);
-    if (
-      !window.confirm(
-        `"${ad}" konumu silinsin mi? İçindeki alt konumlar da (varsa) birlikte silinir. Bu konumdaki stok kalemleri silinmez, sadece konumsuz kalır.`,
-      )
-    ) {
+    if (!window.confirm(s.konumSilOnay(ad))) {
       return;
     }
     basla(async () => {
@@ -71,7 +70,7 @@ export function KonumSatirMenu({ konumId, ad }: { konumId: string; ad: string })
           setAcik((a) => !a);
         }}
         disabled={bekliyor}
-        aria-label="Konum işlemleri"
+        aria-label={s.konumIslemleri}
         aria-haspopup="menu"
         aria-expanded={acik}
         style={{
@@ -120,7 +119,7 @@ export function KonumSatirMenu({ konumId, ad }: { konumId: string; ad: string })
               onClick={() => setAcik(false)}
               style={{ ...menuOge, color: 'var(--ink-2)' }}
             >
-              Düzenle
+              {sozlukler.ortak.buton.duzenle}
             </Link>
             <button
               type="button"
@@ -128,7 +127,7 @@ export function KonumSatirMenu({ konumId, ad }: { konumId: string; ad: string })
               onClick={sil}
               style={{ ...menuOge, color: 'var(--crit)', borderTop: '1px solid var(--line-soft)' }}
             >
-              Sil
+              {sozlukler.ortak.buton.sil}
             </button>
           </div>,
           document.body,

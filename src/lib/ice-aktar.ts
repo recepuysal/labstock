@@ -19,30 +19,34 @@ type AlanAdi = keyof IceAktarSatir;
  * en genele doğru sıralı (örn. "tedarikci_kodu" "tedarikci"den önce denenir, yoksa
  * "Tedarikçi Kodu" başlığı yanlışlıkla "Tedarikçi" alanına da eşleşir). */
 const ALAN_ANAHTARLARI: { alan: AlanAdi; anahtarlar: string[] }[] = [
-  { alan: 'tedarikci_kodu', anahtarlar: ['tedarikci kodu', 'tedarikçi kodu', 'supplier code', 'supplier part', 'supplier part#', 'lcsc part#', 'lcsc part number', 'lcsc', 'mouser part#', 'digikey part#', 'distributor part#'] },
+  { alan: 'tedarikci_kodu', anahtarlar: ['tedarikci kodu', 'tedarikçi kodu', 'supplier code', 'supplier part', 'supplier part#', 'supplier part number', 'lcsc part#', 'lcsc part number', 'lcsc', 'mouser part#', 'digikey part#', 'distributor part#'] },
   { alan: 'mpn', anahtarlar: ['mpn', 'parça no', 'parca no', 'parça numarası', 'parca numarasi', 'part number', 'part no', 'part#', 'partno', 'manufacturer part number'] },
   { alan: 'uretici', anahtarlar: ['üretici', 'uretici', 'manufacturer', 'marka', 'brand', 'mfr'] },
   { alan: 'aciklama', anahtarlar: ['açıklama', 'aciklama', 'description', 'desc', 'tanım', 'tanim'] },
   { alan: 'kategori', anahtarlar: ['kategori', 'category', 'tip', 'type'] },
   { alan: 'kilif', anahtarlar: ['kılıf', 'kilif', 'package', 'footprint', 'case'] },
   { alan: 'tedarikci', anahtarlar: ['tedarikçi', 'tedarikci', 'supplier', 'vendor'] },
-  { alan: 'konum_metni', anahtarlar: ['konum', 'location', 'yer', 'raf', 'çekmece', 'cekmece'] },
-  { alan: 'min_adet', anahtarlar: ['min adet', 'min. adet', 'minimum', 'min stok', 'reorder point', 'reorder', 'min'] },
+  { alan: 'konum_metni', anahtarlar: ['konum', 'location', 'yer', 'raf', 'çekmece', 'cekmece', 'shelf', 'drawer'] },
+  { alan: 'min_adet', anahtarlar: ['min adet', 'min. adet', 'min seviye', 'minimum', 'min stok', 'min qty', 'min quantity', 'min stock', 'reorder point', 'reorder', 'min'] },
   { alan: 'adet', anahtarlar: ['adet', 'miktar', 'quantity', 'qty', 'stok', 'stock'] },
 ];
 
-function normallestir(s: string): string {
-  return s.toLocaleLowerCase('tr-TR').replace(/[._-]/g, ' ').trim();
+/** Başlığı karşılaştırmaya hazırlar. İngilizce başlıklar için 'en-US' ile de
+ * denenir — Türkçe küçük harfe çevirmede "LOCATION" -> "locatıon" olur. */
+function normallestir(s: string, yerelAyar = 'tr-TR'): string {
+  return s.toLocaleLowerCase(yerelAyar).replace(/[._-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function basliklariEslestir(basliklar: string[]): Partial<Record<AlanAdi, number>> {
-  const normlar = basliklar.map(normallestir);
+  const normlar = basliklar.map((b) => [normallestir(b), normallestir(b, 'en-US')]);
   const eslesme: Partial<Record<AlanAdi, number>> = {};
   const kullanilanIndeksler = new Set<number>();
 
   // 1. geçiş: tam eşleşme (en güvenilir)
   for (const { alan, anahtarlar } of ALAN_ANAHTARLARI) {
-    const idx = normlar.findIndex((b, i) => !kullanilanIndeksler.has(i) && anahtarlar.includes(b));
+    const idx = normlar.findIndex(
+      (b, i) => !kullanilanIndeksler.has(i) && b.some((n) => anahtarlar.includes(n)),
+    );
     if (idx !== -1) {
       eslesme[alan] = idx;
       kullanilanIndeksler.add(idx);
@@ -54,7 +58,7 @@ function basliklariEslestir(basliklar: string[]): Partial<Record<AlanAdi, number
   for (const { alan, anahtarlar } of ALAN_ANAHTARLARI) {
     if (eslesme[alan] !== undefined) continue;
     const idx = normlar.findIndex(
-      (b, i) => !kullanilanIndeksler.has(i) && anahtarlar.some((a) => b.includes(a)),
+      (b, i) => !kullanilanIndeksler.has(i) && b.some((n) => anahtarlar.some((a) => n.includes(a))),
     );
     if (idx !== -1) {
       eslesme[alan] = idx;
