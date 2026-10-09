@@ -5,103 +5,166 @@
   </picture>
 </p>
 
+<h3 align="center">“O direnç hangi çekmecedeydi?” sorusuna son.</h3>
+
 <p align="center">
-  Elektronik komponent deposu için stok takip uygulaması — Windows masaüstünde
-  çalışır, kendini otomatik günceller, ekibinle paylaşabilirsin.
+  Elektronik komponent deposu için ücretsiz stok takip uygulaması — parçaların
+  hangi kutuda, kaç tane olduğunu bilir; QR etiket basar, LCSC'den ve ürün
+  linkinden bilgiyi kendisi doldurur, deponla ilgili sorularını yapay zekâ ile cevaplar.
+</p>
+
+<p align="center">
+  <a href="https://github.com/recepuysal/labstock/releases/latest"><img alt="Son sürüm" src="https://img.shields.io/github/v/release/recepuysal/labstock?label=s%C3%BCr%C3%BCm&color=a3611f"></a>
+  <a href="https://github.com/recepuysal/labstock/releases"><img alt="İndirme" src="https://img.shields.io/github/downloads/recepuysal/labstock/total?label=indirme&color=a3611f"></a>
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows">
+  <img alt="Ücretsiz" src="https://img.shields.io/badge/kullan%C4%B1m-%C3%BCcretsiz-2ea44f">
 </p>
 
 <p align="center">
   <a href="https://github.com/recepuysal/labstock/releases/latest">
-    <strong>⬇ En son sürümü indir</strong>
+    <strong>⬇ Windows için indir (LabStock-Kurulum.exe)</strong>
   </a>
   ·
-  <a href="#geri-bildirim--iletişim">Geri bildirim gönder</a>
+  <a href="#ekran-görüntüleri">Ekran görüntüleri</a>
   ·
-  <a href="#lisans">Lisans</a>
+  <a href="#geri-bildirim--iletişim">Geri bildirim</a>
 </p>
-
----
 
 <p align="center">
-  <img src="docs/screenshots/envanter-listesi.png" alt="Envanter listesi" width="820">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-koyu.png">
+    <img src="docs/screenshots/hero.png" alt="LabStock: envanter listesi ve parça detay sayfası" width="900">
+  </picture>
 </p>
+
+> **English:** LabStock is a free Windows app for tracking electronic components
+> in a workshop or lab — which box, which drawer, how many are left. It prints QR
+> labels, auto-fills part data from LCSC codes and shop links, counts parts with
+> your phone camera, and answers questions about your stock with an AI assistant.
+> The interface is in Turkish.
 
 ## Neden LabStock?
 
-Elektronik hobisiyle uğraşan ya da küçük bir üretim atölyesi işleten herkes aynı
-soruyu sorar: *"O direnç hangi çekmecedeydi?"* LabStock, parçalarını fiziksel
-konumlarıyla (oda › dolap › çekmece › bölme) eşleştirip arama, filtreleme,
-Excel'den toplu aktarma ve QR etiketleriyle bunu çözüyor — üstelik masaüstünde
-her açılışta kendini sessizce günceller, kurulumdan sonra elle bir şey yapmana
-gerek kalmaz.
+Elektronikle uğraşan ya da küçük bir üretim atölyesi işleten herkes aynı soruyu
+sorar: *"O direnç hangi çekmecedeydi?"* LabStock parçalarını fiziksel
+konumlarıyla (oda › dolap › çekmece › bölme) eşleştirir; arar, filtreler, QR
+etiket basar, Excel'den toplu aktarır. Kurulumdan sonra her açılışta kendini
+sessizce günceller, elle bir şey yapman gerekmez.
 
-## Özellikler
+| | |
+|---|---|
+| 📦 **Konum ağacı** — oda › dolap › çekmece › bölme | 🔎 **Anında arama** — parça, MPN, açıklama |
+| 🏷️ **QR etiketler** — yazdır, yapıştır, okut | ⚡ **LCSC'den ve linkten çek** — form kendiliğinden dolar |
+| 💬 **Sohbet asistanı** — "elimde ne var?" diye sor | 📱 **Telefon kamerasıyla sayım** — uygulama kurmadan |
+| 📊 **Excel içe/dışa aktarma** | 👥 **Gözlemci** — depoyu salt-okunur paylaş |
+| 🌙 **Koyu / açık tema** | 🔄 **Sessiz otomatik güncelleme** |
 
-**Konum ağacı ve parça listesi**
+## Ekran görüntüleri
+
+Aşağıdaki görüntüler 265 çeşit / 10.000'den fazla komponent bulunan gerçek bir
+ARGE deposundan alındı. GitHub'ı koyu temada kullanıyorsan görüntüler de koyu
+temada görünür.
+
+### Konum ağacı ve parça listesi
 Oda › dolap › çekmece › bölme şeklinde hiyerarşik bir konum ağacı; parça
 listesini konuma, kategoriye, kılıfa, duruma ve etikete göre filtrele, liste ya
-da ızgara görünümünde incele.
+da ızgara görünümünde incele. Alt çubukta toplam çeşit, adet, kritik stok ve
+deponun tahmini değeri her zaman görünür.
 
 <p align="center">
-  <img src="docs/screenshots/envanter-izgara.png" alt="Izgara görünümü" width="820">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/envanter-izgara-koyu.png">
+    <img src="docs/screenshots/envanter-izgara.png" alt="Izgara görünümü" width="820">
+  </picture>
 </p>
 
-**Parça detayı**
-MPN, üretici, parametreler, hareket geçmişi, konum haritası, tedarik bilgisi ve
-hangi projelerde kullanıldığı — tek sayfada. LCSC kodunu yapıştırıp "çek"
-dediğinde üretici/açıklama/kategori/görsel otomatik doldurulur.
+Bir kutuya tıklayınca sadece o kutudaki parçalar listelenir:
 
 <p align="center">
-  <img src="docs/screenshots/parca-detay.png" alt="Parça detay sayfası" width="820">
+  <img src="docs/screenshots/konum-filtresi.png" alt="SMD Kondansatör Kutusu içindeki parçalar" width="820">
 </p>
 
-**Linkten otomatik malzeme ekleme**
-Malzeme ekleme/düzenleme formunda bir ürün linki yapıştırıp "Linkten çek"
-dediğinde isim, üretici, kısa açıklama, teknik özellikler, fiyat ve görsel
-otomatik doldurulur — kaydetmeden önce gözden geçirip düzeltebilirsin.
-Direnç.net, Robotistan ve Motorobit için yerleşik (ücretsiz, hızlı) destek var;
-Ayarlar'dan kendi ücretsiz [Google Gemini API anahtarını](https://aistudio.google.com/apikey)
-eklersen bu, **herhangi bir satıcı sitesinde** de çalışır — sayfa yapay zekaya
-okutulup aynı şemaya döktürülür. Anahtar sadece sende kalır, kimseyle
-paylaşılmaz; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
+### Parça detayı
+MPN, üretici, parametreler, hareket geçmişi, konum haritası, tedarik bilgisi,
+fiyat ve hangi projelerde kullanıldığı — tek sayfada. LCSC kodunu yapıştırıp
+"çek" dediğinde üretici, açıklama, kategori, parametreler ve ürün görseli
+otomatik doldurulur; açıklama istersen Türkçeye çevrilir.
 
-**Sohbet asistanı**
-Üst bardaki **Sohbet**'ten, deponla ilgili doğal dilde soru sorabilirsin —
-"12V'u 5V'a düşüren bir şeyim var mı?" gibi. Asistan sadece senin gerçek
-envanterine bakarak cevap verir: bir şey varsa nerede olduğunu söyler, yoksa
-işlevsel olarak yerine geçebilecek başka bir parça stoktaysa onu önerir. Aynı
-Ayarlar'daki Gemini API anahtarını kullanır. Konuşma bu bilgisayarda saklanır —
-başka sayfaya geçince ya da uygulama kapanınca kaybolmaz; "Yeni sohbet" ile temizlenir.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/parca-detay-koyu.png">
+    <img src="docs/screenshots/parca-detay.png" alt="Parça detay sayfası" width="820">
+  </picture>
+</p>
 
-**Yazdırılabilir QR etiketler**
+### Linkten otomatik malzeme ekleme
+Malzeme ekleme formuna bir ürün linki yapıştırıp **Linkten çek** dediğinde
+isim, üretici, açıklama, teknik özellikler, fiyat ve görsel otomatik dolar —
+kaydetmeden önce gözden geçirip düzeltebilirsin. Direnç.net, Robotistan ve
+Motorobit için yerleşik (ücretsiz, hızlı) destek var; Ayarlar'dan kendi
+ücretsiz [Google Gemini API anahtarını](https://aistudio.google.com/apikey)
+eklersen **herhangi bir satıcı sitesinde** de çalışır. Anahtar sadece sende
+kalır; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
+
+<p align="center">
+  <img src="docs/screenshots/linkten-cek.png" alt="Direnç.net linkinden doldurulmuş parça formu" width="820">
+</p>
+
+### Sohbet asistanı
+Üst bardaki **Sohbet**'ten deponla ilgili doğal dilde soru sor — "12V'u 5V'a
+düşüren bir şeyim var mı?" gibi. Asistan sadece senin gerçek envanterine bakarak
+cevap verir: bir şey varsa nerede ve kaç tane olduğunu söyler, yoksa stoktaki
+işlevsel bir alternatifi önerir. Konuşma bu bilgisayarda saklanır; "Yeni sohbet"
+ile temizlenir.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/sohbet-asistani-koyu.png">
+    <img src="docs/screenshots/sohbet-asistani.png" alt="Sohbet asistanı kondansatör sorusunu cevaplıyor" width="820">
+  </picture>
+</p>
+
+### Yazdırılabilir QR etiketler
 Her parça ve konum için tamamen çevrimdışı üretilen QR etiketler — yazdır, kes,
-çekmeceye yapıştır. Bir USB barkod okuyucuyla (ya da arama kutusuna elle
-yapıştırarak) taratınca doğrudan ilgili parçaya/konuma atlar.
+çekmeceye yapıştır. USB barkod okuyucuyla (ya da arama kutusuna yapıştırarak)
+okutunca doğrudan ilgili parçaya/konuma atlar.
 
 <p align="center">
-  <img src="docs/screenshots/etiket-qr.png" alt="Yazdırılabilir QR etiketler" width="700">
+  <img src="docs/screenshots/etiket-qr.png" alt="Konum QR etiketleri" width="820">
 </p>
 
-**Telefon kamerasıyla sayım ve etiketten giriş** (masaüstü uygulaması)
-Sol alttaki **Telefon kamerası**'nı açıp ekrandaki QR'ı telefonla okut — uygulama kurmadan,
-aynı Wi-Fi üzerinden telefonun kamerası LabStock'a bağlanır. Parçanın ya da çekmecenin QR
-etiketini göster (etiket yoksa adıyla ara), parçaları masaya dök: kamera sayar, "LabStock'a
-yaz" deyince adet sayılan değere ayarlanır ve hareket geçmişine "Sayım" olarak düşer. LCSC
-poşetinin QR'ını okutunca adet stoğa eklenir (aynı etiket iki kez işlenmez); parça yoksa
-LCSC'den doldurulmuş yeni parça formu açılır. Daha doğru sayım için yanına bir madeni para
-koyup ölçek al, parçanın boyutunu bir kez öğret. Görüntü işleme tamamen bilgisayarında yapılır;
-sunucu sadece sen açınca çalışır ve QR'daki eşleşme anahtarı olmayan cihaz bağlanamaz.
+### Telefon kamerasıyla sayım ve etiketten giriş (masaüstü uygulaması)
+Sol alttaki **Telefon kamerası**'nı açıp ekrandaki QR'ı telefonla okut —
+uygulama kurmadan, aynı Wi-Fi üzerinden telefonun kamerası LabStock'a bağlanır.
+Parçanın ya da çekmecenin QR etiketini göster (etiket yoksa adıyla ara),
+parçaları masaya dök: kamera sayar, "LabStock'a yaz" deyince adet sayılan değere
+ayarlanır ve hareket geçmişine "Sayım" olarak düşer. LCSC poşetinin QR'ını
+okutunca adet stoğa eklenir (aynı etiket iki kez işlenmez); parça yoksa LCSC'den
+doldurulmuş yeni parça formu açılır. Daha doğru sayım için yanına bir madeni para
+koyup ölçek al. Görüntü işleme tamamen bilgisayarında yapılır; sunucu sadece sen
+açınca çalışır ve QR'daki eşleşme anahtarı olmayan cihaz bağlanamaz.
 
-**Excel ile toplu aktarım**
-Elindeki envanteri tek bir `.xlsx`/`.csv` dosyasıyla içe aktar; tüm depoyu
-istediğin an `.xlsx` olarak dışa aktar.
+### Son aktiviteler ve alınacaklar
+Depodaki her stok hareketi — kamera sayımları, Excel aktarımları, elle girişler —
+tek sayfada. **Alınacaklar** ise envanterden bağımsız, linkli bir alışveriş
+listesi: neyi nereden alacağını unutma.
 
-**Gözlemci (salt-okunur paylaşım)**
-Ayarlar'dan ürettiğin bir davet koduyla, deponu bir meslektaşınla ya da
-öğrencinle salt-okunur paylaş — düzenleme/silme arayüzü onlar için otomatik
-gizlenir, sen tek taraflı erişimi istediğin an kaldırabilirsin.
+<p align="center">
+  <img src="docs/screenshots/aktiviteler.png" alt="Son aktiviteler" width="820">
+</p>
+<p align="center">
+  <img src="docs/screenshots/alinacaklar.png" alt="Alınacaklar listesi" width="820">
+</p>
 
-**Masaüstü uygulaması + otomatik güncelleme**
+### Excel, gözlemci, haftalık yedek
+- **Excel ile toplu aktarım:** elindeki envanteri tek bir `.xlsx`/`.csv` ile içe
+  aktar; tüm depoyu istediğin an `.xlsx` olarak dışa aktar.
+- **Gözlemci (salt-okunur paylaşım):** Ayarlar'dan ürettiğin davet koduyla deponu
+  bir meslektaşınla ya da öğrencinle salt-okunur paylaş; erişimi istediğin an kaldır.
+- **Haftalık özet + yedek e-postası:** her Pazartesi kritik stoklar, toplam değer
+  ve tam listenin CSV yedeği e-postana gelir.
+
+### Masaüstü uygulaması ve otomatik güncelleme
 Windows'a kurulum sihirbazıyla kurulur (yönetici izni gerekmez), her açılışta
 arka planda güncelleme kontrolü yapar; yeni sürüm varsa uygulama içi sessiz bir
 bildirimle indirilip kurulur — hiçbir pencere açılmaz.
@@ -110,12 +173,16 @@ bildirimle indirilip kurulur — hiçbir pencere açılmaz.
   <img src="docs/screenshots/masaustu-guncelleme.png" alt="Otomatik güncelleme bildirimi" width="820">
 </p>
 
-**Ayarlar**
-Koyu/açık tema, etiket (QR) görünüm tercihleri, sürüm bilgisi, gözlemci
-yönetimi ve doğrudan uygulama içinden geri bildirim gönderme.
+### Ayarlar
+Koyu/açık tema, etiket (QR) görünümü, yapay zekâ anahtarları (birden fazla
+Gemini/Claude anahtarı, sırayla denenir), haftalık yedek e-postası, içe/dışa
+aktarma, gözlemci yönetimi ve uygulama içinden geri bildirim.
 
 <p align="center">
-  <img src="docs/screenshots/ayarlar.png" alt="Ayarlar sayfası" width="700">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/ayarlar-koyu.png">
+    <img src="docs/screenshots/ayarlar.png" alt="Ayarlar sayfası" width="560">
+  </picture>
 </p>
 
 ## Kurulum (kullanıcı olarak)

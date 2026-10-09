@@ -1,18 +1,25 @@
 # Ekran görüntüleri
 
-Buradaki görseller, uygulamanın gerçek CSS/bileşen yapısıyla üretilmiş
-**örnek veriyle** mockup'lardır (canlı bir depoya erişim olmadan hazırlandı).
-İstersen kendi gerçek deponla gerçek ekran görüntüleri alıp aynı dosya adlarının
-üzerine yaz — README otomatik günceller, başka bir değişiklik gerekmez.
+Buradaki görseller uygulamanın gerçek ekran görüntüleridir (v1.17.2, gerçek bir
+ARGE deposu, 1360×860 pencere, 2x çözünürlük). Davet kodu ve API anahtarı gibi
+gizli bilgiler çekim sırasında maskelendi. Görüntüler Windows pencere çerçevesi
+ve arka planla birlikte işlendi.
+
+`-koyu` ekli dosyalar aynı ekranın koyu temasıdır; ana README bunları
+`<picture>` ile, GitHub koyu temadayken otomatik gösterir.
 
 | Dosya | İçerik |
 | --- | --- |
-| `envanter-listesi.png` | `/envanter` — parça listesi (tablo görünümü) |
-| `envanter-izgara.png` | `/envanter` — ızgara (kart) görünümü |
-| `parca-detay.png` | Malzeme detay sayfası |
-| `etiket-qr.png` | Yazdırılabilir QR etiket kartları (kare + yuvarlak) |
+| `hero.png` / `hero-koyu.png` | README başlığı: liste + parça detayı |
+| `envanter-listesi.png` | `/envanter` — parça listesi |
+| `envanter-izgara.png` | `/envanter?gorunum=izgara` — ızgara görünümü |
+| `konum-filtresi.png` | Bir kutunun (konumun) içeriği |
+| `parca-detay.png` | Parça detay sayfası |
+| `linkten-cek.png` | Parça ekle — Direnç.net linkinden doldurulmuş form |
+| `sohbet-asistani.png` | Sohbet asistanı, gerçek bir soru-cevap |
+| `etiket-qr.png` | Konum QR etiketleri |
+| `aktiviteler.png` | Son aktiviteler |
+| `alinacaklar.png` | Alınacaklar listesi |
 | `ayarlar.png` | Ayarlar sayfası |
-| `masaustu-guncelleme.png` | Masaüstü otomatik güncelleme bildirimi |
-
-Gerçek görüntü alırken pencereyi 1360×860 (varsayılan masaüstü boyutu)
-civarında tutmak, oranların tutarlı kalmasını sağlar.
+| `masaustu-guncelleme.png` | Masaüstü otomatik güncelleme bildirimi (örnek veriyle hazırlanmış mockup) |
+| `sosyal-onizleme.png` | 1280×640 — GitHub "Social preview" görseli |
