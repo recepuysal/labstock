@@ -5,7 +5,8 @@ ARGE deposu, 1360×860 pencere, 2x çözünürlük). Davet kodu ve API anahtarı
 gizli bilgiler çekim sırasında maskelendi. Görüntüler Windows pencere çerçevesi
 ve arka planla birlikte işlendi.
 
-`-koyu` ekli dosyalar aynı ekranın koyu temasıdır; ana README bunları
+`-en` ekli dosyalar aynı ekranların İngilizce arayüzüdür (README.md bunları,
+README.tr.md Türkçe olanları kullanır). `-koyu` ekli dosyalar aynı ekranın koyu temasıdır; ana README bunları
 `<picture>` ile, GitHub koyu temadayken otomatik gösterir.
 
 | Dosya | İçerik |
