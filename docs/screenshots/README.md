@@ -23,4 +23,4 @@ README.tr.md Türkçe olanları kullanır). `-koyu` ekli dosyalar aynı ekranın
 | `alinacaklar.png` | Alınacaklar listesi |
 | `ayarlar.png` | Ayarlar sayfası |
 | `masaustu-guncelleme.png` | Masaüstü otomatik güncelleme bildirimi (örnek veriyle hazırlanmış mockup) |
-| `sosyal-onizleme.jpg` / `sosyal-onizleme-en.jpg` | 1280×640, ~100 KB — GitHub "Social preview" görseli (1 MB sınırının altında) |
+| `sosyal-onizleme-en.jpg` | 1280×640, ~100 KB — GitHub "Social preview" görseli (Settings → Social preview) |
