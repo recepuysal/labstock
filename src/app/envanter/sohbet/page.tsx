@@ -48,7 +48,7 @@ export default async function SohbetSayfasi() {
           )}
         </div>
 
-        <SohbetEkrani />
+        <SohbetEkrani depoId={aktif.kullaniciId} />
       </div>
     </main>
   );

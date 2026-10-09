@@ -70,8 +70,8 @@ paylaşılmaz; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
 "12V'u 5V'a düşüren bir şeyim var mı?" gibi. Asistan sadece senin gerçek
 envanterine bakarak cevap verir: bir şey varsa nerede olduğunu söyler, yoksa
 işlevsel olarak yerine geçebilecek başka bir parça stoktaysa onu önerir. Aynı
-Ayarlar'daki Gemini API anahtarını kullanır; sohbet geçmişi kaydedilmez, sayfa
-yenilenince sıfırlanır.
+Ayarlar'daki Gemini API anahtarını kullanır. Konuşma bu bilgisayarda saklanır —
+başka sayfaya geçince ya da uygulama kapanınca kaybolmaz; "Yeni sohbet" ile temizlenir.
 
 **Yazdırılabilir QR etiketler**
 Her parça ve konum için tamamen çevrimdışı üretilen QR etiketler — yazdır, kes,

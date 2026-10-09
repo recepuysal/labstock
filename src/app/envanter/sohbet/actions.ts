@@ -59,7 +59,21 @@ function sistemYonergesiOlustur(envanterMetni: string, parcaSayisi: number, kirp
   ].join('\n');
 }
 
-export async function sohbetSor(mesajlar: SohbetMesaji[]): Promise<SohbetSonucu> {
+/** Modele gönderilen geçmiş: son mesajlar (konuşma artık kalıcı olduğu için sınırsız büyüyebilir). */
+const AZAMI_GECMIS = 20;
+const AZAMI_MESAJ_UZUNLUGU = 4000;
+
+export async function sohbetSor(gelen: SohbetMesaji[]): Promise<SohbetSonucu> {
+  // İstemciden geleni doğrula ve kırp: rol/metin dışında bir şey taşınmasın, geçmiş sınırlı kalsın
+  let mesajlar: SohbetMesaji[] = (Array.isArray(gelen) ? gelen : [])
+    .slice(-AZAMI_GECMIS)
+    .map((m) => ({
+      rol: m?.rol === 'asistan' ? ('asistan' as const) : ('kullanici' as const),
+      icerik: String(m?.icerik ?? '').slice(0, AZAMI_MESAJ_UZUNLUGU),
+    }))
+    .filter((m) => m.icerik.trim());
+  // Modeller konuşmanın kullanıcı mesajıyla başlamasını bekler
+  while (mesajlar.length && mesajlar[0].rol !== 'kullanici') mesajlar = mesajlar.slice(1);
   if (mesajlar.length === 0) return { hata: 'Boş mesaj.' };
 
   const supabase = await createClient();

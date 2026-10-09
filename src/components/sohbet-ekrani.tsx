@@ -1,7 +1,72 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { sohbetSor, type SohbetMesaji } from '@/app/envanter/sohbet/actions';
+
+/* Konuşma bileşenin dışında, modül düzeyinde tutulur: başka sayfaya gidip dönünce bileşen yeniden
+ * kurulsa da konuşma ve süren istek yaşar (cevap sayfa dışındayken gelse bile konuşmaya eklenir).
+ * Ayrıca bu bilgisayarda localStorage'a yazılır; uygulama kapanıp açılınca da kalır. Depo başına
+ * ayrı tutulur (kendi depon / izlediğin depo, aynı bilgisayardaki farklı hesaplar karışmasın). */
+type SohbetDurumu = { mesajlar: SohbetMesaji[]; gonderiliyor: boolean; hata: string | null; surum: number };
+
+const KAYIT_ONEKI = 'labstock-sohbet:';
+const AZAMI_KAYIT = 100; // bu bilgisayarda saklanan en fazla mesaj
+const BOS: SohbetDurumu = { mesajlar: [], gonderiliyor: false, hata: null, surum: 0 };
+const durumlar = new Map<string, SohbetDurumu>();
+const dinleyiciler = new Set<() => void>();
+
+function durumOku(depoId: string): SohbetDurumu {
+  let d = durumlar.get(depoId);
+  if (!d) {
+    let mesajlar: SohbetMesaji[] = [];
+    try {
+      const ham = JSON.parse(localStorage.getItem(KAYIT_ONEKI + depoId) || '[]');
+      if (Array.isArray(ham)) mesajlar = ham.filter((m) => m && typeof m.icerik === 'string');
+    } catch {}
+    d = { ...BOS, mesajlar };
+    durumlar.set(depoId, d);
+  }
+  return d;
+}
+
+function durumYaz(depoId: string, degisiklik: Partial<SohbetDurumu>) {
+  const yeni = { ...durumOku(depoId), ...degisiklik };
+  durumlar.set(depoId, yeni);
+  if ('mesajlar' in degisiklik) {
+    try {
+      localStorage.setItem(KAYIT_ONEKI + depoId, JSON.stringify(yeni.mesajlar.slice(-AZAMI_KAYIT)));
+    } catch {}
+  }
+  dinleyiciler.forEach((f) => f());
+}
+
+function abone(f: () => void) {
+  dinleyiciler.add(f);
+  return () => dinleyiciler.delete(f);
+}
+
+async function sor(depoId: string, metin: string) {
+  const d = durumOku(depoId);
+  if (d.gonderiliyor) return;
+  const surum = d.surum;
+  const mesajlar: SohbetMesaji[] = [...d.mesajlar, { rol: 'kullanici', icerik: metin }];
+  durumYaz(depoId, { mesajlar, gonderiliyor: true, hata: null });
+  try {
+    const sonuc = await sohbetSor(mesajlar);
+    // Bu arada "Yeni sohbet" dendiyse eski sorunun cevabı yeni konuşmaya karışmasın
+    if (durumOku(depoId).surum !== surum) return;
+    if (sonuc.hata) durumYaz(depoId, { hata: sonuc.hata });
+    else if (sonuc.cevap) durumYaz(depoId, { mesajlar: [...durumOku(depoId).mesajlar, { rol: 'asistan', icerik: sonuc.cevap }] });
+  } catch (e) {
+    if (durumOku(depoId).surum === surum) durumYaz(depoId, { hata: e instanceof Error ? e.message : 'Cevap alınamadı.' });
+  } finally {
+    if (durumOku(depoId).surum === surum) durumYaz(depoId, { gonderiliyor: false });
+  }
+}
+
+function yeniSohbet(depoId: string) {
+  durumYaz(depoId, { mesajlar: [], gonderiliyor: false, hata: null, surum: durumOku(depoId).surum + 1 });
+}
 
 const ORNEK_SORULAR = [
   '12V\'u 5V\'a düşüren bir şeyim var mı?',
@@ -86,11 +151,13 @@ function MesajBalonu({ mesaj, yukleniyor }: { mesaj: SohbetMesaji; yukleniyor?: 
   );
 }
 
-export function SohbetEkrani() {
-  const [mesajlar, setMesajlar] = useState<SohbetMesaji[]>([]);
+export function SohbetEkrani({ depoId }: { depoId: string }) {
+  const { mesajlar, gonderiliyor, hata } = useSyncExternalStore(
+    abone,
+    () => durumOku(depoId),
+    () => BOS,
+  );
   const [girdi, setGirdi] = useState('');
-  const [gonderiliyor, setGonderiliyor] = useState(false);
-  const [hata, setHata] = useState<string | null>(null);
   const sonRef = useRef<HTMLDivElement>(null);
   const girdiRef = useRef<HTMLTextAreaElement>(null);
 
@@ -101,24 +168,9 @@ export function SohbetEkrani() {
   async function gonder(metin: string) {
     const temiz = metin.trim();
     if (!temiz || gonderiliyor) return;
-
-    const yeniMesajlar: SohbetMesaji[] = [...mesajlar, { rol: 'kullanici', icerik: temiz }];
-    setMesajlar(yeniMesajlar);
     setGirdi('');
-    setHata(null);
-    setGonderiliyor(true);
-
-    try {
-      const sonuc = await sohbetSor(yeniMesajlar);
-      if (sonuc.hata) {
-        setHata(sonuc.hata);
-      } else if (sonuc.cevap) {
-        setMesajlar([...yeniMesajlar, { rol: 'asistan', icerik: sonuc.cevap }]);
-      }
-    } finally {
-      setGonderiliyor(false);
-      girdiRef.current?.focus();
-    }
+    await sor(depoId, temiz);
+    girdiRef.current?.focus();
   }
 
   function formuGonder(e: React.FormEvent) {
@@ -151,6 +203,21 @@ export function SohbetEkrani() {
           40% { opacity: 1; transform: scale(1); }
         }
       `}</style>
+
+      {mesajlar.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 12px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+          <button
+            type="button"
+            className="btn"
+            style={{ fontSize: 12 }}
+            onClick={() => {
+              if (confirm('Bu konuşma silinsin ve yeni bir sohbet başlasın mı?')) yeniSohbet(depoId);
+            }}
+          >
+            Yeni sohbet
+          </button>
+        </div>
+      )}
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {mesajlar.length === 0 && (
