@@ -34,18 +34,36 @@ export function AramaKutusu() {
     return () => window.removeEventListener('keydown', tus);
   }, []);
 
-  // yazarken 300 ms sonra URL'i güncelle
+  // Arama sadece malzeme listesinde (/envanter) uygulanır. Başka bir sayfadayken (ör. parça detayı)
+  // URL'i olduğu yerde güncellemek bir şey göstermiyordu (o sayfa ?q= kullanmıyor) — orada yazarken
+  // hiçbir yere gidilmez, Enter'a basınca listeye geçilir.
+  const listede = pathname === '/envanter';
+
+  function aramayiUygula(metin: string) {
+    // Listedeyken mevcut filtreler (konum, kategori…) korunur; başka sayfadan gelince temiz arama
+    const p = new URLSearchParams(listede ? searchParams.toString() : '');
+    if (metin) p.set('q', metin);
+    else p.delete('q');
+    const sorgu = p.toString();
+    const adres = sorgu ? `/envanter?${sorgu}` : '/envanter';
+    basla(() => (listede ? router.replace(adres) : router.push(adres)));
+  }
+
+  // Listedeyken yazarken 300 ms sonra URL'i güncelle (canlı filtre)
   useEffect(() => {
-    if (deger === q) return;
-    const zamanlayici = setTimeout(() => {
-      const p = new URLSearchParams(searchParams.toString());
-      if (deger) p.set('q', deger);
-      else p.delete('q');
-      const hedef = pathname.startsWith('/envanter') ? pathname : '/envanter';
-      basla(() => router.replace(`${hedef}?${p.toString()}`));
-    }, 300);
+    if (!listede || deger === q) return;
+    const zamanlayici = setTimeout(() => aramayiUygula(deger), 300);
     return () => clearTimeout(zamanlayici);
-  }, [deger, q, pathname, router, searchParams]);
+    // aramayiUygula her çizimde yeniden oluşur; asıl bağımlılıkları (deger, q, listede) burada
+  }, [deger, q, listede]);
+
+  function tusaBasildi(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const metin = deger.trim();
+    if (!listede && !metin) return; // başka sayfada boş Enter: bir yere gitme
+    aramayiUygula(metin);
+  }
 
   // Bir USB barkod/QR okuyucu, taradığı kodu klavyeymiş gibi çok hızlı "yazar".
   // Bu kod bizim etiket biçimimize (LSTK:P:… / LSTK:K:…) uyuyorsa arama yapmadan
@@ -94,6 +112,7 @@ export function AramaKutusu() {
         ref={girdi}
         value={deger}
         onChange={degisti}
+        onKeyDown={tusaBasildi}
         placeholder="Parça, MPN, açıklama ara…"
         style={{
           flex: 1,
