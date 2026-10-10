@@ -247,7 +247,7 @@ Open `http://localhost:3000` and create an account at `/kayit`.
 ### 3. Package the desktop app
 
 ```bash
-npm run build:desktop          # Next.js standalone build
+npm run build:desktop          # Next.js standalone build, copied into electron-app/standalone
 cd electron-app
 npm install
 npx electron-builder --win     # produces electron-app/dist/LabStock-Kurulum.exe

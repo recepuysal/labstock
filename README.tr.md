@@ -268,7 +268,7 @@ npm run dev
 ### 3. Masaüstü uygulaması olarak paketlemek
 
 ```bash
-npm run build:desktop          # Next.js'i standalone build'e alır
+npm run build:desktop          # Next.js'i derler ve electron-app/standalone'a kopyalar
 cd electron-app
 npm install
 npx electron-builder --win     # electron-app/dist/LabStock-Kurulum.exe üretir

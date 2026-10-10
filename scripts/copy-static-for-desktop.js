@@ -24,3 +24,10 @@ if (fs.existsSync(publicKlasoru)) {
 }
 
 console.log('Masaüstü kısayolu için statik dosyalar kopyalandı.');
+
+// electron-builder (afterPack.js) uygulamayı electron-app/standalone'dan paketler.
+// Burada güncellenmezse yerel paketlere eski bir derleme girer.
+const hedef = path.join(kok, 'electron-app', 'standalone');
+fs.rmSync(hedef, { recursive: true, force: true });
+fs.cpSync(standalone, hedef, { recursive: true });
+console.log('Derleme electron-app/standalone klasörüne kopyalandı.');
