@@ -15,8 +15,9 @@ what data the app handles and why.
   company logo, if you enter them.
 - **Your inventory:** parts, locations, quantities, stock movements, projects,
   tags, shopping-list items and settings you create in the app.
-- **AI keys (optional):** Google Gemini / Anthropic Claude API keys you add in
-  Settings are stored in your account and can only be read by you.
+- **AI keys (optional):** API keys you add in Settings (Google Gemini, Groq,
+  Z.ai, OpenRouter, Anthropic Claude) are stored in your account and can only be
+  read by you, together with a daily request count per key (shown as the usage bar).
 - **Feedback:** messages you send from Settings → Feedback.
 
 Your inventory is visible only to you and to people you explicitly give an
@@ -35,10 +36,12 @@ invite code to (read-only “viewers”). You can remove a viewer at any time.
 - **Email delivery providers (e.g. Resend)** — send the sign-up verification
   code, the optional weekly summary/backup email (only if you turn it on) and
   feedback notifications to the developer.
-- **Google Gemini / Anthropic Claude** — only if you add your own API key. When
+- **AI providers: Google Gemini, Groq, Z.ai (Zhipu AI, China), OpenRouter,
+  Anthropic Claude** — only the ones you add your own API key for. When
   you use the chat assistant, “Fetch from link” or LCSC description translation,
   the relevant inventory data or product-page content is sent to that provider
-  with your key, under that provider's terms.
+  with your key, under that provider's terms. Free tiers of some providers
+  (e.g. Gemini) may use this data to improve their models.
 - **LCSC and online shops** — when you use “Fetch from LCSC” or “Fetch from
   link”, the app requests that product page.
 - **GitHub** — the version downloaded from GitHub checks GitHub Releases for
@@ -76,8 +79,9 @@ politika, uygulamanın hangi verileri neden işlediğini açıklar.
   fotoğrafı ya da şirket logosu.
 - **Envanterin:** uygulamada oluşturduğun parçalar, konumlar, adetler, stok
   hareketleri, projeler, etiketler, alınacaklar listesi ve ayarlar.
-- **Yapay zekâ anahtarları (isteğe bağlı):** Ayarlar'dan eklediğin Google Gemini /
-  Anthropic Claude API anahtarları hesabında saklanır ve yalnızca sen okuyabilirsin.
+- **Yapay zekâ anahtarları (isteğe bağlı):** Ayarlar'dan eklediğin API anahtarları
+  (Google Gemini, Groq, Z.ai, OpenRouter, Anthropic Claude) hesabında saklanır ve
+  yalnızca sen okuyabilirsin; her anahtar için günlük istek sayısı da tutulur (kullanım barı).
 - **Geri bildirim:** Ayarlar → Geri Bildirim'den gönderdiğin mesajlar.
 
 Envanterini yalnızca sen ve davet kodunu bizzat verdiğin kişiler (salt-okunur
@@ -96,10 +100,12 @@ Envanterini yalnızca sen ve davet kodunu bizzat verdiğin kişiler (salt-okunur
 - **E-posta gönderim hizmetleri (ör. Resend)** — kayıt doğrulama kodu, isteğe
   bağlı haftalık özet/yedek e-postası (yalnızca açarsan) ve geliştiriciye giden
   geri bildirim bildirimleri.
-- **Google Gemini / Anthropic Claude** — yalnızca kendi API anahtarını eklersen.
+- **Yapay zekâ sağlayıcıları: Google Gemini, Groq, Z.ai (Zhipu AI, Çin), OpenRouter,
+  Anthropic Claude** — yalnızca kendi API anahtarını eklediklerin.
   Sohbet asistanını, “Linkten çek”i ya da LCSC açıklama çevirisini kullandığında
   ilgili envanter verisi veya ürün sayfası içeriği senin anahtarınla o sağlayıcıya
-  gönderilir; o sağlayıcının şartları geçerlidir.
+  gönderilir; o sağlayıcının şartları geçerlidir. Bazı sağlayıcıların ücretsiz
+  katmanları (ör. Gemini) bu verileri modellerini geliştirmek için kullanabilir.
 - **LCSC ve çevrimiçi mağazalar** — “LCSC'den çek” ya da “Linkten çek”
   kullandığında uygulama o ürün sayfasını ister.
 - **GitHub** — GitHub'dan indirilen sürüm güncellemeleri GitHub Releases'tan

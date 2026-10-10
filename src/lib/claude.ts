@@ -80,7 +80,7 @@ function metaIcerikBul(html: string, ozellikAdi: string, ozellikDegeri: string):
   return null;
 }
 
-function ogGoruntusuBul(html: string): string | null {
+export function ogGoruntusuBul(html: string): string | null {
   return (
     metaIcerikBul(html, 'property', 'og:image') ??
     metaIcerikBul(html, 'name', 'og:image') ??
@@ -89,7 +89,7 @@ function ogGoruntusuBul(html: string): string | null {
   );
 }
 
-function htmlMetneDonustur(html: string): string {
+export function htmlMetneDonustur(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')

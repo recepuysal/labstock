@@ -10,6 +10,7 @@ import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
 import { geminiApiAnahtariniDogrula } from '@/lib/gemini';
 import { apiAnahtariniTemizle, claudeApiAnahtariniDogrula } from '@/lib/claude';
+import { uyumluAnahtariDogrula, uyumluSaglayiciMi } from '@/lib/openai-uyumlu';
 import type { AiSaglayici } from '@/lib/ai-anahtarlari';
 import { dilAl, sozlukAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
@@ -275,15 +276,19 @@ export async function gozlemciyiCikar(gozlemciId: string): Promise<EylemDurum> {
  * lib/ai.ts). Birden fazla hesaptan anahtar eklenebilir. */
 export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const saglayici = String(formData.get('saglayici') ?? '') as AiSaglayici;
-  if (saglayici !== 'gemini' && saglayici !== 'claude') return { hata: (await mesajlar()).gecersizSaglayici };
+  if (saglayici !== 'gemini' && saglayici !== 'claude' && !uyumluSaglayiciMi(saglayici))
+    return { hata: (await mesajlar()).gecersizSaglayici };
 
   const anahtar = apiAnahtariniTemizle(String(formData.get('api_anahtari') ?? ''));
   if (!anahtar) return { hata: (await mesajlar()).anahtarGir };
 
   const ad = String(formData.get('ad') ?? '').trim() || null;
 
-  const dogrulama =
-    saglayici === 'gemini' ? await geminiApiAnahtariniDogrula(anahtar) : await claudeApiAnahtariniDogrula(anahtar);
+  const dogrulama: { gecerli: boolean; hata?: string; model?: string; gunlukLimit?: number } = uyumluSaglayiciMi(saglayici)
+    ? await uyumluAnahtariDogrula(saglayici, anahtar)
+    : saglayici === 'gemini'
+      ? await geminiApiAnahtariniDogrula(anahtar)
+      : await claudeApiAnahtariniDogrula(anahtar);
   if (!dogrulama.gecerli) {
     return {
       hata: dogrulama.hata
@@ -307,10 +312,16 @@ export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Pr
     .maybeSingle();
   const yeniSira = ((enSonSira?.sira as number | undefined) ?? -1) + 1;
 
-  const { error } = await supabase
-    .from('ai_anahtarlari')
-    .insert({ user_id: user.id, saglayici, ad, anahtar, sira: yeniSira });
-  if (error) return { hata: error.message };
+  const satir: Record<string, unknown> = { user_id: user.id, saglayici, ad, anahtar, sira: yeniSira };
+  // model/gunluk_limit sütunları 0005 göçüyle geldi; yeni sağlayıcılar zaten o göçü gerektiriyor.
+  if (dogrulama.model) satir.model = dogrulama.model;
+  if (dogrulama.gunlukLimit) satir.gunluk_limit = dogrulama.gunlukLimit;
+  const { error } = await supabase.from('ai_anahtarlari').insert(satir);
+  if (error) {
+    // 0005 göçü çalıştırılmamış: yeni sağlayıcı check kısıtına takılır ya da sütun yoktur.
+    if (/saglayici_check|gunluk_limit|column .*model/i.test(error.message)) return { hata: (await mesajlar()).veritabaniGuncellemesiGerekli };
+    return { hata: error.message };
+  }
 
   revalidatePath('/ayarlar');
   return { bilgi: (await mesajlar()).anahtarKaydedildi };

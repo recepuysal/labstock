@@ -145,6 +145,10 @@ const tr = {
     metinYok: 'Sayfadan okunabilir bir metin çıkarılamadı.',
     urunYok: 'Sayfadan ürün bilgisi çıkarılamadı.',
     bilinmeyenHata: 'bilinmeyen hata',
+    uyumluGecersizAnahtar: (ad: string) => `${ad} bu anahtarı kabul etmedi — anahtarı eksiksiz kopyaladığından emin ol.`,
+    uyumluKotaDoldu: (ad: string) => `${ad} günlük ücretsiz kotası doldu; yarın sıfırlanır. Bu arada sıradaki anahtar denenir.`,
+    uyumluYogun: (ad: string) => `${ad} şu an çok yoğun (dakikalık sınır); biraz sonra tekrar dene.`,
+    uyumluModelYok: (ad: string) => `${ad} hesabında kullanılabilir ücretsiz bir sohbet modeli bulunamadı.`,
     claudeAboneTokeni:
       `Bu bir Claude abonelik (Claude Code) token'ı, API anahtarı değil. console.anthropic.com → API Keys'ten bir API anahtarı oluştur.`,
     claudeYoneticiAnahtari:
@@ -310,6 +314,10 @@ const en: Sekil<typeof tr> = {
     metinYok: 'Could not extract readable text from the page.',
     urunYok: 'Could not extract product details from the page.',
     bilinmeyenHata: 'unknown error',
+    uyumluGecersizAnahtar: (ad: string) => `${ad} didn't accept this key — make sure you copied all of it.`,
+    uyumluKotaDoldu: (ad: string) => `${ad}'s free daily quota is used up; it resets tomorrow. The next key is tried meanwhile.`,
+    uyumluYogun: (ad: string) => `${ad} is busy right now (per-minute limit); try again shortly.`,
+    uyumluModelYok: (ad: string) => `No free chat model is available on this ${ad} account.`,
     claudeAboneTokeni:
       `This is a Claude subscription (Claude Code) token, not an API key. Create an API key at console.anthropic.com → API Keys.`,
     claudeYoneticiAnahtari:

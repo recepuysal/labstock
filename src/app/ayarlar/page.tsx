@@ -11,7 +11,7 @@ import { GeriBildirimFormu } from '@/components/geri-bildirim-formu';
 import { AiAnahtarlariKarti, type AiAnahtarSatiri } from '@/components/ai-anahtarlari-karti';
 import { HaftalikYedekFormu } from '@/components/haftalik-yedek-formu';
 import { etiketAyarlariniAl } from '@/lib/etiket-sunucu';
-import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
+import { aiAnahtarlariGetir, bugunkuKullanimGetir, gunlukLimit, kullanimTakibiAktif } from '@/lib/ai-anahtarlari';
 import { DilSecici } from '@/components/dil-secici';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
@@ -32,12 +32,23 @@ export default async function AyarlarSayfasi() {
     .eq('id', user.id)
     .maybeSingle();
 
-  const aiAnahtarlari: AiAnahtarSatiri[] = (await aiAnahtarlariGetir(supabase, user.id)).map((a) => ({
-    id: a.id,
-    saglayici: a.saglayici,
-    ad: a.ad,
-    sonDortHane: a.anahtar.slice(-4),
-  }));
+  const [hamAnahtarlar, bugunkuKullanim, takipAktif] = await Promise.all([
+    aiAnahtarlariGetir(supabase, user.id),
+    bugunkuKullanimGetir(supabase, user.id),
+    kullanimTakibiAktif(supabase),
+  ]);
+  const aiAnahtarlari: AiAnahtarSatiri[] = hamAnahtarlar.map((a) => {
+    const k = bugunkuKullanim.get(a.id);
+    return {
+      id: a.id,
+      saglayici: a.saglayici,
+      ad: a.ad,
+      sonDortHane: a.anahtar.slice(-4),
+      istek: k?.istek ?? 0,
+      limit: gunlukLimit(a),
+      kotaDoldu: k?.kota_doldu ?? false,
+    };
+  });
 
   const { data: gozlemciVerisi } = await supabase.rpc('gozlemcilerimi_listele');
   const gozlemciler = (gozlemciVerisi ?? []) as {
@@ -114,7 +125,7 @@ export default async function AyarlarSayfasi() {
 
         <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />
 
-        <AiAnahtarlariKarti anahtarlar={aiAnahtarlari} />
+        <AiAnahtarlariKarti anahtarlar={aiAnahtarlari} takipAktif={takipAktif} />
 
         <HaftalikYedekFormu
           baslangicAktif={(profil?.haftalik_yedek_aktif as boolean | null) ?? false}
