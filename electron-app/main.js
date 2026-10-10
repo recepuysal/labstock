@@ -244,7 +244,13 @@ ipcMain.handle('kamera-durum', () => kamera.durum());
 ipcMain.handle('kamera-anahtar-yenile', () => kamera.anahtariYenile());
 ipcMain.on('kamera-gonder', (_event, veri) => kamera.gonder(veri));
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Uygulama her zaman kullanıcının kendi deposuyla açılsın: önceki oturum düzgün
+  // kapanmadıysa (çökme, zorla kapatma) before-quit temizliği çalışmamış olabilir ve
+  // izlenen depo seçimi (labstock_gorunum) bir sonraki açılışa taşınırdı.
+  await session.defaultSession.cookies
+    .remove(`http://127.0.0.1:${PORT}/`, 'labstock_gorunum')
+    .catch((err) => logYaz(`[gorunum-temizleme-hata] ${err.message}`));
   diliGuncelle();
   session.defaultSession.cookies.on('changed', (_event, cerez) => {
     if (cerez.name === DIL_COOKIE) diliGuncelle();
