@@ -25,6 +25,7 @@ GitHub güncelleyicisi kapalıdır — `electron-app/main.js`).
 ```bash
 npm run build:desktop
 cd electron-app
+npm ci                                            # bağımlılıklar eksiksiz olsun (ör. ws)
 npx electron-builder --win appx --publish never   # dist/LabStock-Store.appx
 ```
 
