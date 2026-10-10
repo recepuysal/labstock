@@ -25,7 +25,6 @@ type SaglayiciBilgisi = { ad: string; renk: string; ucretsiz: boolean; anahtarSa
 // Ayarlar'daki sıra: önce ücretsizler (önerilen deneme sırası), en sonda ücretli Claude.
 const SAGLAYICILAR: Record<AiSaglayici, SaglayiciBilgisi> = {
   groq: { ad: 'Groq', renk: '#e8590c', ucretsiz: true, anahtarSayfasi: 'https://console.groq.com/keys' },
-  zai: { ad: 'Z.ai (GLM)', renk: '#3b5bdb', ucretsiz: true, anahtarSayfasi: 'https://z.ai/manage-apikey/apikey-list' },
   gemini: { ad: 'Gemini', renk: '#2b8a3e', ucretsiz: true, anahtarSayfasi: 'https://aistudio.google.com/apikey' },
   openrouter: { ad: 'OpenRouter', renk: '#7048e8', ucretsiz: true, anahtarSayfasi: 'https://openrouter.ai/settings/keys' },
   claude: { ad: 'Claude', renk: '#a3611f', ucretsiz: false, anahtarSayfasi: 'https://console.anthropic.com/settings/keys' },

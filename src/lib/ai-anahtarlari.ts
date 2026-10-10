@@ -1,12 +1,12 @@
 // Kullanıcının birden fazla yapay zeka API anahtarını (Gemini, Claude ve
-// ücretsiz katmanlı Groq / Z.ai (GLM) / OpenRouter; birden fazla hesaptan) tek
+// ücretsiz katmanlı Groq / OpenRouter; birden fazla hesaptan) tek
 // bir öncelik sırasıyla okumak için ortak yardımcı — "Linkten çek", LCSC
 // açıklama çevirisi ve sohbet asistanı hepsi bu listeyi kullanır (bkz.
 // lib/ai.ts, ai_anahtarlari ve ai_kullanim tabloları: supabase/migrations/0003, 0005).
 
 import { createClient } from './supabase/server';
 
-export type AiSaglayici = 'gemini' | 'claude' | 'groq' | 'zai' | 'openrouter';
+export type AiSaglayici = 'gemini' | 'claude' | 'groq' | 'openrouter';
 
 /** Ücretli sağlayıcılar kullanım barındaki ücretsiz toplama katılmaz. */
 export const UCRETLI_SAGLAYICILAR: AiSaglayici[] = ['claude'];
@@ -16,7 +16,6 @@ export const VARSAYILAN_GUNLUK_LIMIT: Record<AiSaglayici, number | null> = {
   gemini: 250,
   claude: null,
   groq: 1000,
-  zai: 1000,
   openrouter: 50,
 };
 
@@ -44,7 +43,8 @@ export async function aiAnahtarlariGetir(supabase: Supabase, userId: string): Pr
     .eq('user_id', userId)
     .order('sira', { ascending: true });
 
-  return (data ?? []) as AiAnahtar[];
+  // Uygulamadan kaldırılmış sağlayıcıların (ör. cerebras, zai) eski kayıtları yok sayılır.
+  return ((data ?? []) as AiAnahtar[]).filter((a) => a.saglayici in VARSAYILAN_GUNLUK_LIMIT);
 }
 
 export function bugunUtc(): string {

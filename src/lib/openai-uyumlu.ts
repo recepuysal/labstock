@@ -1,5 +1,5 @@
 // Ücretsiz katmanı olan, OpenAI uyumlu "chat/completions" API'si sunan
-// sağlayıcılar (Groq, Z.ai / Zhipu GLM, OpenRouter). Gemini (lib/gemini.ts) ve Claude
+// sağlayıcılar (Groq, OpenRouter). Gemini (lib/gemini.ts) ve Claude
 // (lib/claude.ts) ile aynı üç işi yapar: linkten ürün çekme, LCSC açıklama
 // çevirisi, sohbet asistanı. lib/ai.ts bu sağlayıcıları da sıradaki anahtar
 // olarak dener.
@@ -15,7 +15,7 @@ import { htmlMetneDonustur, ogGoruntusuBul } from './claude';
 import { sozluk, type Dil } from './i18n';
 import { dilAl } from './i18n/sunucu';
 
-export type UyumluSaglayici = 'groq' | 'zai' | 'openrouter';
+export type UyumluSaglayici = 'groq' | 'openrouter';
 
 type SaglayiciTanimi = {
   ad: string;
@@ -43,18 +43,6 @@ export const UYUMLU_SAGLAYICILAR: Record<UyumluSaglayici, SaglayiciTanimi> = {
     uygunMu: (m) => !SOHBET_DISI.test(m),
     varsayilanGunlukLimit: 1000,
     jsonModu: true,
-  },
-  zai: {
-    // Zhipu AI'ın uluslararası platformu. "-flash" modelleri kalıcı olarak ücretsiz;
-    // resmi günlük sınır yok, hız ≈1 istek/sn ile sınırlı (bar için ≈1.000/gün varsayılır).
-    ad: 'Z.ai (GLM)',
-    tabanUrl: 'https://api.z.ai/api/paas/v4',
-    anahtarSayfasi: 'https://z.ai/manage-apikey/apikey-list',
-    tercihliModeller: ['glm-4.7-flash', 'glm-4.5-flash'],
-    // Sadece ücretsiz "flash" sohbet modelleri (ücretli GLM modelleri bakiye ister; "4.6v-flash" görsel modeli).
-    uygunMu: (m) => /flash/i.test(m) && !/\dv-flash/i.test(m) && !SOHBET_DISI.test(m),
-    varsayilanGunlukLimit: 1000,
-    jsonModu: false,
   },
   openrouter: {
     ad: 'OpenRouter',

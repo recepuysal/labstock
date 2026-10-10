@@ -16,7 +16,7 @@ what data the app handles and why.
 - **Your inventory:** parts, locations, quantities, stock movements, projects,
   tags, shopping-list items and settings you create in the app.
 - **AI keys (optional):** API keys you add in Settings (Google Gemini, Groq,
-  Z.ai, OpenRouter, Anthropic Claude) are stored in your account and can only be
+  OpenRouter, Anthropic Claude) are stored in your account and can only be
   read by you, together with a daily request count per key (shown as the usage bar).
 - **Feedback:** messages you send from Settings → Feedback.
 
@@ -36,7 +36,7 @@ invite code to (read-only “viewers”). You can remove a viewer at any time.
 - **Email delivery providers (e.g. Resend)** — send the sign-up verification
   code, the optional weekly summary/backup email (only if you turn it on) and
   feedback notifications to the developer.
-- **AI providers: Google Gemini, Groq, Z.ai (Zhipu AI, China), OpenRouter,
+- **AI providers: Google Gemini, Groq, OpenRouter,
   Anthropic Claude** — only the ones you add your own API key for. When
   you use the chat assistant, “Fetch from link” or LCSC description translation,
   the relevant inventory data or product-page content is sent to that provider
@@ -80,7 +80,7 @@ politika, uygulamanın hangi verileri neden işlediğini açıklar.
 - **Envanterin:** uygulamada oluşturduğun parçalar, konumlar, adetler, stok
   hareketleri, projeler, etiketler, alınacaklar listesi ve ayarlar.
 - **Yapay zekâ anahtarları (isteğe bağlı):** Ayarlar'dan eklediğin API anahtarları
-  (Google Gemini, Groq, Z.ai, OpenRouter, Anthropic Claude) hesabında saklanır ve
+  (Google Gemini, Groq, OpenRouter, Anthropic Claude) hesabında saklanır ve
   yalnızca sen okuyabilirsin; her anahtar için günlük istek sayısı da tutulur (kullanım barı).
 - **Geri bildirim:** Ayarlar → Geri Bildirim'den gönderdiğin mesajlar.
 
@@ -100,7 +100,7 @@ Envanterini yalnızca sen ve davet kodunu bizzat verdiğin kişiler (salt-okunur
 - **E-posta gönderim hizmetleri (ör. Resend)** — kayıt doğrulama kodu, isteğe
   bağlı haftalık özet/yedek e-postası (yalnızca açarsan) ve geliştiriciye giden
   geri bildirim bildirimleri.
-- **Yapay zekâ sağlayıcıları: Google Gemini, Groq, Z.ai (Zhipu AI, Çin), OpenRouter,
+- **Yapay zekâ sağlayıcıları: Google Gemini, Groq, OpenRouter,
   Anthropic Claude** — yalnızca kendi API anahtarını eklediklerin.
   Sohbet asistanını, “Linkten çek”i ya da LCSC açıklama çevirisini kullandığında
   ilgili envanter verisi veya ürün sayfası içeriği senin anahtarınla o sağlayıcıya

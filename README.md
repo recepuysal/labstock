@@ -167,7 +167,7 @@ installed from a quiet in-app notification — no extra windows.
 
 ### Settings
 Interface language (English / Türkçe), dark/light theme, label (QR) appearance,
-AI keys with a daily usage bar (free Gemini, Groq, Z.ai and OpenRouter keys plus paid Claude — tried in order, a key whose free quota runs out is skipped), weekly backup email,
+AI keys with a daily usage bar (free Gemini, Groq and OpenRouter keys plus paid Claude — tried in order, a key whose free quota runs out is skipped), weekly backup email,
 import/export, viewer management and in-app feedback.
 
 <p align="center">

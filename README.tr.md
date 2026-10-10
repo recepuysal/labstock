@@ -169,7 +169,7 @@ bildirimle indirilip kurulur — hiçbir pencere açılmaz.
 
 ### Ayarlar
 Arayüz dili (Türkçe / English), koyu/açık tema, etiket (QR) görünümü, günlük kullanım barıyla yapay zekâ
-anahtarları (ücretsiz Gemini, Groq, Z.ai ve OpenRouter ile ücretli Claude — sırayla
+anahtarları (ücretsiz Gemini, Groq ve OpenRouter ile ücretli Claude — sırayla
 denenir, ücretsiz kotası dolan anahtar atlanır), haftalık yedek e-postası, içe/dışa
 aktarma, gözlemci yönetimi ve uygulama içinden geri bildirim.
 

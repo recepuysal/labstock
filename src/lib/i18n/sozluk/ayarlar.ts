@@ -85,7 +85,6 @@ const tr = {
     saglayiciNotu: {
       gemini: 'Günde ≈250 istek. Ücretsiz kotada Google verileri model eğitiminde kullanabilir.',
       groq: 'Günde ≈1.000 istek, çok hızlı. Kart gerekmez.',
-      zai: 'Zhipu AI (Çin) — GLM Flash modelleri kalıcı olarak ücretsiz, kart gerekmez. Günlük sınır yok, hız ≈1 istek/sn.',
       openrouter: 'Günde 50 istek (bir kez 10 $ yüklenirse 1.000). Sadece ücretsiz modeller kullanılır.',
       claude: 'Ücretli — Console\'dan kredi yüklemek gerekir. Listede en alta koyarsan sadece ücretsizler dolunca kullanılır.',
     },
@@ -97,7 +96,7 @@ const tr = {
       kotaDoldu: 'Kota doldu',
       hazir: 'Hazır',
       ucretliIstek: (istek: string) => `bugün ${istek} istek (ücretli)`,
-      bos: 'Henüz ücretsiz anahtar yok — aşağıdan Groq, Z.ai ya da OpenRouter ekleyerek başla.',
+      bos: 'Henüz ücretsiz anahtar yok — aşağıdan Groq ya da OpenRouter ekleyerek başla.',
       gocGerekli: 'Kullanım takibi için veritabanı güncellemesi gerekiyor (supabase/migrations/0005_ucretsiz_ai.sql).',
     },
     silOnay: 'Bu API anahtarını kaldırmak istediğine emin misin?',
@@ -333,7 +332,6 @@ const en: Sekil<typeof tr> = {
     saglayiciNotu: {
       gemini: '≈250 requests/day. On the free tier Google may use the data to train its models.',
       groq: '≈1,000 requests/day, very fast. No card needed.',
-      zai: 'Zhipu AI (China) — GLM Flash models are permanently free, no card needed. No daily cap, ≈1 request/second.',
       openrouter: '50 requests/day (1,000 after a one-time $10 top-up). Only free models are used.',
       claude: 'Paid — needs credits in the Console. Put it at the bottom so it is only used when the free ones run out.',
     },
@@ -345,7 +343,7 @@ const en: Sekil<typeof tr> = {
       kotaDoldu: 'Quota used up',
       hazir: 'Ready',
       ucretliIstek: (istek: string) => `${istek} requests today (paid)`,
-      bos: 'No free keys yet — start by adding Groq, Z.ai or OpenRouter below.',
+      bos: 'No free keys yet — start by adding Groq or OpenRouter below.',
       gocGerekli: 'Usage tracking needs a database update (supabase/migrations/0005_ucretsiz_ai.sql).',
     },
     silOnay: 'Are you sure you want to remove this API key?',

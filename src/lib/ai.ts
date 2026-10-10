@@ -1,5 +1,5 @@
 // Kullanıcının Ayarlar'dan eklediği tüm yapay zeka anahtarlarını (Gemini,
-// Claude, Groq, Z.ai (GLM), OpenRouter; birden fazla hesaptan) tek bir öncelik
+// Claude, Groq, OpenRouter; birden fazla hesaptan) tek bir öncelik
 // sırasıyla dener: bir anahtar/sağlayıcı çalışmazsa (kota dolu, anahtar
 // geçersiz, geçici yoğunluk vb.) otomatik olarak sıradakine geçilir. "Linkten
 // çek", LCSC açıklama çevirisi ve sohbet asistanı hepsi bu tek giriş noktasını
