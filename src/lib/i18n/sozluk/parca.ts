@@ -149,7 +149,7 @@ const tr = {
       `Bu bir Claude abonelik (Claude Code) token'ı, API anahtarı değil. console.anthropic.com → API Keys'ten "sk-ant-api03-" ile başlayan bir anahtar oluştur.`,
     claudeYoneticiAnahtari:
       `Bu bir yönetici (Admin) anahtarı; mesaj göndermek için kullanılamaz. console.anthropic.com → API Keys'ten "sk-ant-api03-" ile başlayan normal bir anahtar oluştur.`,
-    claudeBicimHatali: `Bu bir Claude API anahtarına benzemiyor — "sk-ant-api03-" ile başlamalı. Anahtarı eksiksiz kopyaladığından emin ol.`,
+    claudeBicimHatali: `Bu bir Claude API anahtarı değil — API anahtarları "sk-ant-api03-" ile başlar. console.anthropic.com → API Keys'ten yeni bir anahtar oluşturup tamamını kopyala.`,
     claudeGecersizAnahtar:
       `Anthropic bu anahtarı tanımadı (silinmiş, iptal edilmiş ya da eksik kopyalanmış olabilir). console.anthropic.com → API Keys'te anahtarın etkin olduğunu kontrol et ya da yeni bir anahtar oluşturup tamamını kopyala.`,
   },
@@ -314,7 +314,7 @@ const en: Sekil<typeof tr> = {
       `This is a Claude subscription (Claude Code) token, not an API key. Create a key starting with "sk-ant-api03-" at console.anthropic.com → API Keys.`,
     claudeYoneticiAnahtari:
       `This is an Admin key and cannot send messages. Create a regular key starting with "sk-ant-api03-" at console.anthropic.com → API Keys.`,
-    claudeBicimHatali: `This doesn't look like a Claude API key — it should start with "sk-ant-api03-". Make sure you copied the whole key.`,
+    claudeBicimHatali: `This is not a Claude API key — API keys start with "sk-ant-api03-". Create a new key at console.anthropic.com → API Keys and copy all of it.`,
     claudeGecersizAnahtar:
       `Anthropic didn't recognize this key (it may have been deleted, revoked or copied incompletely). Check that the key is active at console.anthropic.com → API Keys, or create a new one and copy all of it.`,
   },

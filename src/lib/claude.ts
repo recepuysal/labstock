@@ -119,7 +119,8 @@ function claudeAnahtarBicimHatasi(anahtar: string, dil: Dil): string | null {
   const s = sozluk(dil).parca.ai;
   if (anahtar.startsWith('sk-ant-oat')) return s.claudeAboneTokeni;
   if (anahtar.startsWith('sk-ant-admin')) return s.claudeYoneticiAnahtari;
-  if (!anahtar.startsWith('sk-ant-')) return s.claudeBicimHatali;
+  // API anahtarları sk-ant-api ile başlar; sk-ant-usr gibi diğer token türleri x-api-key ile çalışmaz
+  if (!anahtar.startsWith('sk-ant-api')) return s.claudeBicimHatali;
   return null;
 }
 
