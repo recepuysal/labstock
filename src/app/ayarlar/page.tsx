@@ -13,6 +13,7 @@ import { HaftalikYedekFormu } from '@/components/haftalik-yedek-formu';
 import { etiketAyarlariniAl } from '@/lib/etiket-sunucu';
 import { aiAnahtarlariGetir, bugunkuKullanimGetir, gunlukLimit, kullanimTakibiAktif } from '@/lib/ai-anahtarlari';
 import { DilSecici } from '@/components/dil-secici';
+import { yoneticiMi } from '@/lib/istatistik';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
 
@@ -65,6 +66,7 @@ export default async function AyarlarSayfasi() {
   const dil = await dilAl();
   const so = sozluk(dil);
   const s = so.ayarlar;
+  const yonetici = await yoneticiMi(supabase);
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
@@ -97,6 +99,20 @@ export default async function AyarlarSayfasi() {
           </Link>
           {s.sayfa.aciklamaSonra}
         </p>
+
+        {yonetici && (
+          <div className="kart" style={{ padding: 20, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div className="mn" style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 6 }}>
+                {s.istatistik.kartBaslik}
+              </div>
+              <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.istatistik.kartAciklama}</p>
+            </div>
+            <Link href="/ayarlar/istatistik" className="btn btn-birincil">
+              {s.istatistik.kartLink}
+            </Link>
+          </div>
+        )}
 
         <div className="kart" style={{ padding: 20 }}>
           <div
