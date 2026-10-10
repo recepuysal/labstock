@@ -145,6 +145,13 @@ const tr = {
     metinYok: 'Sayfadan okunabilir bir metin çıkarılamadı.',
     urunYok: 'Sayfadan ürün bilgisi çıkarılamadı.',
     bilinmeyenHata: 'bilinmeyen hata',
+    claudeAboneTokeni:
+      `Bu bir Claude abonelik (Claude Code) token'ı, API anahtarı değil. console.anthropic.com → API Keys'ten "sk-ant-api03-" ile başlayan bir anahtar oluştur.`,
+    claudeYoneticiAnahtari:
+      `Bu bir yönetici (Admin) anahtarı; mesaj göndermek için kullanılamaz. console.anthropic.com → API Keys'ten "sk-ant-api03-" ile başlayan normal bir anahtar oluştur.`,
+    claudeBicimHatali: `Bu bir Claude API anahtarına benzemiyor — "sk-ant-api03-" ile başlamalı. Anahtarı eksiksiz kopyaladığından emin ol.`,
+    claudeGecersizAnahtar:
+      `Anthropic bu anahtarı tanımadı (silinmiş, iptal edilmiş ya da eksik kopyalanmış olabilir). console.anthropic.com → API Keys'te anahtarın etkin olduğunu kontrol et ya da yeni bir anahtar oluşturup tamamını kopyala.`,
   },
 
   // lib/lcsc.ts, lib/direnc.ts, lib/robotistan.ts, lib/motorobit.ts, lib/urun-ld-json.ts
@@ -303,6 +310,13 @@ const en: Sekil<typeof tr> = {
     metinYok: 'Could not extract readable text from the page.',
     urunYok: 'Could not extract product details from the page.',
     bilinmeyenHata: 'unknown error',
+    claudeAboneTokeni:
+      `This is a Claude subscription (Claude Code) token, not an API key. Create a key starting with "sk-ant-api03-" at console.anthropic.com → API Keys.`,
+    claudeYoneticiAnahtari:
+      `This is an Admin key and cannot send messages. Create a regular key starting with "sk-ant-api03-" at console.anthropic.com → API Keys.`,
+    claudeBicimHatali: `This doesn't look like a Claude API key — it should start with "sk-ant-api03-". Make sure you copied the whole key.`,
+    claudeGecersizAnahtar:
+      `Anthropic didn't recognize this key (it may have been deleted, revoked or copied incompletely). Check that the key is active at console.anthropic.com → API Keys, or create a new one and copy all of it.`,
   },
 
   tedarikci: {

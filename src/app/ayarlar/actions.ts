@@ -9,7 +9,7 @@ import type { EnvanterSatiri } from '@/lib/types';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
 import { geminiApiAnahtariniDogrula } from '@/lib/gemini';
-import { claudeApiAnahtariniDogrula } from '@/lib/claude';
+import { apiAnahtariniTemizle, claudeApiAnahtariniDogrula } from '@/lib/claude';
 import type { AiSaglayici } from '@/lib/ai-anahtarlari';
 import { dilAl, sozlukAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
@@ -277,7 +277,7 @@ export async function aiAnahtarEkle(_onceki: EylemDurum, formData: FormData): Pr
   const saglayici = String(formData.get('saglayici') ?? '') as AiSaglayici;
   if (saglayici !== 'gemini' && saglayici !== 'claude') return { hata: (await mesajlar()).gecersizSaglayici };
 
-  const anahtar = String(formData.get('api_anahtari') ?? '').trim();
+  const anahtar = apiAnahtariniTemizle(String(formData.get('api_anahtari') ?? ''));
   if (!anahtar) return { hata: (await mesajlar()).anahtarGir };
 
   const ad = String(formData.get('ad') ?? '').trim() || null;

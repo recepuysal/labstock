@@ -107,6 +107,22 @@ function htmlMetneDonustur(html: string): string {
     .slice(0, AZAMI_SAYFA_METNI);
 }
 
+/** Yapıştırılan anahtardaki boşluk, satır sonu, tırnak ve görünmez karakterleri
+ * (sıfır genişlikli boşluk, BOM vb.) temizler — kopyalarken araya girebiliyorlar
+ * ve Anthropic bu durumda sadece "invalid x-api-key" der. */
+export function apiAnahtariniTemizle(anahtar: string): string {
+  return anahtar.replace(/[\s\u200B-\u200D\u2060\uFEFF"'`]/g, '');
+}
+
+/** Anahtarın türünü istek atmadan tanır; yanlış türse kullanıcıya ne yapacağını söyleyen mesajı döner. */
+function claudeAnahtarBicimHatasi(anahtar: string, dil: Dil): string | null {
+  const s = sozluk(dil).parca.ai;
+  if (anahtar.startsWith('sk-ant-oat')) return s.claudeAboneTokeni;
+  if (anahtar.startsWith('sk-ant-admin')) return s.claudeYoneticiAnahtari;
+  if (!anahtar.startsWith('sk-ant-')) return s.claudeBicimHatali;
+  return null;
+}
+
 type ClaudeIstek = {
   model: string;
   max_tokens: number;
@@ -129,6 +145,8 @@ async function claudeCagir(apiKey: string, govde: ClaudeIstek): Promise<Response
 }
 
 async function claudeHataMesaji(yanit: Response, dil: Dil): Promise<string> {
+  // 401: anahtar geçersiz — Anthropic'in "invalid x-api-key" mesajı ne yapılacağını söylemiyor
+  if (yanit.status === 401) return sozluk(dil).parca.ai.claudeGecersizAnahtar;
   const govde = await yanit.text();
   try {
     const ayristirilmis = JSON.parse(govde);
@@ -186,6 +204,8 @@ export async function claudeApiAnahtariniDogrula(
   dil?: Dil,
 ): Promise<{ gecerli: boolean; hata?: string }> {
   const d = dil ?? (await dilAl());
+  const bicimHatasi = claudeAnahtarBicimHatasi(apiKey, d);
+  if (bicimHatasi) return { gecerli: false, hata: bicimHatasi };
   try {
     const sonuc = await claudeCagirYenidenDeneyerek(
       apiKey,
