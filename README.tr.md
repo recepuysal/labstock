@@ -52,6 +52,7 @@ sessizce günceller, elle bir şey yapman gerekmez.
 | 📊 **Excel içe/dışa aktarma** | 👥 **Gözlemci** — depoyu salt-okunur paylaş |
 | 🌙 **Koyu / açık tema** | 🔄 **Sessiz otomatik güncelleme** |
 | 🌍 **Türkçe ve İngilizce arayüz** | 🆓 **Ücretsiz** |
+| 🤖 **Ücretsiz yapay zekâ + günlük kullanım barı** — Gemini, Groq, OpenRouter | 🛒 **Microsoft Store** — yakında (sertifikasyonda) |
 
 ## Ekran görüntüleri
 
@@ -95,10 +96,10 @@ otomatik doldurulur; açıklama istersen Türkçeye çevrilir.
 Malzeme ekleme formuna bir ürün linki yapıştırıp **Linkten çek** dediğinde
 isim, üretici, açıklama, teknik özellikler, fiyat ve görsel otomatik dolar —
 kaydetmeden önce gözden geçirip düzeltebilirsin. Direnç.net, Robotistan ve
-Motorobit için yerleşik (ücretsiz, hızlı) destek var; Ayarlar'dan kendi
-ücretsiz [Google Gemini API anahtarını](https://aistudio.google.com/apikey)
-eklersen **herhangi bir satıcı sitesinde** de çalışır. Anahtar sadece kendi
-hesabında saklanır, kimseyle paylaşılmaz; kullanım kendi Google hesabındaki ücretsiz kotandan düşer.
+Motorobit için yerleşik (ücretsiz, hızlı) destek var; Ayarlar'dan ücretsiz
+bir yapay zekâ anahtarı eklersen (aşağıda [Ücretsiz yapay zekâ](#ücretsiz-yapay-zekâ-sağlayıcıları-ve-günlük-kullanım-barı))
+**herhangi bir satıcı sitesinde** de çalışır. Anahtarlar sadece kendi hesabında
+saklanır, kimseyle paylaşılmaz; kullanım kendi ücretsiz kotandan düşer.
 
 <p align="center">
   <img src="docs/screenshots/linkten-cek.png" alt="Direnç.net linkinden doldurulmuş parça formu" width="820">
@@ -116,6 +117,30 @@ ile temizlenir.
     <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/sohbet-asistani-koyu.png">
     <img src="docs/screenshots/sohbet-asistani.png" alt="Sohbet asistanı kondansatör sorusunu cevaplıyor" width="820">
   </picture>
+</p>
+
+### Ücretsiz yapay zekâ sağlayıcıları ve günlük kullanım barı
+Sohbet asistanı, "Linkten çek" ve LCSC açıklama çevirisi senin kendi yapay zekâ
+anahtarlarınla çalışır — ve bunlar için para ödemen gerekmez. **Ayarlar → Yapay
+zekâ API anahtarları**'ndan birden fazla ücretsiz sağlayıcının anahtarını ekle;
+LabStock onları senin sıranla dener, biri çalışmazsa otomatik olarak sıradakine
+geçer. Günlük ücretsiz kotası dolan anahtar o gün boyunca atlanır, hiçbir şey
+yarıda kalmaz.
+
+| Sağlayıcı | Ücretsiz kota | Kart gerekir mi? |
+|---|---|---|
+| [Groq](https://console.groq.com/keys) | Günde ≈1.000 istek, çok hızlı | Hayır |
+| [Google Gemini](https://aistudio.google.com/apikey) | Günde ≈250 istek | Hayır |
+| [OpenRouter](https://openrouter.ai/settings/keys) | Günde 50 istek (bir kez 10 $ yüklenirse 1.000) | Hayır |
+| [Anthropic Claude](https://console.anthropic.com/settings/keys) | Ücretli (kredi) — yedek olarak en alta koy | Evet |
+
+**Bugünkü ücretsiz kullanım** barı tüm ücretsiz anahtarlarının günlük kotasını
+toplar; ne kadarının kullanıldığını sağlayıcı renkleriyle, her anahtar için de
+küçük bir bar ve Hazır / Kota doldu durumuyla gösterir. Limitler mümkünse
+sağlayıcının kendi yanıtlarından okunur.
+
+<p align="center">
+  <img src="docs/screenshots/ai-kullanim.png" alt="Yapay zekâ anahtarları ve bugünkü ücretsiz kullanım barı" width="760">
 </p>
 
 ### Yazdırılabilir QR etiketler
@@ -182,6 +207,11 @@ aktarma, gözlemci yönetimi ve uygulama içinden geri bildirim.
 
 ## Kurulum (kullanıcı olarak)
 
+> **Microsoft Store:** LabStock Microsoft Store'a gönderildi ve sertifikasyonda.
+> Onaylanınca [apps.microsoft.com/detail/9PH7DGF3HXL4](https://apps.microsoft.com/detail/9PH7DGF3HXL4)
+> adresinden kurulabilecek — Microsoft tarafından imzalı (SmartScreen uyarısı yok) ve
+> güncellemeleri Store yapar.
+
 1. [Releases](https://github.com/recepuysal/labstock/releases/latest) sayfasından
    `LabStock-Kurulum.exe` dosyasını indir.
 2. Çalıştır, sihirbazı takip et (yönetici izni gerekmez, kendi kullanıcı klasörüne kurulur).
@@ -231,10 +261,10 @@ isteyenler için.
 2. **SQL Editor**'ü aç, `supabase/migrations/0001_init.sql` dosyasının tamamını
    yapıştır ve çalıştır. (Şema, RLS politikaları, `stok_hareket()`/gözlemci
    RPC'leri, `envanter` view'ı ve `handle_new_user()` tetikleyicisi bir kerede kurulur.)
-   Ardından `0002_gemini_api_key.sql`'i de aynı şekilde çalıştır — Ayarlar'daki
-   Gemini API anahtarı alanı için `profiles.gemini_api_key` sütununu ekler.
-   (Bu proje migration'ları CLI ile otomatik push etmiyor, her ikisi de elle
-   SQL Editor'de çalıştırılır.)
+   Ardından kalan dosyaları sırayla aynı şekilde çalıştır: `0002`–`0003` (yapay zekâ
+   anahtarları), `0004` (haftalık yedek e-postası), `0005`–`0006` (ücretsiz yapay zekâ
+   sağlayıcıları ve günlük kullanım sayacı). (Bu proje migration'ları CLI ile otomatik
+   push etmiyor, hepsi elle SQL Editor'de çalıştırılır.)
 3. **Authentication → Sign In / Providers → Email**: geliştirme sırasında
    "Confirm email" kapalıysa (varsayılan) kayıt olur olmaz giriş yapabilirsin —
    e-posta doğrulama akışını denemek istersen adım 4'e bak.
@@ -271,8 +301,9 @@ npm run dev
 ```bash
 npm run build:desktop          # Next.js'i derler ve electron-app/standalone'a kopyalar
 cd electron-app
-npm install
+npm ci                         # bağımlılıkları eksiksiz kur (ör. telefon kamerası için ws)
 npx electron-builder --win     # electron-app/dist/LabStock-Kurulum.exe üretir
+npx electron-builder --win appx --publish never   # Microsoft Store paketi (LabStock-Store.appx)
 ```
 
 `electron-app/main.js` uygulama açılışında bu standalone sunucuyu arka planda
@@ -285,6 +316,11 @@ npx electron-builder --win     # electron-app/dist/LabStock-Kurulum.exe üretir
 3. `.github/workflows/build-desktop.yml` GitHub'ın kendi sunucusunda otomatik
    derler ve `.exe` + `latest.yml`'i bir GitHub Release'e ekler.
 4. Kurulu olan uygulamalar bir sonraki açılışlarında bunu fark edip güncellenir.
+
+Microsoft Store sürümü ayrıca güncellenir: aynı commit'ten `LabStock-Store.appx`
+üretilip Partner Center'da yeni bir gönderim yapılır (bkz.
+[docs/microsoft-store.md](docs/microsoft-store.md)). Store sürümünde GitHub'dan
+otomatik güncelleme kapalıdır (`process.windowsStore`).
 
 `.github/workflows/keep-alive.yml` ayrıca haftada iki kez Supabase projesine
 hafif bir istek atar — ücretsiz plandaki projeler 7 gün hiç istek almazsa
@@ -334,6 +370,7 @@ Kritik tasarım kararı: **parça tanımı ile stok ayrı**.
 | `profiles` | Ad/telefon/şirket bilgisi, profil fotoğrafı, tema tercihi ve gözlemcilik alanları (`davet_kodu`, `gozlemci_of`, `gozlemci_baglandi`, `son_gorulme`). |
 | `feedback` | Ayarlar sayfasındaki geri bildirim formundan gelen mesajlar. |
 | `alinacaklar` | Envanterden bağımsız, hızlı bir alışveriş notu listesi (malzeme adı, adet, not, link). |
+| `ai_anahtarlari`, `ai_kullanim` | Kullanıcının yapay zekâ anahtarları (sağlayıcı, seçilen model, günlük limit) ve anahtar başına günlük kullanım. |
 
 Adet doğrudan yazılmaz: `stok_hareket()` RPC'si `stock_items.adet` güncellemesi ile
 hareket kaydını birlikte yapar.
@@ -371,10 +408,13 @@ kendi deposunu salt-okunur izlemesine izin verebilir:
 - Parça detay sayfası: parametreler, hareket geçmişi, konum haritası, tedarik bilgisi,
   kullanıldığı projeler, serbest etiketler, RoHS rozeti, parça görseli
 - Linkten otomatik malzeme ekleme: Direnç.net/Robotistan/Motorobit için yerleşik
-  destek, Ayarlar'dan eklenen ücretsiz bir Gemini API anahtarıyla herhangi bir
+  destek, Ayarlar'dan eklenen ücretsiz bir yapay zekâ anahtarıyla herhangi bir
   satıcı sitesi
 - Sohbet asistanı: gerçek envanterine dayanarak doğal dilde soru cevaplar,
-  yoksa alternatif önerir (aynı Gemini API anahtarını kullanır)
+  yoksa alternatif önerir
+- Yapay zekâ anahtarları: ücretsiz Gemini, Groq, OpenRouter ve ücretli Claude; sırayla
+  denenir, kotası dolan atlanır; Ayarlar'da günlük ücretsiz kullanım barı
+- Türkçe ve İngilizce arayüz (Ayarlar → Dil; ilk açılışta Windows diline göre)
 - Yazdırılabilir QR etiketler (tek parça + toplu konum), USB barkod okuyucu desteği
 - Excel/CSV toplu içe aktarma; Ayarlar'dan tüm envanteri `.xlsx` olarak dışa aktarma
 - Son Aktiviteler: depodaki tüm stok hareketlerinin tek sayfada listesi
@@ -384,6 +424,7 @@ kendi deposunu salt-okunur izlemesine izin verebilir:
   kontrolü, gözlemci davet kodu yönetimi, uygulama içi geri bildirim formu
 - Profil: kişisel/şirket bilgileri, profil fotoğrafı/şirket logosu yükleme, gözlemcilik bağlantısı
 - Gözlemci rolü: davet koduyla salt-okunur depo paylaşımı, sahip tarafından tek taraflı çıkarma
+- Microsoft Store paketi (MSIX); Store'a gönderildi, sertifikasyonda
 - Windows masaüstü uygulaması: Electron ile paketleme, GitHub Releases üzerinden
   sessiz otomatik güncelleme, Supabase projesini uyanık tutan zamanlanmış ping
 

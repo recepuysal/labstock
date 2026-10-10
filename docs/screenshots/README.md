@@ -22,5 +22,6 @@ README.tr.md Türkçe olanları kullanır). `-koyu` ekli dosyalar aynı ekranın
 | `aktiviteler.png` | Son aktiviteler |
 | `alinacaklar.png` | Alınacaklar listesi |
 | `ayarlar.png` | Ayarlar sayfası |
+| `ai-kullanim.png` | Ayarlar → yapay zekâ anahtarları ve bugünkü ücretsiz kullanım barı (anahtarların son haneleri maskelendi) |
 | `masaustu-guncelleme.png` | Masaüstü otomatik güncelleme bildirimi (örnek veriyle hazırlanmış mockup) |
 | `sosyal-onizleme-en.jpg` | 1280×640, ~100 KB — GitHub "Social preview" görseli (Settings → Social preview) |

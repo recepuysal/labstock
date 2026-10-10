@@ -55,6 +55,7 @@ nothing to maintain.
 | 📊 **Excel import / export** | 👥 **Viewers** — share your inventory read-only |
 | 🌙 **Dark / light theme** | 🔄 **Silent auto-update** |
 | 🌍 **English and Turkish interface** | 🆓 **Free** |
+| 🤖 **Free AI keys + daily usage bar** — Gemini, Groq, OpenRouter | 🛒 **Microsoft Store** — coming soon (in certification) |
 
 ## Screenshots
 
@@ -98,10 +99,10 @@ product photo automatically.
 Paste a product link into the “Add part” form and click **Fetch from link**: the
 name, manufacturer, description, specifications, price and image are filled in
 for you to review before saving. Direnç.net, Robotistan and Motorobit work out of
-the box (free and fast). Add your own free
-[Google Gemini API key](https://aistudio.google.com/apikey) in Settings and it
-works on **any shop's product page**. The key is stored only in your own account and is never
-shared; usage counts against your own free Google quota.
+the box (free and fast). Add a free AI key in Settings (see
+[Free AI providers](#free-ai-providers-and-daily-usage-bar) below) and it works on
+**any shop's product page**. Keys are stored only in your own account and are never
+shared; usage counts against your own free quota.
 
 ### Chat assistant
 Open **Chat** from the top bar and ask about your inventory in plain language —
@@ -116,6 +117,25 @@ interface.
     <img src="docs/screenshots/sohbet-asistani-en.png" alt="The chat assistant answering a capacitor question" width="820">
   </picture>
 </p>
+
+### Free AI providers and daily usage bar
+The chat assistant, “Fetch from link” and LCSC description translation run on
+your own AI keys — and you don't have to pay for them. Add keys from several free
+providers in **Settings → AI API keys**; LabStock tries them in your order and
+automatically moves on when one fails. A key whose daily free quota is used up is
+skipped for the rest of the day, so nothing stops working.
+
+| Provider | Free tier | Card needed |
+|---|---|---|
+| [Groq](https://console.groq.com/keys) | ≈1,000 requests/day, very fast | No |
+| [Google Gemini](https://aistudio.google.com/apikey) | ≈250 requests/day | No |
+| [OpenRouter](https://openrouter.ai/settings/keys) | 50 requests/day (1,000 after a one-time $10 top-up) | No |
+| [Anthropic Claude](https://console.anthropic.com/settings/keys) | Paid (credits) — put it last as a fallback | Yes |
+
+The **Today's free usage** bar adds up the daily quota of all your free keys and
+shows how much is used, colored per provider, with a small bar and a
+Ready / Quota used up status for each key. Limits are read from the provider's
+responses where available.
 
 ### Printable QR labels
 QR labels for every part and location, generated fully offline — print, cut,
@@ -178,6 +198,11 @@ import/export, viewer management and in-app feedback.
 </p>
 
 ## Installation
+
+> **Microsoft Store:** LabStock has been submitted to the Microsoft Store and is in
+> certification. Once it is approved it will be available at
+> [apps.microsoft.com/detail/9PH7DGF3HXL4](https://apps.microsoft.com/detail/9PH7DGF3HXL4)
+> — signed by Microsoft, so there is no SmartScreen warning, and updated by the Store.
 
 1. Download `LabStock-Kurulum.exe` from the
    [Releases](https://github.com/recepuysal/labstock/releases/latest) page.
@@ -249,8 +274,9 @@ Open `http://localhost:3000` and create an account at `/kayit`.
 ```bash
 npm run build:desktop          # Next.js standalone build, copied into electron-app/standalone
 cd electron-app
-npm install
+npm ci                         # install exact dependencies (e.g. ws for the phone camera)
 npx electron-builder --win     # produces electron-app/dist/LabStock-Kurulum.exe
+npx electron-builder --win appx --publish never   # Microsoft Store package (LabStock-Store.appx)
 ```
 
 `electron-app/main.js` starts the standalone server invisibly in the background
@@ -263,6 +289,11 @@ on launch and opens it in an Electron window when it's ready.
 3. `.github/workflows/build-desktop.yml` builds on GitHub's servers and attaches
    the `.exe` and `latest.yml` to a GitHub Release.
 4. Installed apps pick it up on their next launch.
+
+The Microsoft Store version is updated separately: build `LabStock-Store.appx`
+from the same commit and create a new submission in Partner Center (see
+[docs/microsoft-store.md](docs/microsoft-store.md)). Inside the Store build the
+GitHub auto-updater is disabled (`process.windowsStore`).
 
 `.github/workflows/keep-alive.yml` pings the Supabase project twice a week, so
 free-plan projects aren't paused after 7 days of inactivity.
@@ -277,6 +308,18 @@ components use `sozlukAl()` / `dilAl()` from `src/lib/i18n/sunucu.ts`; client
 components use `useSozluk()` / `useDil()` from `src/lib/i18n/istemci.tsx`.
 Category names are stored in Turkish and translated only for display
 (`src/lib/i18n/kategori.ts`).
+
+### AI providers
+
+`src/lib/ai.ts` is the single entry point for every AI feature: it tries the
+user's keys (`ai_anahtarlari`, ordered by `sira`) one by one, records each
+attempt in `ai_kullanim` via the `ai_kullanim_kaydet` RPC, and moves keys that
+hit their daily quota to the end of the list for the rest of the (UTC) day.
+Gemini and Claude have their own clients (`src/lib/gemini.ts`, `src/lib/claude.ts`);
+Groq and OpenRouter share an OpenAI-compatible client (`src/lib/openai-uyumlu.ts`).
+Model names change often, so no model is hard-coded for those two: one is chosen
+from the provider's `GET /models` list when the key is added (OpenRouter prefers
+its `openrouter/free` router) and re-chosen if it disappears.
 
 ### Data model
 
@@ -293,6 +336,7 @@ The key design decision: **part definitions and stock are separate.**
 | `profiles` | Name/company details, avatar, theme and viewer fields. |
 | `feedback` | Messages from the in-app feedback form. |
 | `alinacaklar` | The shopping list, separate from the inventory. |
+| `ai_anahtarlari`, `ai_kullanim` | Each user's AI keys (provider, chosen model, daily limit) and per-key daily usage. |
 
 Quantities are never written directly: the `stok_hareket()` RPC updates
 `stock_items.adet` and records the movement together.
