@@ -158,6 +158,31 @@ counts, put a coin next to the parts as a scale reference. All image processing
 runs on your computer; the server only runs while you have it open, and devices
 without the pairing key from the QR code can't connect.
 
+**How it looks in practice**
+
+1. **Pair** — open **Phone camera** in the bottom-left corner. The panel shows a
+   QR code and three short steps; scan it with the phone's camera and confirm the
+   one-time “connection is not private” prompt (the connection stays inside your
+   own network). The status pill switches from *Phone waiting* to *Phone connected*
+   and the live picture appears on the computer.
+
+<p align="center">
+  <img src="docs/screenshots/telefon-eslesme.png" alt="Pairing panel with QR code (blurred) and the live camera preview on the desktop" width="760">
+</p>
+
+2. **Camera** — the phone streams 1080p H.264 video at 30 fps with ~10 ms latency;
+   frame rate, bitrate and resolution are shown live.
+3. **Count** — switch to *Count*: every object is boxed and counted on the
+   computer (here: **3 pcs**). Show the part's QR label or search it by name, then
+   write the count to LabStock with one tap.
+4. **Settings** — choose the back or front camera, 720p / 1080p / 4K, H.264 video
+   or JPEG frames and the bitrate; the panel also shows codec, frame size and
+   dropped frames.
+
+<p align="center">
+  <img src="docs/screenshots/telefon-kamerasi.png" alt="Phone screens: live camera, count mode with 3 objects detected, camera settings" width="820">
+</p>
+
 ### Recent activity and shopping list
 Every stock movement — camera counts, Excel imports, manual changes — on one
 page. **To buy** is a simple shopping list with links, separate from the

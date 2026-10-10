@@ -22,6 +22,8 @@ README.tr.md Türkçe olanları kullanır). `-koyu` ekli dosyalar aynı ekranın
 | `aktiviteler.png` | Son aktiviteler |
 | `alinacaklar.png` | Alınacaklar listesi |
 | `ayarlar.png` | Ayarlar sayfası |
+| `telefon-eslesme.png` | Telefon kamerası: masaüstü eşleştirme paneli (QR bulanıklaştırıldı) ve canlı önizleme |
+| `telefon-kamerasi.png` | Telefon ekranları: canlı kamera, sayım modu (3 adet), kamera ayarları |
 | `ai-kullanim.png` | Ayarlar → yapay zekâ anahtarları ve bugünkü ücretsiz kullanım barı (anahtarların son haneleri maskelendi) |
 | `masaustu-guncelleme.png` | Masaüstü otomatik güncelleme bildirimi (örnek veriyle hazırlanmış mockup) |
 | `sosyal-onizleme-en.jpg` | 1280×640, ~100 KB — GitHub "Social preview" görseli (Settings → Social preview) |

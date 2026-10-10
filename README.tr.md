@@ -163,6 +163,29 @@ doldurulmuş yeni parça formu açılır. Daha doğru sayım için yanına bir m
 koyup ölçek al. Görüntü işleme tamamen bilgisayarında yapılır; sunucu sadece sen
 açınca çalışır ve QR'daki eşleşme anahtarı olmayan cihaz bağlanamaz.
 
+**Pratikte nasıl görünüyor**
+
+1. **Eşleştir** — sol alttaki **Telefon kamerası**'nı aç. Panelde bir QR kod ve üç
+   kısa adım çıkar; telefonun kamerasıyla okut ve bir kereye mahsus "bağlantı gizli
+   değil" uyarısını onayla (bağlantı kendi ağının içinde kalır). Durum düğmesi
+   *Telefon bekleniyor*'dan *Telefon bağlı*'ya döner, canlı görüntü bilgisayarda belirir.
+
+<p align="center">
+  <img src="docs/screenshots/telefon-eslesme.png" alt="QR kodlu eşleştirme paneli (QR bulanıklaştırıldı) ve masaüstündeki canlı kamera önizlemesi" width="760">
+</p>
+
+2. **Kamera** — telefon 30 fps'de, yaklaşık 10 ms gecikmeyle 1080p H.264 video
+   gönderir; kare hızı, bit hızı ve çözünürlük canlı olarak görünür.
+3. **Sayım** — *Sayım*'a geç: her nesne kutu içine alınıp bilgisayarda sayılır
+   (burada: **3 adet**). Parçanın QR etiketini göster ya da adıyla ara, sonra sayıyı
+   tek dokunuşla LabStock'a yaz.
+4. **Ayarlar** — arka/ön kamera, 720p / 1080p / 4K, H.264 video ya da JPEG kareler
+   ve bit hızı seçilir; panel kodlayıcıyı, kare boyutunu ve atlanan kareleri de gösterir.
+
+<p align="center">
+  <img src="docs/screenshots/telefon-kamerasi.png" alt="Telefon ekranları: canlı kamera, 3 nesnenin algılandığı sayım modu, kamera ayarları" width="820">
+</p>
+
 ### Son aktiviteler ve alınacaklar
 Depodaki her stok hareketi — kamera sayımları, Excel aktarımları, elle girişler —
 tek sayfada. **Alınacaklar** ise envanterden bağımsız, linkli bir alışveriş
