@@ -36,9 +36,9 @@
       "shortcutName": "LabStock v${version}"
     },
     "appx": {
-      "identityName": "PARTNER_CENTER_PACKAGE_IDENTITY_NAME",
-      "publisher": "CN=PARTNER-CENTER-PUBLISHER-ID",
-      "publisherDisplayName": "PARTNER_CENTER_PUBLISHER_DISPLAY_NAME",
+      "identityName": "RecepUYSAL.Labstock",
+      "publisher": "CN=3C87CFFB-1A96-4A81-B3B7-E96C5FE939A5",
+      "publisherDisplayName": "Recep UYSAL",
       "applicationId": "LabStock",
       "displayName": "LabStock",
       "backgroundColor": "transparent",
