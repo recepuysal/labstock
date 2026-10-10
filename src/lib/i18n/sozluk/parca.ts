@@ -146,10 +146,10 @@ const tr = {
     urunYok: 'Sayfadan ürün bilgisi çıkarılamadı.',
     bilinmeyenHata: 'bilinmeyen hata',
     claudeAboneTokeni:
-      `Bu bir Claude abonelik (Claude Code) token'ı, API anahtarı değil. console.anthropic.com → API Keys'ten "sk-ant-api03-" ile başlayan bir anahtar oluştur.`,
+      `Bu bir Claude abonelik (Claude Code) token'ı, API anahtarı değil. console.anthropic.com → API Keys'ten bir API anahtarı oluştur.`,
     claudeYoneticiAnahtari:
-      `Bu bir yönetici (Admin) anahtarı; mesaj göndermek için kullanılamaz. console.anthropic.com → API Keys'ten "sk-ant-api03-" ile başlayan normal bir anahtar oluştur.`,
-    claudeBicimHatali: `Bu bir Claude API anahtarı değil — API anahtarları "sk-ant-api03-" ile başlar. console.anthropic.com → API Keys'ten yeni bir anahtar oluşturup tamamını kopyala.`,
+      `Bu bir yönetici (Admin) anahtarı; mesaj göndermek için kullanılamaz. console.anthropic.com → API Keys'ten normal bir API anahtarı oluştur.`,
+    claudeBicimHatali: `Bu bir Claude API anahtarına benzemiyor — "sk-ant-" ile başlamalı. console.anthropic.com → API Keys'ten anahtarı oluştururken açılan pencereden tamamını kopyala.`,
     claudeGecersizAnahtar:
       `Anthropic bu anahtarı tanımadı (silinmiş, iptal edilmiş ya da eksik kopyalanmış olabilir). console.anthropic.com → API Keys'te anahtarın etkin olduğunu kontrol et ya da yeni bir anahtar oluşturup tamamını kopyala.`,
   },
@@ -311,10 +311,10 @@ const en: Sekil<typeof tr> = {
     urunYok: 'Could not extract product details from the page.',
     bilinmeyenHata: 'unknown error',
     claudeAboneTokeni:
-      `This is a Claude subscription (Claude Code) token, not an API key. Create a key starting with "sk-ant-api03-" at console.anthropic.com → API Keys.`,
+      `This is a Claude subscription (Claude Code) token, not an API key. Create an API key at console.anthropic.com → API Keys.`,
     claudeYoneticiAnahtari:
-      `This is an Admin key and cannot send messages. Create a regular key starting with "sk-ant-api03-" at console.anthropic.com → API Keys.`,
-    claudeBicimHatali: `This is not a Claude API key — API keys start with "sk-ant-api03-". Create a new key at console.anthropic.com → API Keys and copy all of it.`,
+      `This is an Admin key and cannot send messages. Create a regular API key at console.anthropic.com → API Keys.`,
+    claudeBicimHatali: `This doesn't look like a Claude API key — it should start with "sk-ant-". Copy the whole key from the window shown when you create it at console.anthropic.com → API Keys.`,
     claudeGecersizAnahtar:
       `Anthropic didn't recognize this key (it may have been deleted, revoked or copied incompletely). Check that the key is active at console.anthropic.com → API Keys, or create a new one and copy all of it.`,
   },
