@@ -138,7 +138,12 @@ function yerelDeger(v: unknown) {
 export async function buluttanYerele(bulut: SupabaseClient, kullaniciId: string) {
   const veri = await bulutVerisiniOku(bulut, kullaniciId);
   for (const p of veri.parts) p.resim_url = await resmiIndir(p.resim_url);
-  for (const p of veri.profiles) p.resim_url = await resmiIndir(p.resim_url);
+  for (const p of veri.profiles) {
+    p.resim_url = await resmiIndir(p.resim_url);
+    // İzlenen (gözlemcisi olunan) hesabın verisi yerele kopyalanmaz.
+    p.gozlemci_of = null;
+    p.gozlemci_baglandi = null;
+  }
 
   const db = yerelVeritabani();
   db.exec('pragma foreign_keys = off');

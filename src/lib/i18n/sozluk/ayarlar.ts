@@ -282,7 +282,7 @@ const tr = {
     kopyalaniyor: 'Veriler kopyalanıyor…',
     bulutaDonBaslik: 'Buluta dönülsün mü?',
     bulutaDonAciklama:
-      'Hesabınla giriş yapman istenecek. Ardından çevrimdışıyken kaydettiğin verileri hesabına yükleyip yüklemeyeceğin sorulacak.',
+      'Hesabınla giriş yapman istenecek. Ardından çevrimdışıyken kaydettiğin verileri hesabına ekleyip eklemeyeceğin sorulacak; buluttaki verilerin silinmez.',
     bulutaDon: 'Buluta dön',
     yuklemeBaslik: 'Çevrimdışı verilerin hesabına eklensin mi?',
     yuklemeAciklama: (tarih: string | null) =>
@@ -302,7 +302,7 @@ const tr = {
     hata: (m: string) => `İşlem tamamlanamadı: ${m}`,
     oturumGerekli: 'Buluttaki verileri kopyalamak için giriş yapmış olmalısın.',
     banner: 'Çevrimdışı modda kaydedilmiş verilerin var.',
-    bannerLink: 'Hesabına yükle',
+    bannerLink: 'Hesabına ekle',
     hesapsizKullan: 'Hesapsız kullan (çevrimdışı)',
     hesapsizAciklama: 'Veriler yalnızca bu bilgisayarda tutulur, hesap gerekmez.',
     rozet: 'Çevrimdışı',
@@ -612,7 +612,7 @@ const en: Sekil<typeof tr> = {
     kopyalaniyor: 'Copying data…',
     bulutaDonBaslik: 'Go back to the cloud?',
     bulutaDonAciklama:
-      'You will be asked to sign in. Then you can choose whether to upload the data you saved while offline to your account.',
+      'You will be asked to sign in. Then you can choose whether to add the data you saved while offline to your account; your cloud data is not deleted.',
     bulutaDon: 'Go back to the cloud',
     yuklemeBaslik: 'Add your offline data to your account?',
     yuklemeAciklama: (tarih: string | null) =>
@@ -632,7 +632,7 @@ const en: Sekil<typeof tr> = {
     hata: (m: string) => `Could not complete: ${m}`,
     oturumGerekli: 'You need to be signed in to copy your cloud data.',
     banner: 'You have data saved in offline mode.',
-    bannerLink: 'Upload to your account',
+    bannerLink: 'Add to your account',
     hesapsizKullan: 'Use without an account (offline)',
     hesapsizAciklama: 'Data is kept only on this computer; no account needed.',
     rozet: 'Offline',
