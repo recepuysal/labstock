@@ -3,9 +3,9 @@
 // buluttanYerele: hesabın tüm verisini bu bilgisayara kopyalar (yerel veritabanı
 //   sıfırlanır). Bulut tarafına dokunmaz. Bulutta yüklü resimler de indirilir ki
 //   çevrimdışıyken görünsün.
-// yereldenBuluta: Ayarlar'da "yerel verileri hesabıma yükle" onaylanınca —
-//   buluttaki veriler yerel verilerle DEĞİŞTİRİLİR (birleştirme yok). Önce
-//   buluttaki verilerin tam bir JSON yedeği veri klasörüne yazılır.
+// bulutaBirlestir: Ayarlar'da "yerel verileri hesabıma ekle" onaylanınca (ya da
+//   bir bulut yedeği geri eklenirken) — veriler buluttakilerin ÜSTÜNE eklenir,
+//   buluttaki hiçbir kayıt silinmez. Önce buluttaki verinin JSON yedeği alınır.
 //
 // Ortak parça kataloğu (parts) herkesindir: yüklerken buluttaki kayıtlar silinmez,
 // yerel parça bulutta varsa (aynı kimlik ya da aynı MPN + üretici) ona bağlanır,
@@ -165,7 +165,7 @@ export async function buluttanYerele(bulut: SupabaseClient, kullaniciId: string)
   return { parca: veri.stock_items.length, hareket: veri.stock_movements.length };
 }
 
-// ------------------------------------------------------- yerelden buluta
+// ------------------------------------------------------- buluta birleştir
 
 function yerelTablo(tablo: string): Satir[] {
   const satirlar = yerelVeritabani().prepare(`select * from "${tablo}"`).all() as Satir[];
@@ -192,6 +192,19 @@ export function yerelVeriVarMi(): boolean {
   return Number(r.n) > 0;
 }
 
+/** En büyük yerel hareket kimliği. Buluttan kopyalandığı andaki değeri eşik
+ * olarak saklanır: bundan büyük kimlikli hareketler çevrimdışıyken yapılmıştır. */
+export function sonYerelHareketId(): number {
+  const r = yerelVeritabani().prepare('select coalesce(max(id), 0) as n from stock_movements').get() as { n: number | bigint };
+  return Number(r.n);
+}
+
+export function yerelVeriKumesi(): BulutVerisi {
+  return Object.fromEntries(TABLOLAR.map((t) => [t, yerelTablo(t)])) as BulutVerisi;
+}
+
+export type BirlesimOzeti = { yeniKalem: number; islenenHareket: number; yeniKonum: number; diger: number; uyarilar: string[] };
+
 async function ekle(bulut: SupabaseClient, tablo: string, satirlar: Satir[]) {
   for (const grup of parcala(satirlar, 500)) {
     const { error } = await bulut.from(tablo).insert(grup);
@@ -199,99 +212,235 @@ async function ekle(bulut: SupabaseClient, tablo: string, satirlar: Satir[]) {
   }
 }
 
-/** Bulut verilerini yerel verilerle değiştirir. Dönüş: alınan yedeğin yolu. */
-export async function yereldenBuluta(bulut: SupabaseClient, bulutKullanici: string, yerelSahip: string): Promise<string> {
-  // 1) Buluttaki mevcut verinin yedeği — bir şey ters giderse elde dursun.
-  const yedek = await bulutVerisiniOku(bulut, bulutKullanici);
-  const yedekDizini = path.join(veriDizini(), 'yedekler');
-  fs.mkdirSync(yedekDizini, { recursive: true });
-  const yedekYolu = path.join(yedekDizini, `bulut-yedegi-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-  fs.writeFileSync(yedekYolu, JSON.stringify(yedek));
+const kucuk = (v: unknown) => String(v ?? '').toLocaleLowerCase('tr');
 
-  // 2) Yerel veri; sahip kimliği bulut hesabına çevrilir.
-  const sahip = (v: unknown) => (v === yerelSahip ? bulutKullanici : v);
-  const oku = (tablo: string) =>
-    yerelTablo(tablo).map((s) => {
-      for (const k of ['user_id', 'olusturan']) if (k in s) s[k] = sahip(s[k]);
-      return s;
-    });
-  const parts = oku('parts');
-  const locations = oku('locations');
-  const projects = oku('projects');
-  const stock_items = oku('stock_items');
-  const stock_movements = oku('stock_movements');
-  const project_bom = oku('project_bom');
-  const tags = oku('tags');
-  const stock_item_tags = oku('stock_item_tags');
-  const alinacaklar = oku('alinacaklar');
-  const ai_anahtarlari = oku('ai_anahtarlari');
-  const ai_kullanim = oku('ai_kullanim');
-  const profil = oku('profiles').find((p) => p.id === yerelSahip || p.id === bulutKullanici);
+/**
+ * Bir veri kümesini (yerel veriler ya da bir bulut yedeği) hesabın bulut verisine
+ * EKLER — buluttaki hiçbir kayıt silinmez.
+ *  - Bulutta zaten olan stok kalemi: `hareketEsigi`nden sonraki hareketler
+ *    stok_hareket ile +/− olarak işlenir; başka bir cihazda yapılan
+ *    değişiklikler kaybolmaz.
+ *  - Bulutta olmayan kayıtlar eklenir; aynı kodlu konum / aynı adlı etiket /
+ *    aynı MPN+üreticili parça varsa yenisi açılmaz, olana bağlanır.
+ */
+export async function bulutaBirlestir(
+  bulut: SupabaseClient,
+  bulutKullanici: string,
+  kume: BulutVerisi,
+  secenek: { eskiSahip: string; hareketEsigi: number; alanlariGuncelle: boolean },
+): Promise<BirlesimOzeti> {
+  const ozet: BirlesimOzeti = { yeniKalem: 0, islenenHareket: 0, yeniKonum: 0, diger: 0, uyarilar: [] };
+  const sahip = (v: unknown) => (v === secenek.eskiSahip ? bulutKullanici : v);
+  const kendi = (tablo: string) => tumu(() => bulut.from(tablo).select('*').eq('user_id', bulutKullanici));
+  const [bLocations, bProjects, bTags, bItems, bAlinacak, bAi, bProfil] = await Promise.all([
+    kendi('locations'),
+    kendi('projects'),
+    kendi('tags'),
+    kendi('stock_items'),
+    kendi('alinacaklar'),
+    kendi('ai_anahtarlari'),
+    tumu(() => bulut.from('profiles').select('*').eq('id', bulutKullanici)),
+  ]);
 
-  // 3) Parçalar: bulutta varsa ona bağla, yoksa ekle.
-  const parcaEsleme = new Map<string, string>();
-  const kullanilan = new Set([...stock_items, ...project_bom].map((s) => s.part_id as string));
-  for (const p of parts.filter((p) => kullanilan.has(p.id as string))) {
+  // --- parçalar (ortak katalog)
+  const parcaEs = new Map<string, string>();
+  const kullanilan = new Set([...kume.stock_items, ...kume.project_bom].map((s) => s.part_id as string));
+  for (const p of kume.parts.filter((p) => kullanilan.has(p.id as string))) {
     const { data: ayni } = await bulut.from('parts').select('id').eq('id', p.id as string).maybeSingle();
     if (ayni) {
-      parcaEsleme.set(p.id as string, p.id as string);
+      parcaEs.set(p.id as string, p.id as string);
       continue;
     }
-    let ara = bulut.from('parts').select('id').ilike('mpn', String(p.mpn).replace(/[%_\\]/g, '\\$&'));
-    ara = p.uretici ? ara.ilike('uretici', String(p.uretici).replace(/[%_\\]/g, '\\$&')) : ara.is('uretici', null);
+    const kacis = (v: unknown) => String(v).replace(/[%_\\]/g, '\\$&');
+    let ara = bulut.from('parts').select('id').ilike('mpn', kacis(p.mpn));
+    ara = p.uretici ? ara.ilike('uretici', kacis(p.uretici)) : ara.is('uretici', null);
     const { data: benzer } = await ara.limit(1).maybeSingle();
     if (benzer) {
-      parcaEsleme.set(p.id as string, (benzer as Satir).id as string);
+      parcaEs.set(p.id as string, (benzer as Satir).id as string);
       continue;
     }
-    const yeni = { ...p, olusturan: bulutKullanici, resim_url: await resmiYukle(bulut, p.resim_url, yerelSahip, bulutKullanici) };
+    const yeni = { ...p, olusturan: bulutKullanici, resim_url: await resmiYukle(bulut, p.resim_url, secenek.eskiSahip, bulutKullanici) };
     const { error } = await bulut.from('parts').insert(yeni);
     if (error) throw new Error(`parts: ${error.message}`);
-    parcaEsleme.set(p.id as string, p.id as string);
+    parcaEs.set(p.id as string, p.id as string);
   }
-  const parca = (id: unknown) => parcaEsleme.get(id as string) ?? id;
+  const parca = (id: unknown) => parcaEs.get(id as string) ?? (id as string);
 
-  // 4) Hesabın bulut verisini sil (stok kalemleriyle hareketleri ve etiket
-  //    bağlantıları da gider; yapay zekâ anahtarıyla kullanım kayıtları da).
-  for (const tablo of ['stock_items', 'project_bom', 'projects', 'tags', 'locations', 'alinacaklar', 'ai_anahtarlari']) {
-    const { error } = await bulut.from(tablo).delete().eq('user_id', bulutKullanici);
-    if (error) throw new Error(`${tablo} silinemedi: ${error.message}. Yedek: ${yedekYolu}`);
-  }
-
-  // 5) Yerel veriyi yükle. Konumlar üstten alta sıralı (üst konum önce).
-  const sirali: Satir[] = [];
-  const eklenen = new Set<string>();
-  let kalan = [...locations];
+  // --- konumlar: aynı kimlik ya da aynı kod → olan; yoksa ekle (üst konum önce)
+  const konumEs = new Map<string, string>();
+  const bKonumId = new Set(bLocations.map((l) => l.id as string));
+  const bKonumKod = new Map(bLocations.filter((l) => l.kod).map((l) => [kucuk(l.kod), l.id as string]));
+  let kalan = [...kume.locations];
   while (kalan.length) {
-    const hazir = kalan.filter((l) => !l.parent_id || eklenen.has(l.parent_id as string));
-    if (!hazir.length) {
-      sirali.push(...kalan.map((l) => ({ ...l, parent_id: null })));
-      break;
+    const hazir = kalan.filter(
+      (l) => !l.parent_id || konumEs.has(l.parent_id as string) || !kume.locations.some((x) => x.id === l.parent_id),
+    );
+    const sira = hazir.length ? hazir : kalan;
+    for (const l of sira) {
+      const id = l.id as string;
+      if (bKonumId.has(id)) konumEs.set(id, id);
+      else if (l.kod && bKonumKod.has(kucuk(l.kod))) konumEs.set(id, bKonumKod.get(kucuk(l.kod))!);
+      else {
+        const ust = l.parent_id ? (konumEs.get(l.parent_id as string) ?? null) : null;
+        await ekle(bulut, 'locations', [{ ...l, user_id: bulutKullanici, parent_id: ust }]);
+        konumEs.set(id, id);
+        ozet.yeniKonum++;
+      }
     }
-    hazir.forEach((l) => eklenen.add(l.id as string));
-    sirali.push(...hazir);
-    kalan = kalan.filter((l) => !eklenen.has(l.id as string));
+    const bitti = new Set(sira.map((l) => l.id));
+    kalan = kalan.filter((l) => !bitti.has(l.id));
   }
-  try {
-    await ekle(bulut, 'locations', sirali);
-    await ekle(bulut, 'projects', projects);
-    await ekle(bulut, 'tags', tags);
-    await ekle(bulut, 'stock_items', stock_items.map((s) => ({ ...s, part_id: parca(s.part_id) })));
-    // Bulutta hareket kimliği veritabanınca üretilir.
-    await ekle(bulut, 'stock_movements', stock_movements.map(({ id: _id, ...s }) => s));
-    await ekle(bulut, 'project_bom', project_bom.map((s) => ({ ...s, part_id: parca(s.part_id) })));
-    await ekle(bulut, 'stock_item_tags', stock_item_tags);
-    await ekle(bulut, 'alinacaklar', alinacaklar);
-    await ekle(bulut, 'ai_anahtarlari', ai_anahtarlari);
-    await ekle(bulut, 'ai_kullanim', ai_kullanim);
-    if (profil) {
-      const { ad, telefon, sirket_adi, sirket_adresi } = profil;
-      const resim_url = await resmiYukle(bulut, profil.resim_url, yerelSahip, bulutKullanici);
-      const { error } = await bulut.from('profiles').update({ ad, telefon, sirket_adi, sirket_adresi, resim_url }).eq('id', bulutKullanici);
-      if (error) throw new Error(`profiles: ${error.message}`);
+  const konum = (id: unknown) => (id ? (konumEs.get(id as string) ?? null) : null);
+
+  // --- projeler ve etiketler
+  const bProjeId = new Set(bProjects.map((p) => p.id as string));
+  const yeniProjeler = kume.projects.filter((p) => !bProjeId.has(p.id as string));
+  await ekle(bulut, 'projects', yeniProjeler.map((p) => ({ ...p, user_id: bulutKullanici })));
+  ozet.diger += yeniProjeler.length;
+  const projeIdleri = new Set(kume.projects.map((p) => p.id as string));
+  const proje = (id: unknown) => (id && projeIdleri.has(id as string) ? (id as string) : null);
+
+  const etiketEs = new Map<string, string>();
+  const bEtiketAd = new Map(bTags.map((t) => [kucuk(t.ad), t.id as string]));
+  const bEtiketId = new Set(bTags.map((t) => t.id as string));
+  const yeniEtiketler: Satir[] = [];
+  for (const t of kume.tags) {
+    const id = t.id as string;
+    if (bEtiketId.has(id)) etiketEs.set(id, id);
+    else if (bEtiketAd.has(kucuk(t.ad))) etiketEs.set(id, bEtiketAd.get(kucuk(t.ad))!);
+    else {
+      yeniEtiketler.push({ ...t, user_id: bulutKullanici });
+      etiketEs.set(id, id);
     }
-  } catch (e) {
-    throw new Error(`${(e as Error).message}. Buluttaki eski verilerin yedeği: ${yedekYolu}`);
   }
-  return yedekYolu;
+  await ekle(bulut, 'tags', yeniEtiketler);
+  ozet.diger += yeniEtiketler.length;
+
+  // --- stok kalemleri ve hareketler
+  const kalemEs = new Map<string, string>();
+  const bKalemId = new Set(bItems.map((s) => s.id as string));
+  const bKalemAnahtar = new Map(bItems.map((s) => [`${s.part_id}|${s.location_id ?? ''}`, s.id as string]));
+  const hareketler = new Map<string, Satir[]>();
+  for (const h of [...kume.stock_movements].sort((a, b) => Number(a.id) - Number(b.id))) {
+    const liste = hareketler.get(h.stock_item_id as string) ?? [];
+    liste.push(h);
+    hareketler.set(h.stock_item_id as string, liste);
+  }
+  for (const s of kume.stock_items) {
+    const id = s.id as string;
+    const anahtar = `${parca(s.part_id)}|${konum(s.location_id) ?? ''}`;
+    const mevcut = bKalemId.has(id) ? id : bKalemAnahtar.get(anahtar);
+    const kendiHareketleri = hareketler.get(id) ?? [];
+    if (mevcut) {
+      kalemEs.set(id, mevcut);
+      // Bulutta olan kalem: sadece eşikten sonraki (çevrimdışı yapılan) hareketler.
+      for (const h of kendiHareketleri.filter((h) => Number(h.id) > secenek.hareketEsigi)) {
+        const { error } = await bulut.rpc('stok_hareket', {
+          p_stok_id: mevcut,
+          p_delta: h.delta,
+          p_sebep: h.sebep ?? 'manuel',
+          p_aciklama: h.aciklama ?? null,
+          p_proje_id: proje(h.proje_id),
+        });
+        if (error) ozet.uyarilar.push(error.message);
+        else ozet.islenenHareket++;
+      }
+      if (secenek.alanlariGuncelle) {
+        const { min_adet, birim, tedarikci, tedarikci_kodu, alis_fiyati, para_birimi, notlar } = s;
+        await bulut
+          .from('stock_items')
+          .update({ min_adet, birim, tedarikci, tedarikci_kodu, alis_fiyati, para_birimi, notlar })
+          .eq('id', mevcut);
+      }
+    } else {
+      // Bulutta olmayan kalem: adediyle ve hareket geçmişiyle birlikte eklenir.
+      await ekle(bulut, 'stock_items', [
+        { ...s, user_id: bulutKullanici, part_id: parca(s.part_id), location_id: konum(s.location_id) },
+      ]);
+      await ekle(
+        bulut,
+        'stock_movements',
+        kendiHareketleri.map(({ id: _id, ...h }) => ({ ...h, user_id: bulutKullanici, proje_id: proje(h.proje_id) })),
+      );
+      kalemEs.set(id, id);
+      ozet.yeniKalem++;
+    }
+  }
+
+  // --- bağlantılar (zaten varsa atlanır)
+  const etiketBag = kume.stock_item_tags
+    .filter((b) => kalemEs.has(b.stock_item_id as string) && etiketEs.has(b.tag_id as string))
+    .map((b) => ({ stock_item_id: kalemEs.get(b.stock_item_id as string), tag_id: etiketEs.get(b.tag_id as string) }));
+  for (const grup of parcala(etiketBag, 500)) {
+    const { error } = await bulut.from('stock_item_tags').upsert(grup, { onConflict: 'stock_item_id,tag_id', ignoreDuplicates: true });
+    if (error) throw new Error(`stock_item_tags: ${error.message}`);
+  }
+  const bom = kume.project_bom
+    .filter((b) => proje(b.proje_id))
+    .map(({ id: _id, ...b }) => ({ ...b, user_id: bulutKullanici, part_id: parca(b.part_id) }));
+  for (const grup of parcala(bom, 500)) {
+    const { error } = await bulut.from('project_bom').upsert(grup, { onConflict: 'proje_id,part_id', ignoreDuplicates: true });
+    if (error) throw new Error(`project_bom: ${error.message}`);
+  }
+
+  // --- alınacaklar ve yapay zekâ anahtarları (aynı kimlik / aynı anahtar varsa atla)
+  const bAlinacakId = new Set(bAlinacak.map((a) => a.id as string));
+  const yeniAlinacak = kume.alinacaklar
+    .filter((a) => !bAlinacakId.has(a.id as string))
+    .map((a) => ({ ...a, user_id: bulutKullanici, olusturan: sahip(a.olusturan) ?? bulutKullanici }));
+  await ekle(bulut, 'alinacaklar', yeniAlinacak);
+  const bAnahtar = new Set(bAi.map((a) => a.anahtar as string));
+  const bAiId = new Set(bAi.map((a) => a.id as string));
+  const yeniAi = kume.ai_anahtarlari.filter((a) => !bAiId.has(a.id as string) && !bAnahtar.has(a.anahtar as string));
+  await ekle(bulut, 'ai_anahtarlari', yeniAi.map((a) => ({ ...a, user_id: bulutKullanici })));
+  ozet.diger += yeniAlinacak.length + yeniAi.length;
+
+  // --- profil: sadece buluttakinde boş olan alanlar doldurulur
+  const yerelProfil = kume.profiles.find((p) => p.id === secenek.eskiSahip || p.id === bulutKullanici);
+  const bulutProfil = bProfil[0] ?? {};
+  if (yerelProfil) {
+    const guncelle: Satir = {};
+    for (const k of ['ad', 'telefon', 'sirket_adi', 'sirket_adresi']) if (!bulutProfil[k] && yerelProfil[k]) guncelle[k] = yerelProfil[k];
+    if (!bulutProfil.resim_url && yerelProfil.resim_url) {
+      guncelle.resim_url = await resmiYukle(bulut, yerelProfil.resim_url, secenek.eskiSahip, bulutKullanici);
+    }
+    if (Object.keys(guncelle).length) await bulut.from('profiles').update(guncelle).eq('id', bulutKullanici);
+  }
+  return ozet;
+}
+
+/** Birleştirme öncesi buluttaki verinin JSON yedeği. Dönüş: dosya yolu. */
+export async function bulutYedegiAl(bulut: SupabaseClient, kullaniciId: string): Promise<string> {
+  const yedek = await bulutVerisiniOku(bulut, kullaniciId);
+  const yedekDizini = path.join(veriDizini(), 'yedekler');
+  fs.mkdirSync(yedekDizini, { recursive: true });
+  const yol = path.join(yedekDizini, `bulut-yedegi-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+  fs.writeFileSync(yol, JSON.stringify(yedek));
+  return yol;
+}
+
+export function yedekleriListele(): { ad: string; tarih: string; kalem: number; sahip: string | null }[] {
+  const dizin = path.join(veriDizini(), 'yedekler');
+  if (!fs.existsSync(dizin)) return [];
+  return fs
+    .readdirSync(dizin)
+    .filter((d) => /^bulut-yedegi-[\w-]+\.json$/.test(d))
+    .map((ad) => {
+      const yol = path.join(dizin, ad);
+      let kalem = 0;
+      let sahip: string | null = null;
+      try {
+        const veri = JSON.parse(fs.readFileSync(yol, 'utf8')) as BulutVerisi;
+        kalem = veri.stock_items?.length ?? 0;
+        sahip = (veri.profiles?.[0]?.id as string | undefined) ?? null;
+      } catch {}
+      return { ad, tarih: fs.statSync(yol).mtime.toISOString(), kalem, sahip };
+    })
+    .sort((a, b) => b.tarih.localeCompare(a.tarih));
+}
+
+export function yedekOku(ad: string): BulutVerisi {
+  if (!/^bulut-yedegi-[\w-]+\.json$/.test(ad)) throw new Error('Geçersiz yedek adı');
+  const ham = JSON.parse(fs.readFileSync(path.join(veriDizini(), 'yedekler', ad), 'utf8')) as Partial<BulutVerisi>;
+  return Object.fromEntries(TABLOLAR.map((t) => [t, ham[t] ?? []])) as BulutVerisi;
 }

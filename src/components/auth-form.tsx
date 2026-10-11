@@ -235,7 +235,7 @@ export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Pro
               <label className="etiket" htmlFor="ad">
                 {s.ad}
               </label>
-              <input className="alan" id="ad" name="ad" autoComplete="name" placeholder="Recep" />
+              <input className="alan" id="ad" name="ad" autoComplete="name" placeholder={s.adIpucu} />
             </div>
           )}
 

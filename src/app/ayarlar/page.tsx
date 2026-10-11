@@ -19,6 +19,7 @@ import { sozluk, yerel } from '@/lib/i18n';
 import { VeriDepolamaKarti } from '@/components/veri-depolama-karti';
 import { ayarOku, yerelModDestekleniyor } from '@/lib/yerel/mod';
 import { veritabaniYolu } from '@/lib/yerel/veritabani';
+import { yedekleriListele } from '@/lib/yerel/aktarim';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,13 @@ export default async function AyarlarSayfasi() {
   const yonetici = await yoneticiMi(supabase);
   const depolama = ayarOku();
   const cevrimdisi = yerelModDestekleniyor() && depolama.mod === 'yerel';
+  // Sadece bu hesaba ait bulut yedekleri (en yeni 5).
+  const yedekler = cevrimdisi
+    ? []
+    : yedekleriListele()
+        .filter((y) => y.sahip === user.id)
+        .slice(0, 5)
+        .map((y) => ({ ad: y.ad, etiket: s.depolama.yedekSatir(new Date(y.tarih).toLocaleString(yerel(dil), { dateStyle: 'short', timeStyle: 'short' }), y.kalem) }));
   const sonDegisiklik = depolama.sonDegisiklik
     ? new Date(depolama.sonDegisiklik).toLocaleString(yerel(dil), { dateStyle: 'short', timeStyle: 'short' })
     : null;
@@ -151,6 +159,7 @@ export default async function AyarlarSayfasi() {
             dosyaYolu={veritabaniYolu()}
             yuklemeBekliyor={Boolean(depolama.yuklemeBekliyor)}
             sonDegisiklik={sonDegisiklik}
+            yedekler={yedekler}
           />
         )}
 

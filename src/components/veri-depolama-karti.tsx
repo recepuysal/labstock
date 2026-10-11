@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { bulutaDon, cevrimdisiModaGec, yerelVerileriYukle, yuklemeyiAtla } from '@/app/ayarlar/depolama-actions';
+import { bulutaDon, cevrimdisiModaGec, yedektenGeriEkle, yerelVerileriYukle, yuklemeyiAtla } from '@/app/ayarlar/depolama-actions';
 import { useSozluk } from '@/lib/i18n/istemci';
 
 /** Ayarlar → Veri depolama: bulut (varsayılan) ↔ çevrimdışı mod anahtarı. */
@@ -10,12 +10,15 @@ export function VeriDepolamaKarti({
   dosyaYolu,
   yuklemeBekliyor,
   sonDegisiklik,
+  yedekler,
 }: {
   mod: 'bulut' | 'yerel';
   dosyaYolu: string;
   yuklemeBekliyor: boolean;
   /** Önceden biçimlendirilmiş tarih (sunucuda, aktif dilde). */
   sonDegisiklik: string | null;
+  /** Bu hesaba ait önceki bulut yedekleri (etiket sunucuda hazırlanır). */
+  yedekler: { ad: string; etiket: string }[];
 }) {
   const s = useSozluk().ayarlar.depolama;
   const [onay, setOnay] = useState(false);
@@ -110,6 +113,32 @@ export function VeriDepolamaKarti({
             </button>
           </div>
         </div>
+      )}
+
+      {bulutta && yedekler.length > 0 && (
+        <details style={{ borderTop: '1px solid var(--line)', marginTop: 14, paddingTop: 12 }}>
+          <summary style={{ cursor: 'pointer', fontSize: 12.5, color: 'var(--muted)' }}>{s.yedekBaslik}</summary>
+          <p style={{ margin: '8px 0 10px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>{s.yedekAciklama}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {yedekler.map((y) => (
+              <div key={y.ad} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 12.5 }}>
+                <span className="mn" style={{ fontSize: 11.5 }}>{y.etiket}</span>
+                <button
+                  className="btn"
+                  type="button"
+                  disabled={bekliyor}
+                  style={{ height: 28, fontSize: 12 }}
+                  onClick={() => {
+                    setMesaj({});
+                    baslat(async () => setMesaj(await yedektenGeriEkle(y.ad)));
+                  }}
+                >
+                  {s.geriEkle}
+                </button>
+              </div>
+            ))}
+          </div>
+        </details>
       )}
 
       {mesaj.hata && (

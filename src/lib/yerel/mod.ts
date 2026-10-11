@@ -23,6 +23,9 @@ export type YerelAyar = {
   yuklemeBekliyor?: boolean;
   /** Yerel veriler en son ne zaman değişti (geri dönüşte gösterilir). */
   sonDegisiklik?: string;
+  /** Buluttan kopyalandığı (ya da buluta eklendiği) andaki en büyük yerel hareket
+   * kimliği; bundan sonraki hareketler buluta +/− olarak işlenir. */
+  hareketEsigi?: number;
 };
 
 const AYAR_DOSYASI = 'depolama.json';
