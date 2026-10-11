@@ -27,6 +27,8 @@
   ·
   <a href="#linux">⬇ Linux (AppImage / .deb)</a>
   ·
+  <a href="https://labstock.com.tr">🌐 labstock.com.tr</a>
+  ·
   <a href="#ekran-görüntüleri">Ekran görüntüleri</a>
   ·
   <a href="#geri-bildirim--iletişim">Geri bildirim</a>
