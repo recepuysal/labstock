@@ -11,14 +11,18 @@ export async function UstBar({
   saltOkunur,
   gozlemciOf,
   izlenenAdi,
+  cevrimdisi,
 }: {
   bas?: string;
   resimUrl?: string | null;
   saltOkunur?: boolean;
   gozlemciOf?: string | null;
   izlenenAdi?: string | null;
+  /** Çevrimdışı moddaysa ayarlara giden küçük bir rozet gösterilir. */
+  cevrimdisi?: boolean;
 }) {
-  const s = (await sozlukAl()).ortak;
+  const so = await sozlukAl();
+  const s = so.ortak;
   return (
     <header
       style={{
@@ -100,6 +104,27 @@ export async function UstBar({
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       </Link>
+
+      {cevrimdisi && (
+        <Link
+          href="/ayarlar#depolama"
+          title={so.ayarlar.depolama.cevrimdisiAciklama}
+          className="mn"
+          style={{
+            flexShrink: 0,
+            fontSize: 10.5,
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            padding: '3px 8px',
+            borderRadius: 99,
+            border: '1px solid var(--line)',
+            color: 'var(--muted)',
+            textDecoration: 'none',
+          }}
+        >
+          {so.ayarlar.depolama.rozet}
+        </Link>
+      )}
 
       <Link
         href="/ayarlar/profil"

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ProfilFormu } from '@/components/profil-formu';
 import { ProfilResmiFormu } from '@/components/profil-resmi-formu';
 import { cikisYap } from '@/app/auth-actions';
+import { yerelModda } from '@/lib/yerel/mod';
 import { basHarfleri } from '@/lib/types';
 import { GozlemcilikKarti } from '@/components/gozlemcilik-karti';
 import { sozlukAl } from '@/lib/i18n/sunucu';
@@ -78,13 +79,17 @@ export default async function ProfilSayfasi() {
           }}
         />
 
-        <GozlemcilikKarti hedefAdi={hedefAdi} />
+        {!yerelModda() && (
+          <>
+            <GozlemcilikKarti hedefAdi={hedefAdi} />
 
-        <form action={cikisYap} style={{ marginTop: 16 }}>
-          <button type="submit" className="btn" style={{ width: '100%' }}>
-            {s.cikisYap}
-          </button>
-        </form>
+            <form action={cikisYap} style={{ marginTop: 16 }}>
+              <button type="submit" className="btn" style={{ width: '100%' }}>
+                {s.cikisYap}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </main>
   );

@@ -34,6 +34,8 @@ function sunucuyuBaslat() {
       PORT: String(PORT),
       HOSTNAME: '127.0.0.1',
       NODE_ENV: 'production',
+      // Çevrimdışı mod (Ayarlar → Veri depolama): SQLite dosyası ve mod tercihi burada.
+      LABSTOCK_VERI_DIZINI: app.getPath('userData'),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

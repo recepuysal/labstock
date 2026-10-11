@@ -16,6 +16,9 @@ import { DilSecici } from '@/components/dil-secici';
 import { yoneticiMi } from '@/lib/istatistik';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
+import { VeriDepolamaKarti } from '@/components/veri-depolama-karti';
+import { ayarOku, yerelModDestekleniyor } from '@/lib/yerel/mod';
+import { veritabaniYolu } from '@/lib/yerel/veritabani';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +70,11 @@ export default async function AyarlarSayfasi() {
   const so = sozluk(dil);
   const s = so.ayarlar;
   const yonetici = await yoneticiMi(supabase);
+  const depolama = ayarOku();
+  const cevrimdisi = yerelModDestekleniyor() && depolama.mod === 'yerel';
+  const sonDegisiklik = depolama.sonDegisiklik
+    ? new Date(depolama.sonDegisiklik).toLocaleString(yerel(dil), { dateStyle: 'short', timeStyle: 'short' })
+    : null;
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
@@ -137,17 +145,29 @@ export default async function AyarlarSayfasi() {
           <TemaAnahtari />
         </div>
 
+        {yerelModDestekleniyor() && (
+          <VeriDepolamaKarti
+            mod={cevrimdisi ? 'yerel' : 'bulut'}
+            dosyaYolu={veritabaniYolu()}
+            yuklemeBekliyor={Boolean(depolama.yuklemeBekliyor)}
+            sonDegisiklik={sonDegisiklik}
+          />
+        )}
+
         <EtiketAyarlariFormu baslangic={etiketAyarlari} />
 
-        <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />
+        {/* Gözlemci ve haftalık yedek e-postası bulut hesabına bağlı. */}
+        {!cevrimdisi && <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} gozlemciler={gozlemciler} />}
 
         <AiAnahtarlariKarti anahtarlar={aiAnahtarlari} takipAktif={takipAktif} />
 
-        <HaftalikYedekFormu
-          baslangicAktif={(profil?.haftalik_yedek_aktif as boolean | null) ?? false}
-          baslangicEposta={(profil?.yedek_eposta_adresi as string | null) ?? null}
-          girisEpostasi={user.email ?? null}
-        />
+        {!cevrimdisi && (
+          <HaftalikYedekFormu
+            baslangicAktif={(profil?.haftalik_yedek_aktif as boolean | null) ?? false}
+            baslangicEposta={(profil?.yedek_eposta_adresi as string | null) ?? null}
+            girisEpostasi={user.email ?? null}
+          />
+        )}
 
         <div className="kart" style={{ padding: 20, marginTop: 16 }}>
           <div

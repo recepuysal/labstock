@@ -17,12 +17,15 @@ type Props = {
   mod: 'giris' | 'kayit';
   eylem: (onceki: AuthDurum, formData: FormData) => Promise<AuthDurum>;
   devam?: string;
+  /** Masaüstünde: hesap açmadan çevrimdışı modda başlama (Ayarlar → Veri depolama). */
+  hesapsizEylem?: () => Promise<void>;
 };
 
-export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
+export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Props) {
   const [durum, gonder, bekliyor] = useActionState<AuthDurum, FormData>(eylem, {});
   const kayit = mod === 'kayit';
-  const s = useSozluk().ayarlar.auth;
+  const so = useSozluk();
+  const s = so.ayarlar.auth;
 
   const [eposta, setEposta] = useState('');
   const [sifre, setSifre] = useState('');
@@ -338,6 +341,15 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
             )}
           </p>
         </form>
+
+        {hesapsizEylem && (
+          <form action={hesapsizEylem} style={{ marginTop: 14, textAlign: 'center' }}>
+            <button type="submit" className="btn" style={{ fontSize: 12.5 }}>
+              {so.ayarlar.depolama.hesapsizKullan}
+            </button>
+            <p style={{ margin: '6px 0 0', fontSize: 11.5, color: 'var(--muted-2)' }}>{so.ayarlar.depolama.hesapsizAciklama}</p>
+          </form>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
           <DilSecici />
