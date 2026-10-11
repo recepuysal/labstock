@@ -17,14 +17,17 @@
   <a href="https://github.com/recepuysal/labstock/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/recepuysal/labstock?label=release&color=a3611f"></a>
   <a href="https://github.com/recepuysal/labstock/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/recepuysal/labstock/total?label=downloads&color=a3611f"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows">
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb-FCC624?logo=linux&logoColor=black">
   <img alt="Free to use" src="https://img.shields.io/badge/price-free-2ea44f">
   <img alt="English and Turkish" src="https://img.shields.io/badge/UI-English%20%7C%20T%C3%BCrk%C3%A7e-555">
 </p>
 
 <p align="center">
-  <a href="https://github.com/recepuysal/labstock/releases/latest">
-    <strong>⬇ Download for Windows (LabStock-Kurulum.exe)</strong>
+  <a href="https://github.com/recepuysal/labstock/releases/latest/download/LabStock-Kurulum.exe">
+    <strong>⬇ Download for Windows</strong>
   </a>
+  ·
+  <a href="#linux">⬇ Linux (AppImage / .deb)</a>
   ·
   <a href="#screenshots">Screenshots</a>
   ·
@@ -219,8 +222,8 @@ don't want an account at all, use **"Use without an account"** on the sign-in sc
 - A backup of your cloud data is taken before every merge and can be added back from Settings.
 
 ### Desktop app and automatic updates
-Installs on Windows with a setup wizard (no admin rights needed) and checks for
-updates in the background on every launch. New versions are downloaded and
+Installs on Windows with a setup wizard (no admin rights needed) and runs on Linux
+as an AppImage or a .deb package. It checks for updates in the background on every launch. New versions are downloaded and
 installed from a quiet in-app notification — no extra windows.
 
 ### Settings
@@ -254,8 +257,27 @@ import/export, viewer management and in-app feedback.
    generated in their Settings into the “Invite code” field when signing up — or
    later from your Profile page.
 
-The interface language follows your Windows language on first launch; change it
+The interface language follows your system language on first launch; change it
 any time in **Settings → Language**.
+
+### Linux
+
+Two packages are on the [Releases](https://github.com/recepuysal/labstock/releases/latest) page
+(x86_64):
+
+- **AppImage** (any distribution):
+  ```bash
+  chmod +x LabStock-Linux-x86_64.AppImage
+  ./LabStock-Linux-x86_64.AppImage
+  ```
+  Older distributions may need `libfuse2` (Ubuntu 24.04+: `sudo apt install libfuse2t64`).
+  The AppImage updates itself.
+- **.deb** (Ubuntu / Debian): `sudo apt install ./LabStock-Linux-amd64.deb` — it shows up in
+  the application menu as LabStock. In-app updates install the new .deb and ask for your
+  password.
+
+Phone camera on Linux: if a firewall such as `ufw` is enabled, allow port 8443 on your
+local network (`sudo ufw allow 8443/tcp`). Data is stored in `~/.config/labstock-desktop`.
 
 ## Feedback & contact
 

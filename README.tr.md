@@ -16,13 +16,16 @@
   <a href="https://github.com/recepuysal/labstock/releases/latest"><img alt="Son sürüm" src="https://img.shields.io/github/v/release/recepuysal/labstock?label=s%C3%BCr%C3%BCm&color=a3611f"></a>
   <a href="https://github.com/recepuysal/labstock/releases"><img alt="İndirme" src="https://img.shields.io/github/downloads/recepuysal/labstock/total?label=indirme&color=a3611f"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows">
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb-FCC624?logo=linux&logoColor=black">
   <img alt="Ücretsiz" src="https://img.shields.io/badge/kullan%C4%B1m-%C3%BCcretsiz-2ea44f">
 </p>
 
 <p align="center">
-  <a href="https://github.com/recepuysal/labstock/releases/latest">
-    <strong>⬇ Windows için indir (LabStock-Kurulum.exe)</strong>
+  <a href="https://github.com/recepuysal/labstock/releases/latest/download/LabStock-Kurulum.exe">
+    <strong>⬇ Windows için indir</strong>
   </a>
+  ·
+  <a href="#linux">⬇ Linux (AppImage / .deb)</a>
   ·
   <a href="#ekran-görüntüleri">Ekran görüntüleri</a>
   ·
@@ -221,8 +224,8 @@ ile de doğrudan başlayabilirsin.
 - Her eklemeden önce buluttaki verilerin yedeği alınır ve Ayarlar'dan geri eklenebilir.
 
 ### Masaüstü uygulaması ve otomatik güncelleme
-Windows'a kurulum sihirbazıyla kurulur (yönetici izni gerekmez), her açılışta
-arka planda güncelleme kontrolü yapar; yeni sürüm varsa uygulama içi sessiz bir
+Windows'a kurulum sihirbazıyla kurulur (yönetici izni gerekmez), Linux'ta AppImage
+ya da .deb paketiyle çalışır. Her açılışta arka planda güncelleme kontrolü yapar; yeni sürüm varsa uygulama içi sessiz bir
 bildirimle indirilip kurulur — hiçbir pencere açılmaz.
 
 <p align="center">
@@ -261,8 +264,26 @@ aktarma, gözlemci yönetimi ve uygulama içinden geri bildirim.
    sayfasından ürettiği **davet kodunu** kayıt ekranındaki "Davet kodu" alanına
    gir — ya da kayıt olduktan sonra Profil sayfasından da girebilirsin.
 
-Arayüz dili ilk açılışta Windows'un diline göre seçilir; istediğin an
+Arayüz dili ilk açılışta sistem diline göre seçilir; istediğin an
 **Ayarlar → Dil**'den değiştirebilirsin.
+
+### Linux
+
+[Releases](https://github.com/recepuysal/labstock/releases/latest) sayfasında iki paket var
+(x86_64):
+
+- **AppImage** (her dağıtımda çalışır):
+  ```bash
+  chmod +x LabStock-Linux-x86_64.AppImage
+  ./LabStock-Linux-x86_64.AppImage
+  ```
+  Bazı dağıtımlarda `libfuse2` gerekebilir (Ubuntu 24.04+: `sudo apt install libfuse2t64`).
+  AppImage kendini günceller.
+- **.deb** (Ubuntu / Debian): `sudo apt install ./LabStock-Linux-amd64.deb` — uygulama
+  menüsünde LabStock olarak görünür. Uygulama içi güncelleme yeni .deb'i kurar ve şifreni sorar.
+
+Linux'ta telefon kamerası: `ufw` gibi bir güvenlik duvarı açıksa yerel ağda 8443 portuna izin
+ver (`sudo ufw allow 8443/tcp`). Veriler `~/.config/labstock-desktop` klasöründe durur.
 
 Uygulama her açılışta arka planda güncelleme kontrolü yapar. Yeni bir sürüm
 varsa sağ altta uygulama içi bir bildirim çıkar (Windows penceresi değil) —
