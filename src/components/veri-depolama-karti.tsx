@@ -27,12 +27,12 @@ export function VeriDepolamaKarti({
   const [yuklemeSorusu, setYuklemeSorusu] = useState(yuklemeBekliyor);
   const bulutta = mod === 'bulut';
 
-  function onayla() {
+  function onayla(ekle = false) {
     setMesaj({});
     baslat(async () => {
       // Başarılı olursa sunucu yönlendirir; buraya sadece hata dönerse gelinir.
-      const sonuc = bulutta ? await cevrimdisiModaGec() : await bulutaDon();
-      if (sonuc && 'hata' in sonuc && sonuc.hata) setMesaj({ hata: sonuc.hata });
+      const sonuc = bulutta ? await cevrimdisiModaGec() : await bulutaDon(ekle);
+      if (sonuc?.hata) setMesaj({ hata: sonuc.hata });
     });
   }
 
@@ -105,9 +105,20 @@ export function VeriDepolamaKarti({
             {bulutta ? s.onayAciklama : s.bulutaDonAciklama}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn btn-birincil" type="button" disabled={bekliyor} onClick={onayla}>
-              {bekliyor ? s.kopyalaniyor : bulutta ? s.gec : s.bulutaDon}
-            </button>
+            {bulutta ? (
+              <button className="btn btn-birincil" type="button" disabled={bekliyor} onClick={() => onayla()}>
+                {bekliyor ? s.kopyalaniyor : s.gec}
+              </button>
+            ) : (
+              <>
+                <button className="btn btn-birincil" type="button" disabled={bekliyor} onClick={() => onayla(true)}>
+                  {bekliyor ? s.yukleniyor : s.bulutaDonEkle}
+                </button>
+                <button className="btn" type="button" disabled={bekliyor} onClick={() => onayla(false)}>
+                  {s.bulutaDonEkleme}
+                </button>
+              </>
+            )}
             <button className="btn" type="button" disabled={bekliyor} onClick={() => setOnay(false)}>
               {s.vazgec}
             </button>

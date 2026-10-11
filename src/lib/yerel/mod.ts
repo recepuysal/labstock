@@ -26,6 +26,9 @@ export type YerelAyar = {
   /** Buluttan kopyalandığı (ya da buluta eklendiği) andaki en büyük yerel hareket
    * kimliği; bundan sonraki hareketler buluta +/− olarak işlenir. */
   hareketEsigi?: number;
+  /** "Buluta dön ve verilerimi ekle" seçildi ama oturum kapalıydı: girişten
+   * hemen sonra eklenir. */
+  otomatikEkle?: boolean;
 };
 
 const AYAR_DOSYASI = 'depolama.json';

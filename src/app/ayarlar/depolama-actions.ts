@@ -7,15 +7,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createBulutClient } from '@/lib/supabase/server';
 import { ayarOku, ayarYaz, yerelModDestekleniyor } from '@/lib/yerel/mod';
-import {
-  bulutaBirlestir,
-  bulutYedegiAl,
-  buluttanYerele,
-  sonYerelHareketId,
-  yedekOku,
-  yerelVeriKumesi,
-  yerelVeriVarMi,
-} from '@/lib/yerel/aktarim';
+import { bulutaBirlestir, bulutYedegiAl, buluttanYerele, sonYerelHareketId, yedekOku, yerelVeriVarMi } from '@/lib/yerel/aktarim';
+import { yerelVeriyiHesabaEkle } from '@/lib/yerel/ekleme';
 import { yerelKullaniciId } from '@/lib/yerel/istemci';
 import { sozlukAl } from '@/lib/i18n/sunucu';
 import type { EylemDurum } from '@/app/envanter/actions';
@@ -59,13 +52,33 @@ export async function hesapsizBasla(): Promise<void> {
   redirect('/envanter');
 }
 
-/** Çevrimdışından buluta: giriş yaptıktan sonra yerel verileri hesaba ekleyip
- * eklemeyeceği sorulur (yerel veri varsa). */
-export async function bulutaDon(): Promise<void> {
-  const ayar = ayarOku();
-  ayarYaz({ ...ayar, mod: 'bulut', yuklemeBekliyor: yerelVeriVarMi() });
+/** Çevrimdışından buluta tek adımda. `ekle`: çevrimdışıyken kaydedilenler
+ * buluttakilerin üstüne eklensin mi? Oturum açıksa hemen eklenir ve envanter
+ * güncel açılır; kapalıysa giriş istenir ve ekleme girişten hemen sonra
+ * kendiliğinden yapılır (bkz. girisYap). */
+export async function bulutaDon(ekle: boolean): Promise<EylemDurum> {
+  const veriVar = yerelVeriVarMi();
+  ayarYaz({ ...ayarOku(), mod: 'bulut', yuklemeBekliyor: false, otomatikEkle: false });
+
+  if (ekle && veriVar) {
+    const { bulut, user } = await bulutKullanicisi();
+    if (!user) {
+      ayarYaz({ ...ayarOku(), yuklemeBekliyor: true, otomatikEkle: true });
+      revalidatePath('/', 'layout');
+      redirect('/giris');
+    }
+    try {
+      await yerelVeriyiHesabaEkle(bulut, user.id);
+    } catch (e) {
+      console.error('[depolama] buluta dönüşte ekleme:', e);
+      // Bulut moduna geçildi; ekleme Ayarlar'dan tekrar denenebilsin.
+      ayarYaz({ ...ayarOku(), yuklemeBekliyor: true });
+      revalidatePath('/', 'layout');
+      return { hata: (await metin()).hata((e as Error).message) };
+    }
+  }
   revalidatePath('/', 'layout');
-  redirect('/giris');
+  redirect('/envanter');
 }
 
 /** "Yerel verileri hesabıma ekle": buluttakilerin üstüne eklenir, hiçbir şey silinmez. */
@@ -74,16 +87,8 @@ export async function yerelVerileriYukle(): Promise<EylemDurum> {
   const { bulut, user } = await bulutKullanicisi();
   if (!user) return { hata: m.oturumGerekli };
 
-  const ayar = ayarOku();
   try {
-    await bulutYedegiAl(bulut, user.id);
-    const ozet = await bulutaBirlestir(bulut, user.id, yerelVeriKumesi(), {
-      eskiSahip: ayar.kullaniciId ?? user.id,
-      hareketEsigi: ayar.hareketEsigi ?? 0,
-      alanlariGuncelle: true,
-    });
-    // Aynı hareketler ikinci kez işlenmesin.
-    ayarYaz({ ...ayarOku(), yuklemeBekliyor: false, kullaniciId: user.id, hareketEsigi: sonYerelHareketId() });
+    const ozet = await yerelVeriyiHesabaEkle(bulut, user.id);
     revalidatePath('/', 'layout');
     return { bilgi: m.eklendi(ozet.yeniKalem, ozet.islenenHareket, ozet.uyarilar.length) };
   } catch (e) {

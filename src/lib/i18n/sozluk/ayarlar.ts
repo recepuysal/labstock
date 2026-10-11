@@ -282,8 +282,9 @@ const tr = {
     kopyalaniyor: 'Veriler kopyalanıyor…',
     bulutaDonBaslik: 'Buluta dönülsün mü?',
     bulutaDonAciklama:
-      'Hesabınla giriş yapman istenecek. Ardından çevrimdışıyken kaydettiğin verileri hesabına ekleyip eklemeyeceğin sorulacak; buluttaki verilerin silinmez.',
-    bulutaDon: 'Buluta dön',
+      'Çevrimdışıyken kaydettiğin veriler buluttaki verilerinin üstüne eklenebilir; hiçbir şey silinmez, bulutta olan parçalarda yaptığın giriş/çıkışlar +/− olarak işlenir. Oturumun kapandıysa önce giriş yapman istenir, ekleme girişten sonra kendiliğinden yapılır.',
+    bulutaDonEkle: 'Buluta dön ve verilerimi ekle',
+    bulutaDonEkleme: 'Buluta dön, ekleme',
     yuklemeBaslik: 'Çevrimdışı verilerin hesabına eklensin mi?',
     yuklemeAciklama: (tarih: string | null) =>
       `Bu bilgisayarda çevrimdışı modda kaydedilmiş veriler var${tarih ? ` (son değişiklik: ${tarih})` : ''}. Eklersen buluttaki verilerinin üstüne eklenir, hiçbir şey silinmez: yeni parçalar, konumlar ve kayıtlar eklenir; bulutta zaten olan parçalarda çevrimdışıyken yaptığın stok giriş/çıkışları +/− olarak işlenir. Çevrimdışıyken sildiğin kayıtlar bulutta kalır.`,
@@ -612,8 +613,9 @@ const en: Sekil<typeof tr> = {
     kopyalaniyor: 'Copying data…',
     bulutaDonBaslik: 'Go back to the cloud?',
     bulutaDonAciklama:
-      'You will be asked to sign in. Then you can choose whether to add the data you saved while offline to your account; your cloud data is not deleted.',
-    bulutaDon: 'Go back to the cloud',
+      'The data you saved while offline can be added on top of your cloud data; nothing is deleted, and stock ins/outs on parts already in the cloud are applied as +/−. If your session has expired you will be asked to sign in first, and the data is added right after.',
+    bulutaDonEkle: 'Go back and add my data',
+    bulutaDonEkleme: "Go back, don't add",
     yuklemeBaslik: 'Add your offline data to your account?',
     yuklemeAciklama: (tarih: string | null) =>
       `This computer has data saved in offline mode${tarih ? ` (last change: ${tarih})` : ''}. Adding it merges it into your cloud data and deletes nothing: new parts, locations and records are added; for parts already in the cloud, the stock ins/outs you made offline are applied as +/−. Records you deleted while offline stay in the cloud.`,

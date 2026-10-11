@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { sozlukAl } from '@/lib/i18n/sunucu';
 import type { Sozluk } from '@/lib/i18n';
+import { girisSonrasiEkle } from '@/lib/yerel/ekleme';
 
 export type AuthDurum = { hata?: string; bilgi?: string; kodBekleniyor?: string };
 
@@ -49,7 +50,7 @@ export async function girisYap(_onceki: AuthDurum, formData: FormData): Promise<
   if (!eposta || !sifre) return { hata: s.ayarlar.auth.epostaSifreGerekli };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email: eposta, password: sifre });
+  const { data: giris, error } = await supabase.auth.signInWithPassword({ email: eposta, password: sifre });
 
   if (error) {
     if (error.code === 'email_not_confirmed' || error.message === 'Email not confirmed') {
@@ -57,6 +58,9 @@ export async function girisYap(_onceki: AuthDurum, formData: FormData): Promise<
     }
     return { hata: authHatasi(error, s) };
   }
+
+  // Çevrimdışı moddan "Buluta dön ve verilerimi ekle" ile gelindiyse.
+  if (giris.user) await girisSonrasiEkle(supabase, giris.user.id);
 
   revalidatePath('/', 'layout');
   redirect(devam.startsWith('/') ? devam : '/envanter');
