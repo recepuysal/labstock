@@ -42,7 +42,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/sayim-demo.gif" alt="Count parts with your phone camera and write the count to LabStock" width="800"><br>
+  <img src="docs/screenshots/sayim-demo-en.gif" alt="Count parts with your phone camera and write the count to LabStock" width="800"><br>
   <sub>Pour parts on the table, count them with your phone camera, write the count to LabStock — <a href="#count-parts-with-your-phone-camera-desktop-app">how it works</a></sub>
 </p>
 
@@ -157,7 +157,7 @@ search box) to jump straight to that part or location.
 ### Count parts with your phone camera (desktop app)
 
 <p align="center">
-  <img src="docs/screenshots/sayim-demo.gif" alt="Counting 6 terminal blocks with a phone and writing the count to LabStock" width="800">
+  <img src="docs/screenshots/sayim-demo-en.gif" alt="Counting 6 terminal blocks with a phone and writing the count to LabStock" width="800">
 </p>
 
 Open **Phone camera** in the bottom-left corner and scan the QR code on screen
