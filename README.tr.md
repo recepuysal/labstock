@@ -206,6 +206,20 @@ listesi: neyi nereden alacağını unutma.
 - **Haftalık özet + yedek e-postası:** her Pazartesi kritik stoklar, toplam değer
   ve tam listenin CSV yedeği e-postana gelir.
 
+### Çevrimdışı mod (verilerin sadece bilgisayarında)
+
+Varsayılan olarak veriler hesabına bağlı bir bulut veritabanında tutulur (birden
+fazla bilgisayar, gözlemci, haftalık yedek). İstersen **Ayarlar → Veri depolama**'dan
+"Bulutta sakla"yı kapatıp **çevrimdışı moda** geçebilirsin: tüm veriler yalnızca bu
+bilgisayardaki bir SQLite dosyasında tutulur, hiçbir sunucuya gönderilmez ve
+internetsiz çalışır. Hesap açmak istemiyorsan giriş ekranındaki **"Hesapsız kullan"**
+ile de doğrudan başlayabilirsin.
+
+- Buluttan çevrimdışına geçerken hesabındaki tüm veriler bilgisayara kopyalanır.
+- Buluta dönerken çevrimdışıyken yaptıkların **buluttakilerin üstüne eklenir** —
+  hiçbir şey silinmez; bulutta olan parçalardaki giriş/çıkışlar +/− olarak işlenir.
+- Her eklemeden önce buluttaki verilerin yedeği alınır ve Ayarlar'dan geri eklenebilir.
+
 ### Masaüstü uygulaması ve otomatik güncelleme
 Windows'a kurulum sihirbazıyla kurulur (yönetici izni gerekmez), her açılışta
 arka planda güncelleme kontrolü yapar; yeni sürüm varsa uygulama içi sessiz bir
