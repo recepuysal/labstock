@@ -150,6 +150,11 @@ search box) to jump straight to that part or location.
 </p>
 
 ### Count parts with your phone camera (desktop app)
+
+<p align="center">
+  <img src="docs/screenshots/sayim-demo.gif" alt="Counting 6 terminal blocks with a phone and writing the count to LabStock" width="800">
+</p>
+
 Open **Phone camera** in the bottom-left corner and scan the QR code on screen
 with your phone — no app to install; the phone's camera connects to LabStock over
 your Wi-Fi. Show the part's or drawer's QR label (or search by name), pour the

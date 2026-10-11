@@ -156,6 +156,11 @@ okutunca doğrudan ilgili parçaya/konuma atlar.
 </p>
 
 ### Telefon kamerasıyla sayım ve etiketten giriş (masaüstü uygulaması)
+
+<p align="center">
+  <img src="docs/screenshots/sayim-demo.gif" alt="Telefonla 6 terminal bloğu sayılıp LabStock'a yazılıyor" width="800">
+</p>
+
 Sol alttaki **Telefon kamerası**'nı açıp ekrandaki QR'ı telefonla okut —
 uygulama kurmadan, aynı Wi-Fi üzerinden telefonun kamerası LabStock'a bağlanır.
 Parçanın ya da çekmecenin QR etiketini göster (etiket yoksa adıyla ara),
