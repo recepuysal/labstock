@@ -102,7 +102,10 @@ function cozucuKur(kodek) {
       gonder({ tur: 'anahtar' });
     },
   });
-  cozucu.configure({ codec: kodek, optimizeForLatency: true, hardwareAcceleration: 'prefer-hardware' });
+  // 'prefer-hardware' donanım çözücü şart koşar; Linux'taki Electron'da H.264 için
+  // donanım çözücü yok (yalnızca yazılım) ve çözücü hiç kurulamıyordu. 'no-preference'
+  // varsa donanımı yine kullanır, yoksa yazılıma düşer.
+  cozucu.configure({ codec: kodek, optimizeForLatency: true, hardwareAcceleration: 'no-preference' });
   cozucuKodek = kodek;
 }
 
