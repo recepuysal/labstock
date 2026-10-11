@@ -70,6 +70,15 @@ export async function kurulumIstatistikleri(supabase: Supabase): Promise<Kurulum
   return data as KurulumIstatistikleri;
 }
 
+export type SiteIndirmeleri = { toplam: number; bugun: number; son7: number; tur: Record<string, number> };
+
+/** labstock.com.tr indirme butonu sayacı (0009 göçü); fonksiyon yoksa null. */
+export async function siteIndirmeleri(supabase: Supabase): Promise<SiteIndirmeleri | null> {
+  const { data, error } = await supabase.rpc('site_indirme_istatistikleri');
+  if (error || !data) return null;
+  return data as SiteIndirmeleri;
+}
+
 type GithubSurum = { tag_name: string; draft: boolean; prerelease: boolean; assets: { name: string; download_count: number }[] };
 
 /** GitHub sürümlerindeki indirme sayaçları. Kurulum dosyası sayısı otomatik

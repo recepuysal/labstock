@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { githubIndirmeleri, istatistikleriGetir, kurulumIstatistikleri, yoneticiMi } from '@/lib/istatistik';
+import { githubIndirmeleri, istatistikleriGetir, kurulumIstatistikleri, siteIndirmeleri, yoneticiMi } from '@/lib/istatistik';
 import { HaftalikGrafik } from '@/components/haftalik-grafik';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
@@ -39,10 +39,11 @@ export default async function IstatistikSayfasi() {
   // Yönetici olmayan biri adresi bilse bile sayfanın varlığını görmesin.
   if (!(await yoneticiMi(supabase))) notFound();
 
-  const [ist, github, kurulum, dil] = await Promise.all([
+  const [ist, github, kurulum, site, dil] = await Promise.all([
     istatistikleriGetir(supabase),
     githubIndirmeleri(),
     kurulumIstatistikleri(supabase),
+    siteIndirmeleri(supabase),
     dilAl(),
   ]);
   if (!ist) notFound();
@@ -139,6 +140,21 @@ export default async function IstatistikSayfasi() {
           <Kutu etiket={s.gozlemci} deger={sayi(k.gozlemci)} />
           <Kutu etiket={s.aiEkleyen} deger={sayi(k.ai_anahtari_ekleyen)} alt={s.aiBugun(sayi(k.ai_istek_bugun))} />
         </div>
+
+        {site && (
+          <>
+            <div className="mn" style={kucukBaslik}>{s.siteBaslik}</div>
+            <div style={izgara}>
+              <Kutu etiket={s.siteToplam} deger={sayi(site.toplam)} alt={s.siteSon(sayi(site.bugun), sayi(site.son7))} />
+              <Kutu
+                etiket={s.siteTurler}
+                deger={sayi(site.tur.windows ?? 0)}
+                alt={s.siteLinux(sayi(site.tur.appimage ?? 0), sayi(site.tur.deb ?? 0))}
+              />
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--muted-2)' }}>{s.siteAciklama}</p>
+          </>
+        )}
 
         <div className="mn" style={kucukBaslik}>{s.indirmeler}</div>
         {github ? (

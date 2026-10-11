@@ -24,6 +24,9 @@ what data the app handles and why.
   operating system and the storage mode (cloud / offline). Nothing else — no
   email, inventory or IP address is stored. You can turn this off in
   Settings → Data storage.
+- **Website (labstock.com.tr):** clicks on the download buttons are counted as
+  a daily total per button (Windows / AppImage / .deb). No cookies, IDs or IP
+  addresses.
 
 Your inventory is visible only to you and to people you explicitly give an
 invite code to (read-only “viewers”). You can remove a viewer at any time.
@@ -94,6 +97,9 @@ politika, uygulamanın hangi verileri neden işlediğini açıklar.
   bir kurulum kimliği (hesabına bağlı değil), sürüm, işletim sistemi ve veri
   modunu (bulut / çevrimdışı) gönderir. Başka bir şey — e-posta, envanter ya da
   IP adresi — saklanmaz. Ayarlar → Veri depolama'dan kapatabilirsin.
+- **Web sitesi (labstock.com.tr):** indirme butonlarına tıklamalar yalnızca
+  buton başına günlük toplam olarak sayılır (Windows / AppImage / .deb). Çerez,
+  kimlik ya da IP adresi yok.
 
 Envanterini yalnızca sen ve davet kodunu bizzat verdiğin kişiler (salt-okunur
 “gözlemciler”) görebilir. Bir gözlemciyi istediğin an çıkarabilirsin.
