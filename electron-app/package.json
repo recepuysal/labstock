@@ -1,7 +1,10 @@
 {
   "name": "labstock-desktop",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "private": true,
+  "description": "LabStock - electronic component inventory",
+  "homepage": "https://github.com/recepuysal/labstock",
+  "author": "Recep UYSAL <recepuysal@users.noreply.github.com>",
   "main": "main.js",
   "devDependencies": {
     "electron": "^44.2.0",
@@ -16,6 +19,7 @@
       "kamera/**/*",
       "kamera.js",
       "icon.ico",
+      "icon.png",
       "node_modules/**/*"
     ],
     "afterPack": "afterPack.js",
@@ -34,6 +38,21 @@
       "allowToChangeInstallationDirectory": true,
       "artifactName": "LabStock-Kurulum.${ext}",
       "shortcutName": "LabStock v${version}"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "icon.png",
+      "category": "Science",
+      "synopsis": "Electronic component inventory",
+      "description": "Track your electronic components: stock, locations, QR labels, phone-camera counting and an AI assistant.",
+      "maintainer": "Recep UYSAL <recepuysal@users.noreply.github.com>",
+      "executableName": "labstock"
+    },
+    "appImage": {
+      "artifactName": "LabStock-Linux-x86_64.${ext}"
+    },
+    "deb": {
+      "artifactName": "LabStock-Linux-amd64.${ext}"
     },
     "appx": {
       "identityName": "RecepUYSAL.Labstock",

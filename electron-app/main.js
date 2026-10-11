@@ -61,7 +61,8 @@ function pencereyiAc() {
     minHeight: 600,
     autoHideMenuBar: true,
     show: false,
-    icon: path.join(__dirname, 'icon.ico'),
+    // Linux pencere/görev çubuğu simgesi .ico okuyamıyor
+    icon: path.join(__dirname, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -163,9 +164,16 @@ ipcMain.handle('surum-al', () => app.getVersion());
 // olarak sadece bu Windows kullanıcı hesabı çözebilir.
 const sifreYolu = path.join(app.getPath('userData'), 'sifre.dat');
 
+// Linux'ta anahtar zinciri (GNOME Keyring / KWallet) yoksa Electron sabit bir anahtarla
+// "şifreler" (basic_text) — bu gerçek koruma değil, o durumda şifreyi hiç kaydetmiyoruz.
+function guvenliKasaVarMi() {
+  if (!safeStorage.isEncryptionAvailable()) return false;
+  return process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text';
+}
+
 ipcMain.handle('sifre-kaydet', (_event, sifre) => {
   try {
-    if (!safeStorage.isEncryptionAvailable()) return false;
+    if (!guvenliKasaVarMi()) return false;
     fs.writeFileSync(sifreYolu, safeStorage.encryptString(sifre));
     return true;
   } catch (err) {
@@ -176,7 +184,7 @@ ipcMain.handle('sifre-kaydet', (_event, sifre) => {
 
 ipcMain.handle('sifre-al', () => {
   try {
-    if (!safeStorage.isEncryptionAvailable() || !fs.existsSync(sifreYolu)) return null;
+    if (!guvenliKasaVarMi() || !fs.existsSync(sifreYolu)) return null;
     return safeStorage.decryptString(fs.readFileSync(sifreYolu));
   } catch (err) {
     logYaz(`[sifre-al-hata] ${err.message}`);

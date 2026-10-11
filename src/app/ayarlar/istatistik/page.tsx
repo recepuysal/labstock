@@ -120,7 +120,11 @@ export default async function IstatistikSayfasi() {
         <div className="mn" style={kucukBaslik}>{s.indirmeler}</div>
         {github ? (
           <div style={izgara}>
-            <Kutu etiket={s.exeIndirme} deger={sayi(github.exeIndirme)} alt={s.exeAciklama} />
+            <Kutu
+              etiket={s.exeIndirme}
+              deger={sayi(github.exeIndirme)}
+              alt={github.linuxIndirme > 0 ? `${s.exeAciklama} · ${s.linuxIndirme(sayi(github.linuxIndirme))}` : s.exeAciklama}
+            />
             <Kutu etiket={s.guncellemeKontrolu} deger={sayi(github.guncellemeKontrolu)} alt={s.surumSayisi(sayi(github.surumSayisi))} />
             {github.sonSurum && (
               <Kutu etiket={github.sonSurum.ad} deger={sayi(github.sonSurum.indirme)} alt={s.sonSurum(github.sonSurum.ad, sayi(github.sonSurum.indirme))} />

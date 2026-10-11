@@ -1,4 +1,4 @@
-name: Masaüstü uygulamasını derle (Windows .exe)
+name: Masaüstü uygulamasını derle (Windows .exe + Linux)
 
 on:
   workflow_dispatch:
@@ -61,6 +61,46 @@ jobs:
           tag_name: "${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}"
           name: "${{ github.ref_type == 'tag' && github.ref_name || format('Test derleme #{0}', github.run_number) }}"
           body_path: release-notes.txt
+          prerelease: ${{ github.ref_type != 'tag' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Linux (AppImage + .deb). Next.js'in standalone çıktısı platforma özel yerel
+  # modüller (sharp vb.) içerdiği için Linux paketi Linux'ta derlenmeli.
+  # Windows işi sürümü oluşturduktan sonra çalışır ki ikisi aynı anda sürüm
+  # yaratmaya çalışmasın.
+  build-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Next.js standalone build
+        run: |
+          npm ci
+          npm run build:desktop
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Electron ile paketle
+        working-directory: electron-app
+        run: |
+          npm ci
+          npx electron-builder --linux --publish never
+
+      - name: Sürüme ekle
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            electron-app/dist/*.AppImage
+            electron-app/dist/*.deb
+            electron-app/dist/latest-linux.yml
+          tag_name: "${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}"
           prerelease: ${{ github.ref_type != 'tag' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
