@@ -1,9 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { yerelModda } from '@/lib/yerel/mod';
 
 const HERKESE_ACIK = ['/giris', '/kayit', '/auth'];
 
 export async function proxy(request: NextRequest) {
+  // Çevrimdışı mod: hesap yok, oturum kontrolü de yok — giriş/kayıt sayfaları
+  // yerine doğrudan envantere.
+  if (yerelModda()) {
+    const { pathname } = request.nextUrl;
+    if (pathname === '/giris' || pathname === '/kayit') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/envanter';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
