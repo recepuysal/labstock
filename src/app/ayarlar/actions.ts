@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/server';
 import type { EylemDurum } from '@/app/envanter/actions';
 import type { EnvanterSatiri } from '@/lib/types';
+import { parcala, tumSatirlar } from '@/lib/sayfali';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { ETIKET_AYAR_COOKIE, type EtiketAyarlari } from '@/lib/etiket';
 import { geminiApiAnahtariniDogrula } from '@/lib/gemini';
@@ -137,21 +138,37 @@ export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
   const metin = sozluk(dil).ayarlar;
   if (!aktif) return { hata: metin.eylem.oturumYok };
 
-  const { data, error } = await supabase
-    .from('envanter')
-    .select('*')
-    .eq('user_id', aktif.kullaniciId)
-    .order('mpn', { ascending: true });
-  if (error) return { hata: error.message };
-  const satirlar = (data ?? []) as EnvanterSatiri[];
+  // Supabase tek istekte en fazla 1000 satır verir: büyük envanterde dışa aktarma
+  // eksik kalmasın diye sayfa sayfa, etiketler de parça parça okunur.
+  let satirlar: EnvanterSatiri[];
+  const etiketVerisi: { stock_item_id: string; tags: unknown }[] = [];
+  try {
+    satirlar = await tumSatirlar<EnvanterSatiri>(() =>
+      supabase
+        .from('envanter')
+        .select('*')
+        .eq('user_id', aktif.kullaniciId)
+        .order('mpn', { ascending: true })
+        .order('stok_id', { ascending: true }),
+    );
+    for (const grup of parcala(satirlar.map((s) => s.stok_id))) {
+      etiketVerisi.push(
+        ...(await tumSatirlar<{ stock_item_id: string; tags: unknown }>(() =>
+          supabase
+            .from('stock_item_tags')
+            .select('stock_item_id, tags(ad)')
+            .in('stock_item_id', grup)
+            .order('stock_item_id', { ascending: true })
+            .order('tag_id', { ascending: true }),
+        )),
+      );
+    }
+  } catch (e) {
+    return { hata: e instanceof Error ? e.message : String(e) };
+  }
 
-  const stokIdleri = satirlar.map((s) => s.stok_id);
-  const { data: etiketVerisi } =
-    stokIdleri.length > 0
-      ? await supabase.from('stock_item_tags').select('stock_item_id, tags(ad)').in('stock_item_id', stokIdleri)
-      : { data: [] };
   const etiketHaritasi = new Map<string, string[]>();
-  for (const row of etiketVerisi ?? []) {
+  for (const row of etiketVerisi) {
     const ad = (row.tags as unknown as { ad: string } | null)?.ad;
     if (!ad) continue;
     const liste = etiketHaritasi.get(row.stock_item_id) ?? [];

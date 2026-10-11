@@ -15,13 +15,24 @@ const TIPLER: Record<string, string> = {
 
 export async function GET(_istek: Request, { params }: { params: Promise<{ yol: string[] }> }) {
   const { yol } = await params;
+  const bulunamadi = () => new Response('Bulunamadı', { status: 404 });
   const kok = path.resolve(yerelDosyaDizini());
-  const hedef = path.resolve(kok, ...yol.map(decodeURIComponent));
-  if (!hedef.startsWith(kok + path.sep) || !fs.existsSync(hedef)) {
-    return new Response('Bulunamadı', { status: 404 });
+  let hedef: string;
+  try {
+    hedef = path.resolve(kok, ...yol.map(decodeURIComponent));
+  } catch {
+    return bulunamadi(); // bozuk % dizisi (URIError)
+  }
+  if (!hedef.startsWith(kok + path.sep)) return bulunamadi();
+  let icerik: Buffer;
+  try {
+    if (!fs.statSync(hedef).isFile()) return bulunamadi(); // dizin vb.
+    icerik = fs.readFileSync(hedef);
+  } catch {
+    return bulunamadi();
   }
   const uzanti = path.extname(hedef).slice(1).toLowerCase();
-  return new Response(new Uint8Array(fs.readFileSync(hedef)), {
+  return new Response(new Uint8Array(icerik), {
     headers: {
       'Content-Type': TIPLER[uzanti] ?? 'application/octet-stream',
       'Cache-Control': 'no-cache',

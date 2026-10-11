@@ -20,10 +20,12 @@ import {
 } from '@/lib/types';
 import { sozluk } from '@/lib/i18n';
 import { dilAl } from '@/lib/i18n/sunucu';
+import { tumSatirlar } from '@/lib/sayfali';
 
 export const dynamic = 'force-dynamic';
 
 const LIMIT = 200;
+const EN_FAZLA = 5000;
 
 export default async function EnvanterSayfasi({
   searchParams,
@@ -37,9 +39,13 @@ export default async function EnvanterSayfasi({
     etiket?: string;
     sira?: string;
     gorunum?: string;
+    adet?: string;
   }>;
 }) {
-  const { q, konum, kategori, kilif, durum, etiket, sira, gorunum } = await searchParams;
+  const parametreler = await searchParams;
+  const { q, konum, kategori, kilif, durum, etiket, sira, gorunum } = parametreler;
+  // "Daha fazla yükle" her basışta LIMIT kadar artırır
+  const gosterilen = Math.min(EN_FAZLA, Math.max(LIMIT, Math.floor(Number(parametreler.adet) / LIMIT) * LIMIT || LIMIT));
   const dil = await dilAl();
   const s = sozluk(dil).envanter.liste;
   const sayi = sayiBicimi(dil);
@@ -57,7 +63,7 @@ export default async function EnvanterSayfasi({
   const konumlar = (konumVerisi ?? []) as Konum[];
   const agac = agacKur(konumlar);
 
-  let sorgu = supabase.from('envanter').select('*').eq('user_id', hedef).limit(LIMIT);
+  let sorgu = supabase.from('envanter').select('*').eq('user_id', hedef).limit(gosterilen);
 
   if (konum) {
     sorgu = sorgu.in('konum_id', altAgacIdleri(konum, konumlar));
@@ -122,14 +128,23 @@ export default async function EnvanterSayfasi({
     .select('id', { count: 'exact', head: true })
     .eq('user_id', hedef);
 
-  const { data: stokOzetVerisi } = await supabase
-    .from('stock_items')
-    .select('location_id, adet, alis_fiyati, para_birimi')
-    .eq('user_id', hedef);
+  // Konum sayıları ve depo değeri tüm kalemlerden hesaplanır (1000 satır sınırına takılmadan)
+  const stokOzetVerisi = await tumSatirlar<{
+    location_id: string | null;
+    adet: number;
+    alis_fiyati: number | null;
+    para_birimi: string | null;
+  }>(() =>
+    supabase
+      .from('stock_items')
+      .select('location_id, adet, alis_fiyati, para_birimi')
+      .eq('user_id', hedef)
+      .order('id', { ascending: true }),
+  ).catch(() => []);
 
   const dogrudanSayilar = new Map<string, number>();
   const depoDegeri = new Map<string, number>();
-  for (const row of stokOzetVerisi ?? []) {
+  for (const row of stokOzetVerisi) {
     if (row.location_id) {
       dogrudanSayilar.set(row.location_id, (dogrudanSayilar.get(row.location_id) ?? 0) + 1);
     }
@@ -182,7 +197,7 @@ export default async function EnvanterSayfasi({
             </h1>
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>
               {s.kayitAdet(satirlar.length, sayi.format(toplamAdet))}
-              {satirlar.length === LIMIT && s.ilk(LIMIT)}
+              {satirlar.length === gosterilen && s.ilk(gosterilen)}
             </span>
           </div>
 
@@ -232,6 +247,23 @@ export default async function EnvanterSayfasi({
           )}
           {!error && satirlar.length > 0 && gorunum !== 'izgara' && (
             <ParcaTablosu satirlar={satirlar} saltOkunur={saltOkunur} />
+          )}
+          {!error && satirlar.length === gosterilen && gosterilen < EN_FAZLA && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
+              <Link
+                className="btn"
+                scroll={false}
+                href={{
+                  query: Object.fromEntries(
+                    Object.entries({ ...parametreler, adet: String(gosterilen + LIMIT) }).filter(
+                      (g): g is [string, string] => typeof g[1] === 'string' && g[1] !== '',
+                    ),
+                  ),
+                }}
+              >
+                {s.dahaFazla(LIMIT)}
+              </Link>
+            </div>
           )}
         </div>
         </main>

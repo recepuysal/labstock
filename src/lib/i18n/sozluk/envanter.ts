@@ -62,6 +62,7 @@ const tr = {
     tumEnvanter: 'Tüm envanter',
     kayitAdet: (kayit: number, adet: string) => `${kayit} kayıt · ${adet} adet`,
     ilk: (n: number) => ` (ilk ${n})`,
+    dahaFazla: (n: number) => `${n} kayıt daha yükle`,
     yuklenemedi: 'Liste yüklenemedi:',
     bosBaslik: 'Depon henüz boş',
     bosIzleyen: 'İzlediğin depo henüz boş.',
@@ -353,6 +354,7 @@ const en: Sekil<typeof tr> = {
     kayitAdet: (kayit: number, adet: string) =>
       `${kayit} ${kayit === 1 ? 'record' : 'records'} · ${adet} pcs`,
     ilk: (n: number) => ` (first ${n})`,
+    dahaFazla: (n: number) => `Load ${n} more`,
     yuklenemedi: 'Could not load the list:',
     bosBaslik: 'Your inventory is empty',
     bosIzleyen: 'The inventory you are viewing is empty.',
