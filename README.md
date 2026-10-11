@@ -41,6 +41,11 @@
   </picture>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/sayim-demo.gif" alt="Count parts with your phone camera and write the count to LabStock" width="800"><br>
+  <sub>Pour parts on the table, count them with your phone camera, write the count to LabStock — <a href="#count-parts-with-your-phone-camera-desktop-app">how it works</a></sub>
+</p>
+
 ## Why LabStock?
 
 Anyone who does electronics as a hobby or runs a small production workshop ends

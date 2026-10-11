@@ -39,6 +39,11 @@
   </picture>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/sayim-demo.gif" alt="Telefon kamerasıyla parça sayıp LabStock'a yazma" width="800"><br>
+  <sub>Parçaları masaya dök, telefon kamerasıyla say, LabStock'a yaz — <a href="#telefon-kamerasıyla-sayım-ve-etiketten-giriş-masaüstü-uygulaması">nasıl çalışır</a></sub>
+</p>
+
 ## Neden LabStock?
 
 Elektronikle uğraşan ya da küçük bir üretim atölyesi işleten herkes aynı soruyu
