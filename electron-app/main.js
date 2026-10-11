@@ -65,6 +65,9 @@ function pencereyiAc() {
     icon: path.join(__dirname, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      // Windows/macOS işletim sisteminin kendi yazım denetimini kullanır; Linux'ta
+      // Electron sözlüğü Google'ın sunucusundan indirir — gereksiz dış bağlantı.
+      spellcheck: process.platform !== 'linux',
     },
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());

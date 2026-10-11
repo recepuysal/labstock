@@ -10,6 +10,8 @@
     "kamera-dosyalari": "node scripts/kamera-dosyalari.js"
   },
   "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.58.0",
     "next": "^16.3.4",

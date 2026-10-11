@@ -1,4 +1,13 @@
 import type { Metadata } from 'next';
+// Yazı tipleri uygulamayla birlikte paketlenir (@fontsource): açılışta Google
+// Fonts'a istek atılmaz, derleme de ağ gerektirmez.
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
+import '@fontsource/space-grotesk/600.css';
+import '@fontsource/space-grotesk/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/700.css';
 import './globals.css';
 import { GuncellemeBildirimi } from '@/components/guncelleme-bildirimi';
 import { AlinacaklarBildirimi } from '@/components/alinacaklar-bildirimi';
@@ -29,14 +38,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('labstock-tema')==='koyu'){document.documentElement.setAttribute('data-theme','koyu');}}catch(e){}`,
           }}
-        />
-        {/* next/font yerine <link>: derleme sırasında Google'a istek atmaz,
-            ağı kısıtlı ortamlarda build kırılmaz. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
         />
       </head>
       <body>
