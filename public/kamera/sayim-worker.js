@@ -16,6 +16,7 @@
  *   { tur: 'tedarikci', kaynak, kod, mpn, adet, iz }  tedarikçi poşet etiketi (LCSC)
  *   { tur: 'dokunuldu', amac, alan, w, h, x, y, kac } | { tur: 'dokunuldu', amac, yok: true }
  *   { tur: 'resim', veri: ArrayBuffer(JPEG), sayim: bool }  { tur: 'anahtar' }  { tur: 'hata', mesaj }
+ *   { tur: 'isaretler', bolgeler: [[x, y, w, h, kac]], referans: [x, y, w, h] | null }  (0-1, canlı sayım)
  */
 /* global cv, jsQR, LabSayim */
 importScripts('opencv.js', 'jsQR.js', 'sayim.js');
@@ -368,7 +369,17 @@ async function isle() {
           if (!sabitB) sonuc.adet = sabitleyici.guncelle(sonuc); // gösterilen sayı: son karelerin ortancası
           else sonuc.adet = sabitleyici.guncelle({ adet: sonuc.adet, birimTahmin: null });
           gonder({ tur: 'sayim', adet: sonuc.adet, sabit: false, uyari: sonuc.uyari });
-          await isaretliGonder(tuval, w, h, sonuc, true);
+          // Canlı sayımda telefona resim değil sadece işaretler gider: telefon kendi canlı
+          // videosunu gösterip işaretleri üstüne çizer (resim beklerken görüntü donuyordu).
+          const n = (v, b) => Math.round((v / b) * 10000) / 10000;
+          gonder({
+            tur: 'isaretler',
+            bolgeler: sonuc.bolgeler.map(([x, y, bw, bh, , kac]) => [n(x, w), n(y, h), n(bw, w), n(bh, h), kac]),
+            referans: sonuc.referansKutusu
+              ? [n(sonuc.referansKutusu[0], w), n(sonuc.referansKutusu[1], h), n(sonuc.referansKutusu[2], w), n(sonuc.referansKutusu[3], h)]
+              : null,
+          });
+          if (onizlemeAcik) await isaretliGonder(tuval, w, h, sonuc, false); // sadece PC panelindeki önizleme
         }
       }
     } else if (onizlemeAcik && simdi - sonOnizleme >= ONIZLEME_ARALIK) {

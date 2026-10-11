@@ -116,6 +116,8 @@
 
  /* ---- Sayım */
  #sayimResim{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none}
+ #isaretTuval{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
+ body.sayim #isaretTuval{display:block}
  body.sayim #sayimResim.var{display:block}
  body.sayim #istat{display:none!important}
  #sayimKart{flex:none;display:none;margin:8px 10px 0;padding:12px 14px;border-radius:18px;background:#1c1c1e}
@@ -205,6 +207,7 @@
    <div class="adres" id="adres"></div>
   </div>
   <img id="sayimResim" alt="">
+  <canvas id="isaretTuval"></canvas>
   </div>
 
   <header class="ust">
@@ -515,7 +518,7 @@ const kac=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 function modSec(m){
   MOD=m; document.body.classList.toggle('sayim', m==='sayim');
   document.querySelectorAll('#modSecici button').forEach(b=>b.classList.toggle('on', b.dataset.mod===m));
-  sayim.sabit=false; olayGonder({olay:'mod', mod:m});
+  sayim.sabit=false; olayGonder({olay:'mod', mod:m}); canliyaDon();
   if(m==='sayim' && !calisiyor) basla();
   kartCiz();
 }
@@ -710,6 +713,7 @@ function girisCiz(){
 function sayimMesaji(m){
   if(m.resim){ return; }
   if(m.sayim){ if(!(sayim.sabit && !m.sayim.sabit)){ sayim.adet=m.sayim.adet; sayim.sabit=!!m.sayim.sabit; sayim.uyari=m.sayim.uyari||null; } }
+  if(m.sayim && !sayim.sabit && $('sayimResim').classList.contains('var')) canliyaDon(); // canlı sayıma dönüldü: canlı video
   if(m.qr){ if(navigator.vibrate) navigator.vibrate(30); }
   if(m.parca){
     if(m.parca.ok){ sayim.parca=m.parca; sayim.konum=null; mesaj(T.secildi(m.parca.mpn),1500); }
@@ -751,6 +755,31 @@ function sayimMesaji(m){
   if(MOD==='sayim') kartCiz();
 }
 
+// Canlı sayım işaretleri: PC'nin saydığı bölgeler (0-1) canlı videonun üstüne çizilir.
+let isaretZamani=0;
+function isaretleriCiz(m){
+  const t=$('isaretTuval'), r=t.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  if(t.width!==Math.round(r.width*dpr)||t.height!==Math.round(r.height*dpr)){ t.width=Math.round(r.width*dpr); t.height=Math.round(r.height*dpr); }
+  const c=t.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,t.width,t.height);
+  if(!m||$('sayimResim').classList.contains('var')) return;
+  const iw=v.videoWidth, ih=v.videoHeight; if(!iw||!ih) return;
+  // video object-fit:contain — görünen dikdörtgen
+  const o=Math.min(t.width/iw, t.height/ih), gw=iw*o, gh=ih*o, ox=(t.width-gw)/2, oy=(t.height-gh)/2;
+  const ayna=v.classList.contains('ayna');
+  const kutu=(x,y,w,h)=>[ox+(ayna?1-x-w:x)*gw, oy+y*gh, w*gw, h*gh];
+  c.lineWidth=Math.max(2,Math.round(gw/360)); c.font='700 '+Math.round(gw/26)+'px system-ui,sans-serif';
+  if(m.r){ const [x,y,w,h]=kutu(...m.r); c.strokeStyle='#3b82f6'; c.beginPath(); c.ellipse(x+w/2,y+h/2,w/2+4,h/2+4,0,0,Math.PI*2); c.stroke(); }
+  for(const [bx,by,bw,bh,k] of (m.b||[])){
+    const [x,y,w,h]=kutu(bx,by,bw,bh), renk=k===1?'#50dc50':'#ffa500';
+    c.strokeStyle=renk; c.strokeRect(x,y,w,h);
+    if(k>1){ c.fillStyle=renk; c.fillText('x'+k, x, Math.max(gw/26, y-4)); }
+  }
+  isaretZamani=performance.now();
+}
+// Bir süre yeni işaret gelmezse eskileri kaldır (kamera başka yere dönmüş olabilir)
+setInterval(()=>{ if(isaretZamani && performance.now()-isaretZamani>1500){ isaretZamani=0; isaretleriCiz(null); } },500);
+function canliyaDon(){ $('sayimResim').classList.remove('var'); isaretleriCiz(null); }
+
 function resimGeldi(buf){
   const blob=new Blob([new Uint8Array(buf,1)],{type:'image/jpeg'});
   const eski=resimUrl; resimUrl=URL.createObjectURL(blob);
@@ -780,6 +809,7 @@ function baglan(){
   ws.onmessage=e=>{
     if(e.data instanceof ArrayBuffer){ if(new Uint8Array(e.data)[0]===0x10) resimGeldi(e.data); return; }
     const m=JSON.parse(e.data);
+    if(m.isaretler){ if(MOD==='sayim' && !sayim.sabit) isaretleriCiz(m.isaretler); return; }
     if(m.sayim||m.qr||m.parca||m.konum||m.arama||m.labstock||m.islendi||m.giris||m.girisSonuc||('olcek' in m)||('birim' in m)||m.dokunHata||m.bilgiMesaj){ sayimMesaji(m); return; }
     if(m.surum && m.surum!==SURUM){
       try{ sessionStorage.setItem('otomatik', calisiyor?'1':''); }catch(_){}

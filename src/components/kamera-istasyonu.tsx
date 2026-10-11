@@ -154,6 +154,9 @@ export function KameraIstasyonu() {
           api.gonder({ sayim: { adet: m.adet, sabit: m.sabit, uyari: m.uyari === UYARI_TR ? k.telefon.parcalarDegiyor : (m.uyari ?? null) } });
           setSonAdet({ adet: m.adet, sabit: !!m.sabit });
           break;
+        case 'isaretler':
+          api.gonder({ isaretler: { b: m.bolgeler, r: m.referans } });
+          break;
         case 'resim': {
           const jpeg = new Uint8Array(m.veri);
           if (m.sayim) {
