@@ -36,6 +36,8 @@ function sunucuyuBaslat() {
       NODE_ENV: 'production',
       // Çevrimdışı mod (Ayarlar → Veri depolama): SQLite dosyası ve mod tercihi burada.
       LABSTOCK_VERI_DIZINI: app.getPath('userData'),
+      // Anonim kurulum sayacı için (src/lib/kurulum.ts)
+      LABSTOCK_SURUM: app.getVersion(),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

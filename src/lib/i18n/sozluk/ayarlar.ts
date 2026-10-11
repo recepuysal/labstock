@@ -229,6 +229,14 @@ const tr = {
     baslik: 'İstatistikler',
     aciklama: 'Tüm kullanıcılara ait toplu sayılar. Kişisel bilgi gösterilmez.',
     uyeler: 'ÜYELER',
+    kurulumlar: 'KURULUMLAR (ANONİM)',
+    kurulumToplam: 'Toplam kurulum',
+    kurulumYeni: (n: string) => `son 7 günde ${n} yeni`,
+    kurulumAktif: 'Son 7 günde açılan',
+    kurulumBugun: (n: string) => `son 24 saatte ${n}`,
+    kurulumCevrimdisi: 'Çevrimdışı modda',
+    kurulumPlatform: (p: string) => p,
+    kurulumAciklama: 'Hesap açmadan ya da çevrimdışı kullananlar dahil. v1.21.4 ve sonrası sayılır.',
     toplamUye: 'Toplam üye',
     dogrulanmis: (n: string) => `${n} e-postası doğrulanmış`,
     son7Giris: 'Son 7 günde giriş',
@@ -266,6 +274,8 @@ const tr = {
   },
   depolama: {
     baslik: 'VERİ DEPOLAMA',
+    anonimSayac:
+      'Anonim kurulum sayısına katıl: açılışta yalnızca rastgele bir kurulum kimliği, sürüm, işletim sistemi ve veri modu gönderilir. Hesap, e-posta ya da envanter bilgisi gönderilmez.',
     bulutEtiket: 'Bulutta sakla (önerilen)',
     bulutAciklama:
       'Verilerin hesabına bağlı olarak güvenli bir bulut veritabanında (Supabase) tutulur. Böylece birden fazla bilgisayardan aynı stoğu görebilir, gözlemci ekleyebilir ve haftalık yedek e-postası alabilirsin.',
@@ -560,6 +570,14 @@ const en: Sekil<typeof tr> = {
     baslik: 'Statistics',
     aciklama: 'Aggregate numbers across all users. No personal information is shown.',
     uyeler: 'MEMBERS',
+    kurulumlar: 'INSTALLATIONS (ANONYMOUS)',
+    kurulumToplam: 'Total installations',
+    kurulumYeni: (n: string) => `${n} new in the last 7 days`,
+    kurulumAktif: 'Opened in the last 7 days',
+    kurulumBugun: (n: string) => `${n} in the last 24 hours`,
+    kurulumCevrimdisi: 'In offline mode',
+    kurulumPlatform: (p: string) => p,
+    kurulumAciklama: 'Includes people using it without an account or offline. Counted from v1.21.4 on.',
     toplamUye: 'Total members',
     dogrulanmis: (n: string) => `${n} with verified email`,
     son7Giris: 'Signed in, last 7 days',
@@ -597,6 +615,8 @@ const en: Sekil<typeof tr> = {
   },
   depolama: {
     baslik: 'DATA STORAGE',
+    anonimSayac:
+      'Count this installation anonymously: on launch only a random installation ID, the version, the operating system and the storage mode are sent. No account, email or inventory data.',
     bulutEtiket: 'Store in the cloud (recommended)',
     bulutAciklama:
       'Your data is kept in a secure cloud database (Supabase) linked to your account, so you can see the same stock from several computers, add observers and get the weekly backup email.',

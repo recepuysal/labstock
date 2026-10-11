@@ -29,6 +29,8 @@ export type YerelAyar = {
   /** "Buluta dön ve verilerimi ekle" seçildi ama oturum kapalıydı: girişten
    * hemen sonra eklenir. */
   otomatikEkle?: boolean;
+  /** Anonim kurulum sayacına katıl (varsayılan açık; bkz. lib/kurulum.ts). */
+  anonimSayac?: boolean;
 };
 
 const AYAR_DOSYASI = 'depolama.json';

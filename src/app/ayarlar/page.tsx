@@ -160,6 +160,7 @@ export default async function AyarlarSayfasi() {
             yuklemeBekliyor={Boolean(depolama.yuklemeBekliyor)}
             sonDegisiklik={sonDegisiklik}
             yedekler={yedekler}
+            anonimSayac={depolama.anonimSayac !== false}
           />
         )}
 

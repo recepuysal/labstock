@@ -19,6 +19,11 @@ what data the app handles and why.
   OpenRouter, Anthropic Claude) are stored in your account and can only be
   read by you, together with a daily request count per key (shown as the usage bar).
 - **Feedback:** messages you send from Settings → Feedback.
+- **Anonymous installation count (desktop app):** on launch the app sends a
+  random installation ID (not linked to your account), the app version, the
+  operating system and the storage mode (cloud / offline). Nothing else — no
+  email, inventory or IP address is stored. You can turn this off in
+  Settings → Data storage.
 
 Your inventory is visible only to you and to people you explicitly give an
 invite code to (read-only “viewers”). You can remove a viewer at any time.
@@ -49,7 +54,9 @@ invite code to (read-only “viewers”). You can remove a viewer at any time.
 
 ## What we don't do
 
-No ads, no analytics or tracking, and we never sell or share your data.
+No ads and no tracking of what you do in the app; the only usage data is the
+anonymous installation count above, which you can turn off. We never sell or
+share your data.
 
 ## Deleting your data
 
@@ -83,6 +90,10 @@ politika, uygulamanın hangi verileri neden işlediğini açıklar.
   (Google Gemini, Groq, OpenRouter, Anthropic Claude) hesabında saklanır ve
   yalnızca sen okuyabilirsin; her anahtar için günlük istek sayısı da tutulur (kullanım barı).
 - **Geri bildirim:** Ayarlar → Geri Bildirim'den gönderdiğin mesajlar.
+- **Anonim kurulum sayısı (masaüstü uygulaması):** uygulama açılışta rastgele
+  bir kurulum kimliği (hesabına bağlı değil), sürüm, işletim sistemi ve veri
+  modunu (bulut / çevrimdışı) gönderir. Başka bir şey — e-posta, envanter ya da
+  IP adresi — saklanmaz. Ayarlar → Veri depolama'dan kapatabilirsin.
 
 Envanterini yalnızca sen ve davet kodunu bizzat verdiğin kişiler (salt-okunur
 “gözlemciler”) görebilir. Bir gözlemciyi istediğin an çıkarabilirsin.
@@ -113,7 +124,8 @@ Envanterini yalnızca sen ve davet kodunu bizzat verdiğin kişiler (salt-okunur
 
 ## Yapmadıklarımız
 
-Reklam yok, analitik ya da izleme yok; verilerini asla satmayız veya paylaşmayız.
+Reklam yok, uygulamada ne yaptığın izlenmez; tek kullanım verisi yukarıdaki,
+kapatılabilen anonim kurulum sayısıdır. Verilerini asla satmayız veya paylaşmayız.
 
 ## Verilerini silmek
 

@@ -25,6 +25,13 @@ async function bulutKullanicisi() {
   return { bulut, user };
 }
 
+/** Ayarlar → Veri depolama: anonim kurulum sayacını aç/kapat. */
+export async function anonimSayacAyarla(acik: boolean): Promise<void> {
+  if (!yerelModDestekleniyor()) return;
+  ayarYaz({ ...ayarOku(), anonimSayac: acik });
+  revalidatePath('/ayarlar');
+}
+
 /** Buluttan çevrimdışına: hesabın verisini bu bilgisayara kopyalar. */
 export async function cevrimdisiModaGec(): Promise<EylemDurum> {
   const m = await metin();

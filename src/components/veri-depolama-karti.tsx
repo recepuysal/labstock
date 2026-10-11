@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { bulutaDon, cevrimdisiModaGec, yedektenGeriEkle, yerelVerileriYukle, yuklemeyiAtla } from '@/app/ayarlar/depolama-actions';
+import { anonimSayacAyarla, bulutaDon, cevrimdisiModaGec, yedektenGeriEkle, yerelVerileriYukle, yuklemeyiAtla } from '@/app/ayarlar/depolama-actions';
 import { useSozluk } from '@/lib/i18n/istemci';
 
 /** Ayarlar → Veri depolama: bulut (varsayılan) ↔ çevrimdışı mod anahtarı. */
@@ -11,6 +11,7 @@ export function VeriDepolamaKarti({
   yuklemeBekliyor,
   sonDegisiklik,
   yedekler,
+  anonimSayac,
 }: {
   mod: 'bulut' | 'yerel';
   dosyaYolu: string;
@@ -19,6 +20,8 @@ export function VeriDepolamaKarti({
   sonDegisiklik: string | null;
   /** Bu hesaba ait önceki bulut yedekleri (etiket sunucuda hazırlanır). */
   yedekler: { ad: string; etiket: string }[];
+  /** Anonim kurulum sayacına katılım (varsayılan açık). */
+  anonimSayac: boolean;
 }) {
   const s = useSozluk().ayarlar.depolama;
   const [onay, setOnay] = useState(false);
@@ -26,6 +29,7 @@ export function VeriDepolamaKarti({
   const [mesaj, setMesaj] = useState<{ hata?: string; bilgi?: string }>({});
   const [yuklemeSorusu, setYuklemeSorusu] = useState(yuklemeBekliyor);
   const bulutta = mod === 'bulut';
+  const [sayac, setSayac] = useState(anonimSayac);
 
   function onayla(ekle = false) {
     setMesaj({});
@@ -88,6 +92,20 @@ export function VeriDepolamaKarti({
         {bulutta ? s.bulutAciklama : s.cevrimdisiAciklama}
       </p>
       {bulutta && <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.kapatAciklama}</p>}
+
+      <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 14, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.5, cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={sayac}
+          style={{ marginTop: 2 }}
+          onChange={(e) => {
+            const acik = e.target.checked;
+            setSayac(acik);
+            void anonimSayacAyarla(acik);
+          }}
+        />
+        <span>{s.anonimSayac}</span>
+      </label>
 
       {!bulutta && (
         <>

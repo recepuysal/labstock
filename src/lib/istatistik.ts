@@ -53,6 +53,23 @@ export async function istatistikleriGetir(supabase: Supabase): Promise<Istatisti
   return data as Istatistikler;
 }
 
+export type KurulumIstatistikleri = {
+  toplam: number;
+  son24_aktif: number;
+  son7_aktif: number;
+  son7_yeni: number;
+  cevrimdisi: number;
+  platform: Record<string, number>;
+  surum: Record<string, number>;
+};
+
+/** Anonim kurulum sayacı (0008 göçü); fonksiyon yoksa null. */
+export async function kurulumIstatistikleri(supabase: Supabase): Promise<KurulumIstatistikleri | null> {
+  const { data, error } = await supabase.rpc('kurulum_istatistikleri');
+  if (error || !data) return null;
+  return data as KurulumIstatistikleri;
+}
+
 type GithubSurum = { tag_name: string; draft: boolean; prerelease: boolean; assets: { name: string; download_count: number }[] };
 
 /** GitHub sürümlerindeki indirme sayaçları. Kurulum dosyası sayısı otomatik
