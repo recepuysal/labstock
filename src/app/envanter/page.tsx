@@ -63,52 +63,67 @@ export default async function EnvanterSayfasi({
   const konumlar = (konumVerisi ?? []) as Konum[];
   const agac = agacKur(konumlar);
 
-  let sorgu = supabase.from('envanter').select('*').eq('user_id', hedef).limit(gosterilen);
-
-  if (konum) {
-    sorgu = sorgu.in('konum_id', altAgacIdleri(konum, konumlar));
-  }
-  if (q) {
-    const desen = `%${q.replace(/[%,]/g, '')}%`;
-    sorgu = sorgu.or(`mpn.ilike.${desen},aciklama.ilike.${desen},kategori.ilike.${desen}`);
-  }
-  if (kategori) sorgu = sorgu.eq('kategori', kategori);
-  if (kilif) sorgu = sorgu.eq('kilif', kilif);
-  if (durum) sorgu = sorgu.eq('durum', durum);
-
-  let etiketliBosSonuc = false;
+  let stokIdleri: string[] | null = null;
   if (etiket) {
-    const { data: etiketliStokVerisi } = await supabase
-      .from('stock_item_tags')
-      .select('stock_item_id, tags!inner(ad, user_id)')
-      .eq('tags.ad', etiket)
-      .eq('tags.user_id', hedef);
-    const stokIdleri = (etiketliStokVerisi ?? []).map((r) => r.stock_item_id);
-    if (stokIdleri.length === 0) etiketliBosSonuc = true;
-    else sorgu = sorgu.in('stok_id', stokIdleri);
+    const etiketliStokVerisi = await tumSatirlar<{ stock_item_id: string }>(() =>
+      supabase
+        .from('stock_item_tags')
+        .select('stock_item_id, tags!inner(ad, user_id)')
+        .eq('tags.ad', etiket)
+        .eq('tags.user_id', hedef)
+        .order('stock_item_id', { ascending: true })
+        .order('tag_id', { ascending: true }),
+    ).catch(() => []);
+    stokIdleri = etiketliStokVerisi.map((r) => r.stock_item_id);
   }
 
-  switch (sira) {
-    case 'eski':
-      sorgu = sorgu.order('updated_at', { ascending: true });
-      break;
-    case 'ad':
-      sorgu = sorgu.order('mpn', { ascending: true });
-      break;
-    case 'adet-azalan':
-      sorgu = sorgu.order('adet', { ascending: false });
-      break;
-    case 'adet-artan':
-      sorgu = sorgu.order('adet', { ascending: true });
-      break;
-    default:
-      sorgu = sorgu.order('updated_at', { ascending: false });
+  // Supabase tek istekte en fazla 1000 satır verdiği için liste sayfa sayfa
+  // okunur; sorgu her sayfa için yeniden kurulur.
+  function listeSorgusu() {
+    let sorgu = supabase.from('envanter').select('*').eq('user_id', hedef);
+    if (konum) sorgu = sorgu.in('konum_id', altAgacIdleri(konum, konumlar));
+    if (q) {
+      const desen = `%${q.replace(/[%,]/g, '')}%`;
+      sorgu = sorgu.or(`mpn.ilike.${desen},aciklama.ilike.${desen},kategori.ilike.${desen}`);
+    }
+    if (kategori) sorgu = sorgu.eq('kategori', kategori);
+    if (kilif) sorgu = sorgu.eq('kilif', kilif);
+    if (durum) sorgu = sorgu.eq('durum', durum);
+    if (stokIdleri) sorgu = sorgu.in('stok_id', stokIdleri);
+
+    switch (sira) {
+      case 'eski':
+        sorgu = sorgu.order('updated_at', { ascending: true });
+        break;
+      case 'ad':
+        sorgu = sorgu.order('mpn', { ascending: true });
+        break;
+      case 'adet-azalan':
+        sorgu = sorgu.order('adet', { ascending: false });
+        break;
+      case 'adet-artan':
+        sorgu = sorgu.order('adet', { ascending: true });
+        break;
+      default:
+        sorgu = sorgu.order('updated_at', { ascending: false });
+    }
+    // Sayfa sınırında satır kaymasın diye benzersiz son sıralama
+    return sorgu.order('stok_id', { ascending: true });
   }
 
-  const { data, error } = etiketliBosSonuc ? { data: [] as EnvanterSatiri[], error: null } : await sorgu;
-  const satirlar = (data ?? []) as EnvanterSatiri[];
+  let satirlar: EnvanterSatiri[] = [];
+  let error: { message: string } | null = null;
+  if (stokIdleri?.length !== 0) {
+    try {
+      satirlar = await tumSatirlar<EnvanterSatiri>(listeSorgusu, gosterilen);
+    } catch (e) {
+      error = { message: e instanceof Error ? e.message : String(e) };
+    }
+  }
 
-  const { data: katalogVerisi } = await supabase.from('parts').select('kategori, kilif');
+  const katalogVerisi = await tumSatirlar<{ kategori: string | null; kilif: string | null }>(() =>
+    supabase.from('parts').select('kategori, kilif').order('id', { ascending: true }),
+  ).catch(() => []);
   const kategoriler = Array.from(
     new Set((katalogVerisi ?? []).map((p) => p.kategori).filter((v): v is string => Boolean(v))),
   ).sort((a, b) => a.localeCompare(b, 'tr'));

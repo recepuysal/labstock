@@ -15,15 +15,18 @@ type SayfaliSorgu = {
   range: (bas: number, son: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
 };
 
-/** Sorgunun tüm satırlarını sayfa sayfa çeker; hata olursa fırlatır.
- *  Sıralama benzersiz olmalı (ör. son sırada id), yoksa sayfa sınırında satır kayabilir. */
-export async function tumSatirlar<T>(sorgu: () => SayfaliSorgu): Promise<T[]> {
+/** Sorgunun tüm satırlarını (ya da en fazla `sinir` kadarını) sayfa sayfa çeker;
+ *  hata olursa fırlatır. Sıralama benzersiz olmalı (ör. son sırada id), yoksa
+ *  sayfa sınırında satır kayabilir. */
+export async function tumSatirlar<T>(sorgu: () => SayfaliSorgu, sinir = Infinity): Promise<T[]> {
   const sonuc: T[] = [];
-  for (let bas = 0; ; bas += SAYFA) {
-    const { data, error } = await sorgu().range(bas, bas + SAYFA - 1);
+  for (let bas = 0; bas < sinir; bas += SAYFA) {
+    const boy = Math.min(SAYFA, sinir - bas);
+    const { data, error } = await sorgu().range(bas, bas + boy - 1);
     if (error) throw new Error(error.message);
     const satirlar = (data ?? []) as T[];
     sonuc.push(...satirlar);
-    if (satirlar.length < SAYFA) return sonuc;
+    if (satirlar.length < boy) break;
   }
+  return sonuc;
 }
