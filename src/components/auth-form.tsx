@@ -3,7 +3,13 @@
 import { useActionState, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Marka } from './marka';
-import { kodDogrula, kodYenidenGonder, type AuthDurum } from '@/app/auth-actions';
+import { kodDogrula, kodYenidenGonder, oauthIleGiris, type AuthDurum } from '@/app/auth-actions';
+
+// Açık sağlayıcılar (Supabase'te etkinleştirildikçe Vercel'de ayarlanır): "github,google"
+const OAUTH = (process.env.NEXT_PUBLIC_OAUTH_SAGLAYICILAR ?? '')
+  .split(',')
+  .map((p) => p.trim())
+  .filter((p): p is 'github' | 'google' => p === 'github' || p === 'google');
 import { DilSecici } from './dil-secici';
 import { useSozluk } from '@/lib/i18n/istemci';
 
@@ -34,6 +40,8 @@ export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Pro
   const [kodDurum, kodGonder, kodBekliyor] = useActionState<AuthDurum, FormData>(kodDogrula, {});
   const [geriDon, setGeriDon] = useState(false);
   const [yenidenGonderiliyor, yenidenBasla] = useTransition();
+  const [webde, setWebde] = useState(false);
+  useEffect(() => setWebde(!window.electronAPI), []);
   const [yenidenMesaj, setYenidenMesaj] = useState<string | null>(null);
   const kodAdimindeyiz = Boolean(durum.kodBekleniyor) && !geriDon;
 
@@ -341,6 +349,21 @@ export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Pro
             )}
           </p>
         </form>
+
+        {/* GitHub / Google ile giriş: yalnızca web sürümünde (masaüstünde Google
+            uygulama içi pencereden girişe izin vermiyor) */}
+        {webde && OAUTH.length > 0 && (
+          <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
+            <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--muted-2)' }}>{s.veya}</div>
+            {OAUTH.map((p) => (
+              <form key={p} action={oauthIleGiris.bind(null, p, devam)}>
+                <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center' }}>
+                  {p === 'github' ? s.githubIle : s.googleIle}
+                </button>
+              </form>
+            ))}
+          </div>
+        )}
 
         {hesapsizEylem && (
           <form action={hesapsizEylem} style={{ marginTop: 14, textAlign: 'center' }}>

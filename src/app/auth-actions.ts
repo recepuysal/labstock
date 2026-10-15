@@ -146,3 +146,17 @@ export async function cikisYap() {
   revalidatePath('/', 'layout');
   redirect('/giris');
 }
+
+/** GitHub / Google ile giriş (web sürümü): sağlayıcının sayfasına yönlendirir,
+ * dönüş /auth/callback'te oturuma çevrilir. Sağlayıcılar Supabase →
+ * Authentication → Sign In / Providers'ta açık olmalı. */
+export async function oauthIleGiris(saglayici: 'github' | 'google', devam: string): Promise<void> {
+  const { headers } = await import('next/headers');
+  const h = await headers();
+  const koken = h.get('origin') ?? `https://${h.get('host')}`;
+  const supabase = await createClient();
+  const hedef = `${koken}/auth/callback?devam=${encodeURIComponent(devam.startsWith('/') ? devam : '/envanter')}`;
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: saglayici, options: { redirectTo: hedef } });
+  if (error || !data.url) redirect('/giris?hata=oauth');
+  redirect(data.url);
+}
