@@ -5,6 +5,14 @@ import { yerelModda } from '@/lib/yerel/mod';
 const HERKESE_ACIK = ['/giris', '/kayit', '/auth'];
 
 export async function proxy(request: NextRequest) {
+  // GitHub / Google girişi: Supabase dönüş adresini izinli listede bulamazsa
+  // Site URL'e (/?code=...) döner — kodu oturuma çeviren sayfaya aktar.
+  if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.has('code')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    return NextResponse.redirect(url);
+  }
+
   // Çevrimdışı mod: hesap yok, oturum kontrolü de yok — giriş/kayıt sayfaları
   // yerine doğrudan envantere.
   if (yerelModda()) {
