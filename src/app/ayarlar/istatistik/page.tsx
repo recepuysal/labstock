@@ -39,6 +39,15 @@ export default async function IstatistikSayfasi() {
   // Yönetici olmayan biri adresi bilse bile sayfanın varlığını görmesin.
   if (!(await yoneticiMi(supabase))) notFound();
 
+  // Masaüstünde: yöneticinin bu kurulumu kurulum sayılarına katılmasın (0011 göçü).
+  if (process.env.LABSTOCK_VERI_DIZINI) {
+    const { kurulumKimligi } = await import('@/lib/kurulum');
+    await supabase.rpc('kurulum_haric_isaretle', { p_id: kurulumKimligi() }).then(
+      () => {},
+      () => {},
+    );
+  }
+
   const [ist, github, kurulum, site, kaynak, dil] = await Promise.all([
     istatistikleriGetir(supabase),
     githubIndirmeleri(),

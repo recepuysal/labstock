@@ -11,7 +11,7 @@ import { ayarOku, veriDizini } from './yerel/mod';
 
 const KIMLIK_DOSYASI = 'kurulum-id';
 
-function kurulumKimligi(): string {
+export function kurulumKimligi(): string {
   const yol = path.join(veriDizini(), KIMLIK_DOSYASI);
   try {
     const kayitli = fs.readFileSync(yol, 'utf8').trim();
