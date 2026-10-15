@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { yerelDosyaDizini } from '@/lib/yerel/istemci';
+import { yerelModDestekleniyor } from '@/lib/yerel/mod';
 
 const TIPLER: Record<string, string> = {
   png: 'image/png',
@@ -16,6 +17,8 @@ const TIPLER: Record<string, string> = {
 export async function GET(_istek: Request, { params }: { params: Promise<{ yol: string[] }> }) {
   const { yol } = await params;
   const bulunamadi = () => new Response('Bulunamadı', { status: 404 });
+  // Web sürümünde (sunucu internete açık) yerel dosya sunulmaz
+  if (!yerelModDestekleniyor()) return bulunamadi();
   const kok = path.resolve(yerelDosyaDizini());
   let hedef: string;
   try {

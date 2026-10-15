@@ -629,7 +629,17 @@ export async function linkOnizle(url: string): Promise<LinkOnizilemesi> {
   }
 
   try {
-    const sayfaYaniti = await fetch(ayrikUrl.toString(), { headers: { 'User-Agent': TARAYICI_USER_AGENT } });
+    // Yönlendirmeler elle izlenir: her adımda hedef yeniden kontrol edilir
+    // (güvenli bir adres iç ağa yönlendirmesin).
+    let hedefUrl = ayrikUrl;
+    let sayfaYaniti = await fetch(hedefUrl, { headers: { 'User-Agent': TARAYICI_USER_AGENT }, redirect: 'manual' });
+    for (let adim = 0; adim < 5 && sayfaYaniti.status >= 300 && sayfaYaniti.status < 400; adim++) {
+      const konum = sayfaYaniti.headers.get('location');
+      if (!konum) break;
+      hedefUrl = new URL(konum, hedefUrl);
+      if (!guvenliDisUrlMi(hedefUrl)) return { hata: h.gecersizBaglanti };
+      sayfaYaniti = await fetch(hedefUrl, { headers: { 'User-Agent': TARAYICI_USER_AGENT }, redirect: 'manual' });
+    }
     if (!sayfaYaniti.ok) return { hata: h.sayfaAlinamadi(sayfaYaniti.status) };
     const html = await sayfaYaniti.text();
 
