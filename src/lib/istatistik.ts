@@ -70,6 +70,22 @@ export async function kurulumIstatistikleri(supabase: Supabase): Promise<Kurulum
   return data as KurulumIstatistikleri;
 }
 
+export type KaynakIstatistikleri = {
+  kayit_web: number;
+  kayit_masaustu: number;
+  kayit_eski: number;
+  kayit_web_7: number;
+  giris_web_7: number;
+  giris_masaustu_7: number;
+};
+
+/** Web sürümü: kayıt ve giriş kaynakları (0010 göçü); fonksiyon yoksa null. */
+export async function kaynakIstatistikleri(supabase: Supabase): Promise<KaynakIstatistikleri | null> {
+  const { data, error } = await supabase.rpc('kaynak_istatistikleri');
+  if (error || !data) return null;
+  return data as KaynakIstatistikleri;
+}
+
 export type SiteIndirmeleri = { toplam: number; bugun: number; son7: number; tur: Record<string, number> };
 
 /** labstock.com.tr indirme butonu sayacı (0009 göçü); fonksiyon yoksa null. */

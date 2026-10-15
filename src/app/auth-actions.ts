@@ -7,6 +7,18 @@ import { sozlukAl } from '@/lib/i18n/sunucu';
 import type { Sozluk } from '@/lib/i18n';
 import { girisSonrasiEkle } from '@/lib/yerel/ekleme';
 
+// İstatistik için: web sürümü Vercel'de çalışır, diğer her yer masaüstü.
+const KAYNAK = process.env.VERCEL ? 'web' : 'masaustu';
+
+/** Son giriş kaynağını kaydeder (Ayarlar → İstatistikler); hata girişi etkilemez. */
+async function girisKaynagiKaydet(supabase: Awaited<ReturnType<typeof createClient>>) {
+  try {
+    await supabase.rpc('giris_kaynagi_kaydet', { p_kaynak: KAYNAK });
+  } catch {
+    // 0010 göçü yoksa ya da çevrimdışı moddaysa sessizce geç
+  }
+}
+
 export type AuthDurum = { hata?: string; bilgi?: string; kodBekleniyor?: string };
 
 /** Supabase Auth hatasını kullanıcıya gösterilecek metne çevirir. Bilinen
@@ -61,6 +73,7 @@ export async function girisYap(_onceki: AuthDurum, formData: FormData): Promise<
 
   // Çevrimdışı moddan "Buluta dön ve verilerimi ekle" ile gelindiyse.
   if (giris.user) await girisSonrasiEkle(supabase, giris.user.id);
+  await girisKaynagiKaydet(supabase);
 
   revalidatePath('/', 'layout');
   redirect(devam.startsWith('/') ? devam : '/envanter');
@@ -83,7 +96,7 @@ export async function kayitOl(_onceki: AuthDurum, formData: FormData): Promise<A
     // davet_kodu, handle_new_user() tetikleyicisi tarafından okunup gözlemci
     // bağlantısı kuruluyor — e-posta doğrulaması açık olsa bile (oturum
     // henüz gelmeden) hesap oluşturulur oluşturulmaz bu çalışır.
-    options: { data: { ad, davet_kodu: davetKodu || undefined } },
+    options: { data: { ad, davet_kodu: davetKodu || undefined, kaynak: KAYNAK } },
   });
 
   if (error) return { hata: authHatasi(error, s) };
@@ -93,6 +106,7 @@ export async function kayitOl(_onceki: AuthDurum, formData: FormData): Promise<A
     return { kodBekleniyor: eposta };
   }
 
+  await girisKaynagiKaydet(supabase);
   revalidatePath('/', 'layout');
   redirect('/envanter');
 }
@@ -112,6 +126,7 @@ export async function kodDogrula(_onceki: AuthDurum, formData: FormData): Promis
     return { hata: authHatasi(error, s) };
   }
 
+  await girisKaynagiKaydet(supabase);
   revalidatePath('/', 'layout');
   redirect('/envanter');
 }

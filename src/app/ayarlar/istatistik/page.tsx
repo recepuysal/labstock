@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { githubIndirmeleri, istatistikleriGetir, kurulumIstatistikleri, siteIndirmeleri, yoneticiMi } from '@/lib/istatistik';
+import { githubIndirmeleri, istatistikleriGetir, kaynakIstatistikleri, kurulumIstatistikleri, siteIndirmeleri, yoneticiMi } from '@/lib/istatistik';
 import { HaftalikGrafik } from '@/components/haftalik-grafik';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
@@ -39,11 +39,12 @@ export default async function IstatistikSayfasi() {
   // Yönetici olmayan biri adresi bilse bile sayfanın varlığını görmesin.
   if (!(await yoneticiMi(supabase))) notFound();
 
-  const [ist, github, kurulum, site, dil] = await Promise.all([
+  const [ist, github, kurulum, site, kaynak, dil] = await Promise.all([
     istatistikleriGetir(supabase),
     githubIndirmeleri(),
     kurulumIstatistikleri(supabase),
     siteIndirmeleri(supabase),
+    kaynakIstatistikleri(supabase),
     dilAl(),
   ]);
   if (!ist) notFound();
@@ -153,6 +154,32 @@ export default async function IstatistikSayfasi() {
               />
             </div>
             <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--muted-2)' }}>{s.siteAciklama}</p>
+          </>
+        )}
+
+        {(kaynak || site) && (
+          <>
+            <div className="mn" style={kucukBaslik}>{s.webBaslik}</div>
+            <div style={izgara}>
+              {kaynak && (
+                <Kutu
+                  etiket={s.webKayit}
+                  deger={sayi(kaynak.kayit_web)}
+                  alt={s.webKayitAlt(sayi(kaynak.kayit_web_7), sayi(kaynak.kayit_masaustu), sayi(kaynak.kayit_eski))}
+                />
+              )}
+              {kaynak && (
+                <Kutu etiket={s.webGiris} deger={sayi(kaynak.giris_web_7)} alt={s.webGirisAlt(sayi(kaynak.giris_masaustu_7))} />
+              )}
+              {site && (
+                <Kutu
+                  etiket={s.webSiteUye}
+                  deger={sayi(site.tur.kayit ?? 0)}
+                  alt={s.webSiteAlt(sayi(site.tur.giris ?? 0), sayi(site.tur.web ?? 0))}
+                />
+              )}
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--muted-2)' }}>{s.webAciklama}</p>
           </>
         )}
 
