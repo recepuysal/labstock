@@ -1,0 +1,7 @@
+electron-app/
+docs/
+*.appx
+*.exe
+*.AppImage
+*.deb
+.next/

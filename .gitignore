@@ -19,3 +19,6 @@ electron-app/dist/
 
 # Microsoft Store (MSIX) kutucuk görselleri — electron-builder buradan okur
 !electron-app/build/
+
+.vercel
+.env*
