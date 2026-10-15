@@ -29,6 +29,8 @@
   ·
   <a href="#linux">⬇ Linux (AppImage / .deb)</a>
   ·
+  <a href="https://app.labstock.com.tr"><strong>🚀 Try in browser</strong></a>
+  ·
   <a href="https://labstock.com.tr">🌐 labstock.com.tr</a>
   ·
   <a href="#screenshots">Screenshots</a>
