@@ -13,6 +13,7 @@ import type { ModulVerisi } from '@/lib/direnc';
 import { aiIleUrunCek, aiIleAciklamaCevir } from '@/lib/ai';
 import { aiAnahtarlariGetir } from '@/lib/ai-anahtarlari';
 import { TARAYICI_USER_AGENT } from '@/lib/urun-ld-json';
+import { disResmiKopyala } from '@/lib/resim-kopya';
 import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 import { sozlukAl } from '@/lib/i18n/sunucu';
 import type { Sozluk } from '@/lib/i18n';
@@ -266,9 +267,13 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
     const { url, hata } = await parcaResminiYukle(supabase, user.id, partId, resimDosyasi, h);
     if (hata) return { hata };
     await supabase.from('parts').update({ resim_url: url }).eq('id', partId);
-  } else if (otomatikResimUrl && mevcut?.id) {
-    // Parça zaten vardı — yukarıdaki insert bu durumda çalışmadığı için resmi ayrıca yaz.
-    await supabase.from('parts').update({ resim_url: otomatikResimUrl }).eq('id', partId);
+  } else if (otomatikResimUrl) {
+    // Satıcı resmi kendi Storage'ımıza kopyalanır (bkz. lib/resim-kopya.ts);
+    // parça zaten vardıysa insert çalışmadığı için resim burada yazılır.
+    const kopya = await disResmiKopyala(supabase, otomatikResimUrl);
+    if (kopya !== otomatikResimUrl || mevcut?.id) {
+      await supabase.from('parts').update({ resim_url: kopya }).eq('id', partId);
+    }
   }
 
   // 2) Bu parça bu konumda zaten var mı? (kendi stoğunla sınırlı — izlediğin
@@ -375,7 +380,7 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
     if (sonuc.hata) return { hata: sonuc.hata };
     resimUrl = sonuc.url;
   } else if (otomatikResimUrl) {
-    resimUrl = otomatikResimUrl;
+    resimUrl = (await disResmiKopyala(supabase, otomatikResimUrl)) ?? undefined;
   }
 
   // Katalog alanları (mpn/üretici/açıklama/kategori/kılıf/datasheet/parametreler/resim) sadece
@@ -535,7 +540,7 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   if (veri.kategori) partGuncelleme.kategori = veri.kategori;
   if (veri.kilif) partGuncelleme.kilif = veri.kilif;
   if (veri.datasheetUrl) partGuncelleme.datasheet_url = veri.datasheetUrl;
-  if (veri.resimUrl) partGuncelleme.resim_url = veri.resimUrl;
+  if (veri.resimUrl) partGuncelleme.resim_url = await disResmiKopyala(supabase, veri.resimUrl);
   if (Object.keys(veri.parametreler).length > 0) partGuncelleme.parametreler = veri.parametreler;
   if (veri.rohs !== null) partGuncelleme.rohs = veri.rohs;
 
