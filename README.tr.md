@@ -17,7 +17,7 @@
   <a href="https://github.com/recepuysal/labstock/releases"><img alt="İndirme" src="https://img.shields.io/github/downloads/recepuysal/labstock/total?label=indirme&color=a3611f"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows">
   <img alt="Linux" src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb-FCC624?logo=linux&logoColor=black">
-  <img alt="Ücretsiz" src="https://img.shields.io/badge/kullan%C4%B1m-%C3%BCcretsiz-2ea44f">
+  <img alt="Kişisel kullanım ücretsiz" src="https://img.shields.io/badge/ki%C5%9Fisel%20kullan%C4%B1m-%C3%BCcretsiz-2ea44f">
 </p>
 
 <p align="center">
@@ -61,7 +61,7 @@ sessizce günceller, elle bir şey yapman gerekmez.
 | 💬 **Sohbet asistanı** — "elimde ne var?" diye sor | 📱 **Telefon kamerasıyla sayım** — uygulama kurmadan |
 | 📊 **Excel içe/dışa aktarma** | 👥 **Gözlemci** — depoyu salt-okunur paylaş |
 | 🌙 **Koyu / açık tema** | 🔄 **Sessiz otomatik güncelleme** |
-| 🌍 **Türkçe ve İngilizce arayüz** | 🆓 **Ücretsiz** |
+| 🌍 **Türkçe ve İngilizce arayüz** | 🆓 **Kişisel ve eğitim kullanımı ücretsiz** |
 | 🤖 **Ücretsiz yapay zekâ + günlük kullanım barı** — Gemini, Groq, OpenRouter | 🛒 **Microsoft Store** — yakında (sertifikasyonda) |
 
 ## Ekran görüntüleri

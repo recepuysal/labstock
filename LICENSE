@@ -6,9 +6,15 @@ Bu yazılımın kaynak kodu (bu depo) ve derlenmiş sürümleri (GitHub Releases
 yayınlanan .exe dosyaları) aşağıdaki şartlarla ücretsiz kullanıma sunulmuştur.
 
 1. KULLANIM İZNİ
-   Bu yazılımı, kişisel veya ticari herhangi bir amaçla (kendi işinizde,
-   şirketinizde ya da müşterileriniz için dahili stok/envanter takibi dahil)
-   ücretsiz olarak indirebilir, kurabilir ve kullanabilirsiniz.
+   Bu yazılımı kişisel ve eğitim amaçlı (öğrenci, okul, üniversite
+   laboratuvarı, yarışma takımı) olarak ücretsiz indirebilir, kurabilir ve
+   kullanabilirsiniz.
+
+   Ticari kullanım (şirket ya da işletme bünyesinde stok/envanter takibi)
+   şimdilik de ücretsizdir. Telif hakkı sahibi, ticari kullanım için ileride
+   ücretli bir plan getirme hakkını saklı tutar; bu değişiklik en az 30 gün
+   önceden https://labstock.com.tr ve GitHub deposunda duyurulur ve duyurudan
+   önceki dönem için ücret talep edilmez.
 
 2. DAĞITIM YASAĞI
    Bu yazılımın orijinal ya da değiştirilmiş herhangi bir kopyasını üçüncü

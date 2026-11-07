@@ -18,7 +18,7 @@
   <a href="https://github.com/recepuysal/labstock/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/recepuysal/labstock/total?label=downloads&color=a3611f"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows">
   <img alt="Linux" src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb-FCC624?logo=linux&logoColor=black">
-  <img alt="Free to use" src="https://img.shields.io/badge/price-free-2ea44f">
+  <img alt="Free for personal use" src="https://img.shields.io/badge/personal%20use-free-2ea44f">
   <img alt="English and Turkish" src="https://img.shields.io/badge/UI-English%20%7C%20T%C3%BCrk%C3%A7e-555">
 </p>
 
@@ -66,7 +66,7 @@ nothing to maintain.
 | 💬 **Chat assistant** — ask “what do I have?” | 📱 **Count parts with your phone camera** — no app to install |
 | 📊 **Excel import / export** | 👥 **Viewers** — share your inventory read-only |
 | 🌙 **Dark / light theme** | 🔄 **Silent auto-update** |
-| 🌍 **English and Turkish interface** | 🆓 **Free** |
+| 🌍 **English and Turkish interface** | 🆓 **Free for personal & educational use** |
 | 🤖 **Free AI keys + daily usage bar** — Gemini, Groq, OpenRouter | 🛒 **Microsoft Store** — coming soon (in certification) |
 
 ## Screenshots
