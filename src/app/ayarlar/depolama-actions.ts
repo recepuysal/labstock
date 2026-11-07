@@ -1,15 +1,15 @@
 'use server';
 
-// Ayarlar → Veri depolama: bulut (Supabase) ve çevrimdışı (bu bilgisayardaki
-// SQLite) modları arasında geçiş. Bkz. src/lib/yerel.
+// Ayarlar → Veri depolama. Çevrimdışı mod (bu bilgisayardaki SQLite) artık
+// açılamıyor; hâlâ o moddaki kurulumlar buluta dönüp verilerini hesaba ekler.
+// Bkz. src/lib/yerel.
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createBulutClient } from '@/lib/supabase/server';
 import { ayarOku, ayarYaz, yerelModDestekleniyor } from '@/lib/yerel/mod';
-import { bulutaBirlestir, bulutYedegiAl, buluttanYerele, sonYerelHareketId, yedekOku, yerelVeriVarMi } from '@/lib/yerel/aktarim';
+import { bulutaBirlestir, bulutYedegiAl, yedekOku, yerelVeriVarMi } from '@/lib/yerel/aktarim';
 import { yerelVeriyiHesabaEkle } from '@/lib/yerel/ekleme';
-import { yerelKullaniciId } from '@/lib/yerel/istemci';
 import { sozlukAl } from '@/lib/i18n/sunucu';
 import type { EylemDurum } from '@/app/envanter/actions';
 
@@ -30,33 +30,6 @@ export async function anonimSayacAyarla(acik: boolean): Promise<void> {
   if (!yerelModDestekleniyor()) return;
   ayarYaz({ ...ayarOku(), anonimSayac: acik });
   revalidatePath('/ayarlar');
-}
-
-/** Buluttan çevrimdışına: hesabın verisini bu bilgisayara kopyalar. */
-export async function cevrimdisiModaGec(): Promise<EylemDurum> {
-  const m = await metin();
-  if (!yerelModDestekleniyor()) return { hata: m.hata('—') };
-  const { bulut, user } = await bulutKullanicisi();
-  if (!user) return { hata: m.oturumGerekli };
-
-  try {
-    await buluttanYerele(bulut, user.id);
-  } catch (e) {
-    console.error('[depolama] buluttan yerele:', e);
-    return { hata: m.hata((e as Error).message) };
-  }
-  ayarYaz({ mod: 'yerel', kullaniciId: user.id, hareketEsigi: sonYerelHareketId() });
-  revalidatePath('/', 'layout');
-  redirect('/envanter');
-}
-
-/** Hesap açmadan çevrimdışı başla (giriş ekranındaki bağlantı). */
-export async function hesapsizBasla(): Promise<void> {
-  if (!yerelModDestekleniyor()) redirect('/giris');
-  ayarYaz({ ...ayarOku(), mod: 'yerel', yuklemeBekliyor: false });
-  yerelKullaniciId();
-  revalidatePath('/', 'layout');
-  redirect('/envanter');
 }
 
 /** Çevrimdışından buluta tek adımda. `ekle`: çevrimdışıyken kaydedilenler

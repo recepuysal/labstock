@@ -222,18 +222,13 @@ inventory, so you don't forget what to order and where.
 - **Weekly summary + backup email:** every Monday you get critical stock, the
   total value and a CSV backup of the full list by email.
 
-### Offline mode (your data stays on your computer)
+### Your data
 
-By default your data is kept in a cloud database linked to your account (multiple
-computers, viewers, weekly backup). In **Settings → Data storage** you can turn off
-"Store in the cloud" to switch to **offline mode**: all data is kept only in an SQLite
-file on this computer, is never sent to any server and works without internet. If you
-don't want an account at all, use **"Use without an account"** on the sign-in screen.
-
-- Switching from the cloud to offline copies all your account data to the computer.
-- Going back to the cloud **adds** what you did offline on top of your cloud data —
-  nothing is deleted; stock ins/outs on parts already in the cloud are applied as +/−.
-- A backup of your cloud data is taken before every merge and can be added back from Settings.
+Your data is kept in a cloud database linked to your account, so the same stock
+is available on every computer and at app.labstock.com.tr, with viewers and a
+weekly backup. Personal use is free. Offline mode has been retired: installs still
+in offline mode can return to the cloud from **Settings → Data storage**, and what
+they saved offline is **added** to the account — nothing is deleted.
 
 ### Desktop app and automatic updates
 Installs on Windows with a setup wizard (no admin rights needed) and runs on Linux

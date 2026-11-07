@@ -298,7 +298,8 @@ const tr = {
       'Verilerin hesabına bağlı olarak güvenli bir bulut veritabanında (Supabase) tutulur. Böylece birden fazla bilgisayardan aynı stoğu görebilir, gözlemci ekleyebilir ve haftalık yedek e-postası alabilirsin.',
     kapatAciklama:
       'Kapatırsan LabStock çevrimdışı moda geçer: tüm veriler yalnızca bu bilgisayardaki bir dosyada tutulur ve hiçbir sunucuya gönderilmez. İnternetsiz çalışır, hesap gerekmez. Bu modda gözlemci, birden fazla bilgisayar ve haftalık yedek e-postası kullanılamaz; yedeğini almak sana kalır.',
-    cevrimdisiAciklama: 'Çevrimdışı mod açık: veriler yalnızca bu bilgisayarda tutuluyor ve hiçbir sunucuya gönderilmiyor.',
+    cevrimdisiAciklama:
+      'Çevrimdışı mod açık: veriler yalnızca bu bilgisayarda tutuluyor. Çevrimdışı mod kaldırıldı; verilerini kaybetmemek için buluta dön ve hesabına ekle. Kişisel kullanım ücretsiz.',
     dosyaYeri: 'Veri dosyası',
     internetGerekenler:
       'Linkten parça bilgisi çekme, yapay zekâ asistanı ve güncelleme kontrolü internet varsa çalışır. Yapay zekâ asistanı, sorunla birlikte ilgili parça bilgilerini seçtiğin sağlayıcıya gönderir.',
@@ -656,7 +657,8 @@ const en: Sekil<typeof tr> = {
       'Your data is kept in a secure cloud database (Supabase) linked to your account, so you can see the same stock from several computers, add observers and get the weekly backup email.',
     kapatAciklama:
       'Turn it off to switch LabStock to offline mode: all data is kept only in a file on this computer and is never sent to any server. It works without internet and needs no account. Observers, multiple computers and the weekly backup email are not available in this mode; backups are up to you.',
-    cevrimdisiAciklama: 'Offline mode is on: data is kept only on this computer and is not sent to any server.',
+    cevrimdisiAciklama:
+      "Offline mode is on: data is kept only on this computer. Offline mode has been retired; switch to the cloud and add your data to your account so you don't lose it. Personal use is free.",
     dosyaYeri: 'Data file',
     internetGerekenler:
       'Fetching part details from a link, the AI assistant and update checks work when internet is available. The AI assistant sends your question along with the relevant part details to the provider you chose.',

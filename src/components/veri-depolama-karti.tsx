@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { anonimSayacAyarla, bulutaDon, cevrimdisiModaGec, yedektenGeriEkle, yerelVerileriYukle, yuklemeyiAtla } from '@/app/ayarlar/depolama-actions';
+import { anonimSayacAyarla, bulutaDon, yedektenGeriEkle, yerelVerileriYukle, yuklemeyiAtla } from '@/app/ayarlar/depolama-actions';
 import { useSozluk } from '@/lib/i18n/istemci';
 
-/** Ayarlar → Veri depolama: bulut (varsayılan) ↔ çevrimdışı mod anahtarı. */
+/** Ayarlar → Veri depolama. Çevrimdışı moda geçilemez; o modda kalmış
+ * kurulumlar buradan buluta döner. */
 export function VeriDepolamaKarti({
   mod,
   dosyaYolu,
@@ -35,7 +36,7 @@ export function VeriDepolamaKarti({
     setMesaj({});
     baslat(async () => {
       // Başarılı olursa sunucu yönlendirir; buraya sadece hata dönerse gelinir.
-      const sonuc = bulutta ? await cevrimdisiModaGec() : await bulutaDon(ekle);
+      const sonuc = await bulutaDon(ekle);
       if (sonuc?.hata) setMesaj({ hata: sonuc.hata });
     });
   }
@@ -70,28 +71,18 @@ export function VeriDepolamaKarti({
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, fontSize: 13 }}>
-        <span style={{ fontWeight: 600 }}>{s.bulutEtiket}</span>
-        <label className="anahtar">
-          <input
-            type="checkbox"
-            role="switch"
-            checked={bulutta && !onay}
-            disabled={bekliyor}
-            onChange={() => {
-              setMesaj({});
-              setOnay(true);
-            }}
-            aria-label={s.bulutEtiket}
-          />
-          <span className="parmak" />
-        </label>
-      </div>
-
-      <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-        {bulutta ? s.bulutAciklama : s.cevrimdisiAciklama}
-      </p>
-      {bulutta && <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.kapatAciklama}</p>}
+      {bulutta ? (
+        <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.bulutAciklama}</p>
+      ) : (
+        <>
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.cevrimdisiAciklama}</p>
+          {!onay && (
+            <button className="btn btn-birincil" type="button" disabled={bekliyor} style={{ marginTop: 12 }} onClick={() => setOnay(true)}>
+              {s.bulutaDonBaslik}
+            </button>
+          )}
+        </>
+      )}
 
       <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 14, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.5, cursor: 'pointer' }}>
         <input
@@ -116,18 +107,13 @@ export function VeriDepolamaKarti({
         </>
       )}
 
-      {onay && (
+      {onay && !bulutta && (
         <div style={{ borderTop: '1px solid var(--line)', marginTop: 14, paddingTop: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{bulutta ? s.onayBaslik : s.bulutaDonBaslik}</div>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{s.bulutaDonBaslik}</div>
           <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-            {bulutta ? s.onayAciklama : s.bulutaDonAciklama}
+            {s.bulutaDonAciklama}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {bulutta ? (
-              <button className="btn btn-birincil" type="button" disabled={bekliyor} onClick={() => onayla()}>
-                {bekliyor ? s.kopyalaniyor : s.gec}
-              </button>
-            ) : (
               <>
                 <button className="btn btn-birincil" type="button" disabled={bekliyor} onClick={() => onayla(true)}>
                   {bekliyor ? s.yukleniyor : s.bulutaDonEkle}
@@ -136,7 +122,6 @@ export function VeriDepolamaKarti({
                   {s.bulutaDonEkleme}
                 </button>
               </>
-            )}
             <button className="btn" type="button" disabled={bekliyor} onClick={() => setOnay(false)}>
               {s.vazgec}
             </button>
