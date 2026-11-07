@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { dosyayiAyristir } from '@/lib/ice-aktar';
+import { dosyayiAyristir, metniAyristir } from '@/lib/ice-aktar';
 import { sozlukAl } from '@/lib/i18n/sunucu';
 
 export type IceAktarSonuc = {
@@ -23,13 +23,15 @@ export async function excelIceAktar(
 ): Promise<IceAktarSonuc> {
   const s = (await sozlukAl()).envanter.hata;
   const dosya = formData.get('dosya');
-  if (!(dosya instanceof File) || dosya.size === 0) {
+  const metin = String(formData.get('metin') ?? '').trim();
+  const dosyaVar = dosya instanceof File && dosya.size > 0;
+  if (!dosyaVar && !metin) {
     return { hata: s.dosyaSec };
   }
 
   let ayristirma;
   try {
-    ayristirma = dosyayiAyristir(await dosya.arrayBuffer());
+    ayristirma = dosyaVar ? dosyayiAyristir(await (dosya as File).arrayBuffer()) : metniAyristir(metin);
   } catch {
     return { hata: s.dosyaOkunamadi };
   }
@@ -129,6 +131,7 @@ export async function excelIceAktar(
             min_adet: satir.min_adet,
             tedarikci: satir.tedarikci,
             tedarikci_kodu: satir.tedarikci_kodu,
+            ...(satir.alis_fiyati !== null ? { alis_fiyati: satir.alis_fiyati, para_birimi: satir.para_birimi ?? 'TRY' } : {}),
             user_id: user.id,
           })
           .select('id')

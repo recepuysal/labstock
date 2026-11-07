@@ -29,9 +29,23 @@ export function ExcelIceAktarFormu() {
             name="dosya"
             type="file"
             accept=".xlsx,.xls,.csv"
-            required
             style={{ height: 'auto', padding: 8 }}
           />
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label className="etiket" htmlFor="metin">
+            {s.yapistir}
+          </label>
+          <textarea
+            className="alan"
+            id="metin"
+            name="metin"
+            rows={6}
+            placeholder={s.yapistirOrnek}
+            style={{ height: 'auto', padding: 8, fontFamily: 'var(--mono, monospace)', fontSize: 12 }}
+          />
+          <p style={{ margin: '6px 0 0', fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.lcscIpucu}</p>
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>

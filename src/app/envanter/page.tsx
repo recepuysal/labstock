@@ -233,12 +233,15 @@ export default async function EnvanterSayfasi({
                 {saltOkunur ? s.bosIzleyen : s.bosAciklama}
               </p>
               {!saltOkunur && (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <Link href="/envanter/konum-ekle" className="btn btn-birincil">
                     {s.konumEkle}
                   </Link>
                   <Link href="/envanter/yeni" className="btn">
                     {s.parcaEkle}
+                  </Link>
+                  <Link href="/envanter/ice-aktar" className="btn">
+                    {s.siparisAktar}
                   </Link>
                 </div>
               )}

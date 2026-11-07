@@ -70,6 +70,7 @@ const tr = {
       'Önce bir konum oluştur (oda, dolap, çekmece — ne istersen) ya da doğrudan ilk parçanı ekleyebilirsin.',
     konumEkle: 'Konum ekle',
     parcaEkle: 'Parça ekle',
+    siparisAktar: 'LCSC siparişi / Excel içe aktar',
     filtreBos: 'Bu filtreye uyan parça yok.',
     depoBosIzleyen: 'Bu depoda henüz parça yok.',
     depoBos: 'Bu depoda henüz parça yok — sağ üstten ekleyebilirsin.',
@@ -218,10 +219,14 @@ const tr = {
   },
 
   iceAktar: {
-    baslik: "Excel'den içe aktar",
+    baslik: 'İçe aktar (Excel, CSV, LCSC siparişi)',
     aciklama:
-      'İlk satırı başlık olan bir Excel/CSV dosyası yükle — sütunları otomatik tanır (MPN, Üretici, Açıklama, Kategori, Kılıf, Adet, Min. seviye, Tedarikçi, Tedarikçi kodu, Konum). MPN katalogda varsa parça ona bağlanır, yoksa yeni katalog kaydı açılır.',
-    dosya: 'Excel (.xlsx) veya CSV dosyası *',
+      'İlk satırı başlık olan bir Excel/CSV dosyası yükle ya da tabloyu aşağıya yapıştır — sütunları otomatik tanır (MPN, Üretici, Açıklama, Kategori, Kılıf, Adet, Min. seviye, Tedarikçi, Tedarikçi kodu, Birim fiyat, Konum). MPN katalogda varsa parça ona bağlanır, yoksa yeni katalog kaydı açılır.',
+    dosya: 'Excel (.xlsx) veya CSV dosyası',
+    yapistir: 'ya da tabloyu buraya yapıştır',
+    yapistirOrnek: 'MPN\tÜretici\tAdet\nNE555P\tTexas Instruments\t10',
+    lcscIpucu:
+      "LCSC siparişi: lcsc.com'da sipariş detayından indirdiğin Excel dosyasını yükle ya da tabloyu kopyalayıp yapıştır. Adetler stoğa, LCSC kodu, kılıf ve birim fiyat (USD) parçaya yazılır.",
     isleniyor: 'İşleniyor…',
     iceAktar: 'İçe aktar',
     sonuc: 'Sonuç',
@@ -364,6 +369,7 @@ const en: Sekil<typeof tr> = {
       'Create a location first (room, cabinet, drawer — whatever you like) or add your first part directly.',
     konumEkle: 'Add location',
     parcaEkle: 'Add part',
+    siparisAktar: 'Import LCSC order / Excel',
     filtreBos: 'No parts match this filter.',
     depoBosIzleyen: 'No parts in this inventory yet.',
     depoBos: 'No parts in this inventory yet — add one from the top right.',
@@ -512,10 +518,14 @@ const en: Sekil<typeof tr> = {
   },
 
   iceAktar: {
-    baslik: 'Import from Excel',
+    baslik: 'Import (Excel, CSV, LCSC order)',
     aciklama:
-      'Upload an Excel/CSV file whose first row is the header — columns are detected automatically (MPN, Manufacturer, Description, Category, Package, Quantity, Min. qty, Supplier, Supplier code, Location). If the MPN is already in the catalog the part is linked to it; otherwise a new catalog entry is created.',
-    dosya: 'Excel (.xlsx) or CSV file *',
+      'Upload an Excel/CSV file whose first row is the header, or paste the table below — columns are detected automatically (MPN, Manufacturer, Description, Category, Package, Quantity, Min. qty, Supplier, Supplier code, Unit price, Location). If the MPN is already in the catalog the part is linked to it; otherwise a new catalog entry is created.',
+    dosya: 'Excel (.xlsx) or CSV file',
+    yapistir: 'or paste the table here',
+    yapistirOrnek: 'MPN\tManufacturer\tQty\nNE555P\tTexas Instruments\t10',
+    lcscIpucu:
+      'LCSC order: upload the Excel file you download from the order details on lcsc.com, or copy and paste the table. Quantities go into stock; LCSC code, package and unit price (USD) are saved with the part.',
     isleniyor: 'Processing…',
     iceAktar: 'Import',
     sonuc: 'Result',
