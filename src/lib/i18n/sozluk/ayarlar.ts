@@ -332,8 +332,6 @@ const tr = {
     oturumGerekli: 'Buluttaki verileri kopyalamak için giriş yapmış olmalısın.',
     banner: 'Çevrimdışı modda kaydedilmiş verilerin var.',
     bannerLink: 'Hesabına ekle',
-    hesapsizKullan: 'Hesapsız kullan (çevrimdışı)',
-    hesapsizAciklama: 'Veriler yalnızca bu bilgisayarda tutulur, hesap gerekmez.',
     rozet: 'Çevrimdışı',
   },
   eylem: {
@@ -691,8 +689,6 @@ const en: Sekil<typeof tr> = {
     oturumGerekli: 'You need to be signed in to copy your cloud data.',
     banner: 'You have data saved in offline mode.',
     bannerLink: 'Add to your account',
-    hesapsizKullan: 'Use without an account (offline)',
-    hesapsizAciklama: 'Data is kept only on this computer; no account needed.',
     rozet: 'Offline',
   },
   eylem: {

@@ -147,7 +147,7 @@ export async function cikisYap() {
   redirect('/giris');
 }
 
-/** GitHub / Google ile giriş (web sürümü): sağlayıcının sayfasına yönlendirir,
+/** GitHub / Google ile giriş (masaüstünde yalnızca GitHub): sağlayıcının sayfasına yönlendirir,
  * dönüş /auth/callback'te oturuma çevrilir. Sağlayıcılar Supabase →
  * Authentication → Sign In / Providers'ta açık olmalı. */
 export async function oauthIleGiris(saglayici: 'github' | 'google', devam: string): Promise<void> {

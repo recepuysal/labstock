@@ -23,11 +23,9 @@ type Props = {
   mod: 'giris' | 'kayit';
   eylem: (onceki: AuthDurum, formData: FormData) => Promise<AuthDurum>;
   devam?: string;
-  /** Masaüstünde: hesap açmadan çevrimdışı modda başlama (Ayarlar → Veri depolama). */
-  hesapsizEylem?: () => Promise<void>;
 };
 
-export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Props) {
+export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
   const [durum, gonder, bekliyor] = useActionState<AuthDurum, FormData>(eylem, {});
   const kayit = mod === 'kayit';
   const so = useSozluk();
@@ -40,8 +38,10 @@ export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Pro
   const [kodDurum, kodGonder, kodBekliyor] = useActionState<AuthDurum, FormData>(kodDogrula, {});
   const [geriDon, setGeriDon] = useState(false);
   const [yenidenGonderiliyor, yenidenBasla] = useTransition();
-  const [webde, setWebde] = useState(false);
-  useEffect(() => setWebde(!window.electronAPI), []);
+  // null: henüz bilinmiyor (sunucu çizimi). Masaüstünde yalnızca GitHub: Google
+  // uygulama içi pencereden girişe izin vermiyor.
+  const [saglayicilar, setSaglayicilar] = useState<typeof OAUTH | null>(null);
+  useEffect(() => setSaglayicilar(window.electronAPI ? ['github'] : OAUTH), []);
   const [yenidenMesaj, setYenidenMesaj] = useState<string | null>(null);
   const kodAdimindeyiz = Boolean(durum.kodBekleniyor) && !geriDon;
 
@@ -350,12 +350,11 @@ export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Pro
           </p>
         </form>
 
-        {/* GitHub / Google ile giriş: yalnızca web sürümünde (masaüstünde Google
-            uygulama içi pencereden girişe izin vermiyor) */}
-        {webde && OAUTH.length > 0 && (
+        {/* GitHub / Google ile giriş */}
+        {saglayicilar && saglayicilar.length > 0 && (
           <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
             <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--muted-2)' }}>{s.veya}</div>
-            {OAUTH.map((p) => (
+            {saglayicilar.map((p) => (
               <form key={p} action={oauthIleGiris.bind(null, p, devam)}>
                 <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center', gap: 9 }}>
                   {p === 'github' ? (
@@ -375,15 +374,6 @@ export function AuthForm({ mod, eylem, devam = '/envanter', hesapsizEylem }: Pro
               </form>
             ))}
           </div>
-        )}
-
-        {hesapsizEylem && (
-          <form action={hesapsizEylem} style={{ marginTop: 14, textAlign: 'center' }}>
-            <button type="submit" className="btn" style={{ fontSize: 12.5 }}>
-              {so.ayarlar.depolama.hesapsizKullan}
-            </button>
-            <p style={{ margin: '6px 0 0', fontSize: 11.5, color: 'var(--muted-2)' }}>{so.ayarlar.depolama.hesapsizAciklama}</p>
-          </form>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>

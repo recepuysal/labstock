@@ -24,12 +24,32 @@ function standaloneYolu() {
     : path.join(__dirname, 'standalone', 'server.js');
 }
 
-function sunucuyuBaslat() {
+// Next sunucusunun fetch'i (Supabase'e giden her istek) Windows'un proxy
+// ayarını görmez: sistem proxy'si varsa ortam değişkeniyle iletilir.
+// (Store sertifikasyonu: kayıtta "Couldn't reach the server", 2026-11-03)
+async function proxyOrtami() {
+  try {
+    const sonuc = await session.defaultSession.resolveProxy('https://supabase.co');
+    logYaz(`proxy: ${sonuc}`);
+    const eslesme = sonuc.match(/^(PROXY|HTTPS)\s+([^;\s]+)/);
+    if (!eslesme) return {};
+    const adres = `${eslesme[1] === 'HTTPS' ? 'https' : 'http'}://${eslesme[2]}`;
+    return { NODE_USE_ENV_PROXY: '1', HTTPS_PROXY: adres, HTTP_PROXY: adres, NO_PROXY: '127.0.0.1,localhost' };
+  } catch (err) {
+    logYaz(`[proxy-hata] ${err.message}`);
+    return {};
+  }
+}
+
+async function sunucuyuBaslat() {
   const yol = standaloneYolu();
   logYaz(`baslatiliyor: ${yol}, exists=${fs.existsSync(yol)}, execPath=${process.execPath}`);
-  serverProcess = spawn(process.execPath, [yol], {
+  // --use-system-ca: TLS'i denetleyen ağlarda (kurum proxy'si, antivirüs) Node'un
+  // kendi sertifika listesi yetmez; Windows sertifika deposuna da güvenilsin.
+  serverProcess = spawn(process.execPath, ['--use-system-ca', yol], {
     env: {
       ...process.env,
+      ...(await proxyOrtami()),
       ELECTRON_RUN_AS_NODE: '1',
       PORT: String(PORT),
       HOSTNAME: '127.0.0.1',
@@ -270,7 +290,7 @@ app.whenReady().then(async () => {
   session.defaultSession.cookies.on('changed', (_event, cerez) => {
     if (cerez.name === DIL_COOKIE) diliGuncelle();
   });
-  sunucuyuBaslat();
+  await sunucuyuBaslat();
   sunucuHazirMi(() => {
     pencereyiAc();
     guncellemeleriKontrolEt();
