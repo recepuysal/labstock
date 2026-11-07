@@ -319,7 +319,7 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
       .select('id')
       .single();
 
-    if (error) return { hata: error.message };
+    if (error) return { hata: error.message.startsWith('kalem_siniri') ? h.kalemSiniri : error.message };
     stokId = yeniStok.id;
 
     if (adet > 0) {

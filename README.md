@@ -66,7 +66,7 @@ nothing to maintain.
 | 💬 **Chat assistant** — ask “what do I have?” | 📱 **Count parts with your phone camera** — no app to install |
 | 📊 **Excel import / export** | 👥 **Viewers** — share your inventory read-only |
 | 🌙 **Dark / light theme** | 🔄 **Silent auto-update** |
-| 🌍 **English and Turkish interface** | 🆓 **Free for personal & educational use** |
+| 🌍 **English and Turkish interface** | 🆓 **Free for personal & educational use** (up to 300 stock items) |
 | 🤖 **Free AI keys + daily usage bar** — Gemini, Groq, OpenRouter | 🛒 **Microsoft Store** — coming soon (in certification) |
 
 ## Screenshots

@@ -147,7 +147,8 @@ export async function excelIceAktar(
       }
     } catch (e) {
       atlanan++;
-      const mesaj = e instanceof Error ? e.message : s.bilinmeyen;
+      let mesaj = e instanceof Error ? e.message : s.bilinmeyen;
+      if (mesaj.startsWith('kalem_siniri')) mesaj = s.kalemSiniri;
       if (hatalar.length < 10) hatalar.push(`${satir.mpn}: ${mesaj}`);
     }
   }

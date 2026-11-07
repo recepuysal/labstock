@@ -276,6 +276,8 @@ const tr = {
     parcaOlusturulamadi: 'Parça oluşturulamadı.',
     ayniKonumda:
       'Bu parça seçtiğin konumda zaten kayıtlı görünüyor — orada bu parçanın başka bir stok satırı var.',
+    kalemSiniri:
+      'Ücretsiz planın stok kalemi sınırına ulaştın. Mevcut kalemlerin adedini değiştirmeye devam edebilirsin; daha fazlası için labstockassistant@gmail.com adresine yaz.',
     projeSec: 'Bir proje seç ya da yeni proje adı gir.',
     lcscKoduGerekli: 'LCSC kodu gerekli (ör. C25804).',
     lcscAlinamadi: 'LCSC verisi alınamadı.',
@@ -568,6 +570,8 @@ const en: Sekil<typeof tr> = {
     parcaOlusturulamadi: 'Could not create the part.',
     ayniKonumda:
       'This part already seems to be stored at the selected location — there is another stock row for it there.',
+    kalemSiniri:
+      "You've reached the free plan's stock item limit. You can still change quantities of existing items; for more, write to labstockassistant@gmail.com.",
     projeSec: 'Select a project or enter a new project name.',
     lcscKoduGerekli: 'LCSC code is required (e.g. C25804).',
     lcscAlinamadi: 'Could not fetch LCSC data.',

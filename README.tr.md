@@ -61,7 +61,7 @@ sessizce günceller, elle bir şey yapman gerekmez.
 | 💬 **Sohbet asistanı** — "elimde ne var?" diye sor | 📱 **Telefon kamerasıyla sayım** — uygulama kurmadan |
 | 📊 **Excel içe/dışa aktarma** | 👥 **Gözlemci** — depoyu salt-okunur paylaş |
 | 🌙 **Koyu / açık tema** | 🔄 **Sessiz otomatik güncelleme** |
-| 🌍 **Türkçe ve İngilizce arayüz** | 🆓 **Kişisel ve eğitim kullanımı ücretsiz** |
+| 🌍 **Türkçe ve İngilizce arayüz** | 🆓 **Kişisel ve eğitim kullanımı ücretsiz** (300 stok kalemine kadar) |
 | 🤖 **Ücretsiz yapay zekâ + günlük kullanım barı** — Gemini, Groq, OpenRouter | 🛒 **Microsoft Store** — yakında (sertifikasyonda) |
 
 ## Ekran görüntüleri

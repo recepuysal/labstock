@@ -71,6 +71,9 @@ export default async function AyarlarSayfasi() {
   const so = sozluk(dil);
   const s = so.ayarlar;
   const yonetici = await yoneticiMi(supabase);
+  // Ücretsiz plan kalem sınırı (0013 göçü); göç çalışmamışsa kart gizlenir.
+  const { data: kalemKullanimi } = await supabase.rpc('kalem_kullanimi');
+  const plan = kalemKullanimi as { kullanilan: number; sinir: number | null } | null;
   const depolama = ayarOku();
   const cevrimdisi = yerelModDestekleniyor() && depolama.mod === 'yerel';
   // Sadece bu hesaba ait bulut yedekleri (en yeni 5).
@@ -162,6 +165,34 @@ export default async function AyarlarSayfasi() {
             yedekler={yedekler}
             anonimSayac={depolama.anonimSayac !== false}
           />
+        )}
+
+        {plan && !cevrimdisi && (
+          <div className="kart" style={{ padding: 20, marginTop: 16 }}>
+            <div className="mn" style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}>
+              {s.plan.baslik}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', fontSize: 13 }}>
+              <span style={{ fontWeight: 600 }}>{plan.sinir === null ? s.plan.sinirsiz : s.plan.ucretsiz}</span>
+              <span className="mn" style={{ fontSize: 12 }}>
+                {plan.sinir === null ? s.plan.kalemSayisi(plan.kullanilan) : s.plan.kullanim(plan.kullanilan, plan.sinir)}
+              </span>
+            </div>
+            {plan.sinir !== null && (
+              <>
+                <div style={{ height: 6, borderRadius: 3, background: 'var(--line)', marginTop: 10, overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${Math.min(100, (plan.kullanilan / plan.sinir) * 100)}%`,
+                      background: plan.kullanilan >= plan.sinir ? 'var(--crit-dot)' : 'var(--copper)',
+                    }}
+                  />
+                </div>
+                <p style={{ margin: '10px 0 0', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>{s.plan.ticari}</p>
+              </>
+            )}
+          </div>
         )}
 
         <EtiketAyarlariFormu baslangic={etiketAyarlari} />

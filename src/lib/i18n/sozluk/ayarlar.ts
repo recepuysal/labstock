@@ -289,6 +289,14 @@ const tr = {
     aktif: 'Aktif',
     store: 'Microsoft Store istatistikleri (indirme, kurulum, kullanım) Partner Center → Insights bölümünde.',
   },
+  plan: {
+    baslik: 'PLAN',
+    ucretsiz: 'Ücretsiz plan (kişisel ve eğitim kullanımı)',
+    sinirsiz: 'Sınırsız plan',
+    kullanim: (kullanilan: number, sinir: number) => `${kullanilan} / ${sinir} stok kalemi`,
+    kalemSayisi: (kullanilan: number) => `${kullanilan} stok kalemi`,
+    ticari: 'Şirket ya da işletmede kullanıyorsan ya da daha fazla kaleme ihtiyacın varsa: labstockassistant@gmail.com',
+  },
   depolama: {
     baslik: 'VERİ DEPOLAMA',
     anonimSayac:
@@ -645,6 +653,14 @@ const en: Sekil<typeof tr> = {
     yeniUye: 'New members',
     aktif: 'Active',
     store: 'Microsoft Store statistics (downloads, installs, usage) are in Partner Center → Insights.',
+  },
+  plan: {
+    baslik: 'PLAN',
+    ucretsiz: 'Free plan (personal and educational use)',
+    sinirsiz: 'Unlimited plan',
+    kullanim: (kullanilan: number, sinir: number) => `${kullanilan} / ${sinir} stock items`,
+    kalemSayisi: (kullanilan: number) => `${kullanilan} stock items`,
+    ticari: 'Using it in a company or business, or need more items? labstockassistant@gmail.com',
   },
   depolama: {
     baslik: 'DATA STORAGE',
