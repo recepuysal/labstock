@@ -44,13 +44,18 @@ async function tumu(
   }
 }
 
-async function idIle(bulut: SupabaseClient, tablo: string, sutun: string, idler: string[]): Promise<Satir[]> {
+async function idIle(bulut: SupabaseClient, tablo: string, sutun: string, idler: string[], sutunlar = '*'): Promise<Satir[]> {
   const sonuc: Satir[] = [];
   for (const grup of parcala([...new Set(idler)], PARCA)) {
-    sonuc.push(...(await tumu(() => bulut.from(tablo).select('*').in(sutun, grup))));
+    sonuc.push(...(await tumu(() => bulut.from(tablo).select(sutunlar).in(sutun, grup))));
   }
   return sonuc;
 }
+
+// Ortak katalogda "olusturan" (ekleyen kullanıcının kimliği) diğer kullanıcılara
+// okunamaz (0015 göçü) — select('*') yetki hatası verir, sütunlar açıkça yazılır.
+const PARTS_SUTUNLARI = 'id, mpn, uretici, aciklama, kategori, kilif, datasheet_url, parametreler, rohs, resim_url, created_at';
+const PART_SUPPLIERS_SUTUNLARI = 'id, part_id, tedarikci, tedarikci_kodu, fiyat, para_birimi, created_at, updated_at';
 
 /** Hesabın buluttaki tüm verisi. */
 export async function bulutVerisiniOku(bulut: SupabaseClient, kullaniciId: string): Promise<BulutVerisi> {
@@ -71,10 +76,10 @@ export async function bulutVerisiniOku(bulut: SupabaseClient, kullaniciId: strin
     ]);
   const parcaIdleri = [...stock_items, ...project_bom].map((s) => s.part_id as string);
   const [parts, stock_item_tags] = await Promise.all([
-    idIle(bulut, 'parts', 'id', parcaIdleri),
+    idIle(bulut, 'parts', 'id', parcaIdleri, PARTS_SUTUNLARI),
     idIle(bulut, 'stock_item_tags', 'stock_item_id', stock_items.map((s) => s.id as string)),
   ]);
-  const part_suppliers = await idIle(bulut, 'part_suppliers', 'part_id', parts.map((p) => p.id as string));
+  const part_suppliers = await idIle(bulut, 'part_suppliers', 'part_id', parts.map((p) => p.id as string), PART_SUPPLIERS_SUTUNLARI);
   return {
     profiles, parts, locations, projects, stock_items, stock_movements, project_bom, part_suppliers,
     tags, stock_item_tags, feedback, alinacaklar, ai_anahtarlari, ai_kullanim,
