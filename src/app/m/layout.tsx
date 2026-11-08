@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { Marka } from '@/components/marka';
 import { AltMenu } from './alt-menu';
+import { Dokunma } from './dokunma';
 import './mobil.css';
 
 export const dynamic = 'force-dynamic';
@@ -22,24 +23,20 @@ export const viewport: Viewport = {
   ],
 };
 
-/** Telefon görünümü: masaüstü üst barı yerine sade başlık + alt sekme çubuğu. */
+/** Telefon görünümü: sade başlık + alt sekme çubuğu. */
 export default function MobilLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="m-kabuk">
       <header className="m-ust m-kenar">
-        <div className="m-ust-satir">
-          <Link href="/m" style={{ color: 'var(--ink)' }} aria-label="LabStock ana sayfa">
-            <Marka boyut={26} />
-          </Link>
-          <a className="m-masaustu" href="/envanter?masaustu=1">
-            Masaüstü
-          </a>
-        </div>
+        <Link href="/m" className="m-marka" aria-label="LabStock ana sayfa">
+          <Marka boyut={24} />
+        </Link>
       </header>
       {children}
       <Suspense fallback={null}>
         <AltMenu />
       </Suspense>
+      <Dokunma />
     </div>
   );
 }

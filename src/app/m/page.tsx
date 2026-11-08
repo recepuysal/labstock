@@ -72,7 +72,8 @@ export default async function MobilStokSayfasi({
     .in('durum', EKSIK_DURUMLAR);
 
   return (
-    <main className="m-kenar">
+    <main className="m-kenar m-sayfa">
+      <h1 className="m-sayfa-baslik">{durum === 'eksik' ? 'Eksikler' : 'Stok'}</h1>
       <form className="m-ara" action="/m" role="search">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
@@ -92,21 +93,23 @@ export default async function MobilStokSayfasi({
 
       <div className="m-cipler" role="group" aria-label="Stok durumu">
         {CIPLER.map((c) => (
-          <Link key={c.etiket} className="m-cip" href={cipAdresi(c.durum, q)} aria-current={(durum ?? undefined) === c.durum ? 'true' : undefined}>
+          <Link key={c.etiket} className="m-cip m-dokun" href={cipAdresi(c.durum, q)} aria-current={(durum ?? undefined) === c.durum ? 'true' : undefined}>
             {c.etiket}
           </Link>
         ))}
       </div>
 
       <div className="m-ozet">
-        <span>
-          <b>{sayi.format(toplamKalem ?? 0)}</b> kalem
-        </span>
-        <span className="m-eksik">
-          <b>{sayi.format(eksikKalem ?? 0)}</b> eksik
-        </span>
-        {saltOkunur && <span>· izleme modu</span>}
+        <Link className="m-kart m-dokun" href="/m">
+          <span className="m-kart-etiket">Toplam kalem</span>
+          <b>{sayi.format(toplamKalem ?? 0)}</b>
+        </Link>
+        <Link className="m-kart m-dokun uyari" href="/m?durum=eksik">
+          <span className="m-kart-etiket">Eksik / kritik</span>
+          <b>{sayi.format(eksikKalem ?? 0)}</b>
+        </Link>
       </div>
+      {saltOkunur && <div className="m-izleme">İzleme modu · stok değiştirilemez</div>}
 
       {hata ? (
         <div className="m-bos">Liste yüklenemedi: {hata}</div>
@@ -116,7 +119,7 @@ export default async function MobilStokSayfasi({
         <div className="m-liste">
           {satirlar.map((r) => (
             <div className="m-satir" key={r.stok_id}>
-              <Link className="m-satir-bilgi" href={`/m/${r.stok_id}`}>
+              <Link className="m-satir-bilgi m-dokun" href={`/m/${r.stok_id}`}>
                 <div className="m-mpn">{r.mpn}</div>
                 <div className="m-meta">
                   <span className={`m-nokta ${r.durum}`} title={durumEtiketi(r.durum, dil)} />

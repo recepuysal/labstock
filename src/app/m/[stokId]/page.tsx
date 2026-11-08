@@ -47,8 +47,8 @@ export default async function MobilParcaSayfasi({ params }: { params: Promise<{ 
   if (s.tedarikci_kodu) ozellikler.push([s.tedarikci ?? 'Tedarikçi kodu', s.tedarikci_kodu]);
 
   return (
-    <main className="m-kenar" style={{ paddingBottom: 24 }}>
-      <Link href="/m" className="m-geri">
+    <main className="m-kenar m-sayfa">
+      <Link href="/m" className="m-geri m-dokun">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" />
         </svg>
@@ -79,7 +79,7 @@ export default async function MobilParcaSayfasi({ params }: { params: Promise<{ 
       </dl>
 
       {s.datasheet_url && (
-        <a className="m-link-dugme" href={s.datasheet_url} target="_blank" rel="noreferrer">
+        <a className="m-link-dugme m-dokun" href={s.datasheet_url} target="_blank" rel="noreferrer">
           Datasheet'i aç
         </a>
       )}
@@ -100,10 +100,6 @@ export default async function MobilParcaSayfasi({ params }: { params: Promise<{ 
           </div>
         ))
       )}
-
-      <Link className="m-link-dugme" href={`/envanter/${s.stok_id}`}>
-        Tüm ayrıntılar (masaüstü görünüm)
-      </Link>
     </main>
   );
 }
