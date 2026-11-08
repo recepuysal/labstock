@@ -108,6 +108,7 @@ export async function stokHareket(stokId: string, delta: number): Promise<EylemD
   if (error) return { hata: error.message };
 
   revalidatePath('/envanter');
+  revalidatePath('/m', 'layout'); // telefon görünümü
   return {};
 }
 
