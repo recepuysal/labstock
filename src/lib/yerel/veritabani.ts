@@ -130,6 +130,9 @@ create table if not exists alinacaklar (
   not_metni text, link text,
   durum text not null default 'bekliyor',
   olusturan text,
+  tedarikci text, birim_fiyat real,
+  para_birimi text not null default 'TRY',
+  siparis_tarihi text, alinma_tarihi text, guncellendi text,
   created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
@@ -208,9 +211,35 @@ export function yerelVeritabani(): DatabaseSync {
     db.exec(`pragma user_version = ${SURUM}`);
     db.exec('commit');
   }
+  sonradanEklenenSutunlar(db);
   g.__labstockYerelDb = db;
   g.__labstockYerelDbYol = yol;
   return db;
+}
+
+/** SEMA'ya sonradan eklenen sütunlar — "create table if not exists" var olan
+ * tabloya sütun eklemediği için eski veritabanlarında eksikse burada eklenir
+ * (bkz. supabase/migrations/0016_alinacak_detaylari.sql). Tekrar çalışması zararsız. */
+const SONRADAN_EKLENEN: Record<string, Record<string, string>> = {
+  alinacaklar: {
+    tedarikci: 'text',
+    birim_fiyat: 'real',
+    para_birimi: "text not null default 'TRY'",
+    siparis_tarihi: 'text',
+    alinma_tarihi: 'text',
+    guncellendi: 'text',
+  },
+};
+
+function sonradanEklenenSutunlar(db: DatabaseSync) {
+  for (const [tablo, sutunlar] of Object.entries(SONRADAN_EKLENEN)) {
+    const mevcut = new Set(
+      (db.prepare(`pragma table_info("${tablo}")`).all() as { name: string }[]).map((r) => r.name),
+    );
+    for (const [sutun, tip] of Object.entries(sutunlar)) {
+      if (!mevcut.has(sutun)) db.exec(`alter table "${tablo}" add column "${sutun}" ${tip}`);
+    }
+  }
 }
 
 export function yerelVeritabaniniKapat() {
