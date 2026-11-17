@@ -15,6 +15,7 @@ import { KameraIstasyonu } from '@/components/kamera-istasyonu';
 import { alinacaklarBildirimVerisiAl } from '@/lib/gozlemci';
 import { dilAl, sozlukAl } from '@/lib/i18n/sunucu';
 import { DilSaglayici } from '@/lib/i18n/istemci';
+import { Analytics } from '@vercel/analytics/next';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Telefon kamerasıyla QR okuma ve sayım (sadece masaüstü uygulamasında); izleme modunda yazma kapalı */}
         {bildirimVerisi && !bildirimVerisi.saltOkunur && <KameraIstasyonu />}
         </DilSaglayici>
+        {/* Vercel Web Analytics (çerezsiz ziyaret sayımı) — sadece Vercel'deki web
+            sürümünde; masaüstü uygulamasının yerel sunucusunda /_vercel uç noktası yok. */}
+        {process.env.VERCEL === '1' && <Analytics />}
       </body>
     </html>
   );
