@@ -38,10 +38,10 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
   const [kodDurum, kodGonder, kodBekliyor] = useActionState<AuthDurum, FormData>(kodDogrula, {});
   const [geriDon, setGeriDon] = useState(false);
   const [yenidenGonderiliyor, yenidenBasla] = useTransition();
-  // null: henüz bilinmiyor (sunucu çizimi). Masaüstünde yalnızca GitHub: Google
-  // uygulama içi pencereden girişe izin vermiyor.
+  // null: henüz bilinmiyor (sunucu çizimi). Masaüstü uygulamasında yalnızca
+  // e-posta + şifreyle giriş yapılır; GitHub/Google butonları sadece webde.
   const [saglayicilar, setSaglayicilar] = useState<typeof OAUTH | null>(null);
-  useEffect(() => setSaglayicilar(window.electronAPI ? ['github'] : OAUTH), []);
+  useEffect(() => setSaglayicilar(window.electronAPI ? [] : OAUTH), []);
   const [yenidenMesaj, setYenidenMesaj] = useState<string | null>(null);
   const kodAdimindeyiz = Boolean(durum.kodBekleniyor) && !geriDon;
 

@@ -62,6 +62,19 @@ export function ayarYaz(ayar: YerelAyar) {
   fs.renameSync(hedef + '.tmp', hedef);
 }
 
+/** Çevrimdışı mod kapatıldı: uygulamaya yalnızca e-posta + şifreyle girilir.
+ * Hâlâ o modda kalmış bir kurulum ilk açılışta buluta alınır (giriş istenir);
+ * bu bilgisayardaki veriler silinmez, girişten hemen sonra hesaba eklenir
+ * (bkz. girisSonrasiEkle). Bu yüzden her zaman false döner. */
 export function yerelModda(): boolean {
-  return yerelModDestekleniyor() && ayarOku().mod === 'yerel';
+  if (!yerelModDestekleniyor()) return false;
+  const ayar = ayarOku();
+  if (ayar.mod === 'yerel') {
+    try {
+      ayarYaz({ ...ayar, mod: 'bulut', yuklemeBekliyor: true, otomatikEkle: true });
+    } catch (e) {
+      console.error('[depolama] çevrimdışı moddan buluta geçiş:', e);
+    }
+  }
+  return false;
 }

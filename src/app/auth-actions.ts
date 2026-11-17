@@ -147,10 +147,12 @@ export async function cikisYap() {
   redirect('/giris');
 }
 
-/** GitHub / Google ile giriş (masaüstünde yalnızca GitHub): sağlayıcının sayfasına yönlendirir,
- * dönüş /auth/callback'te oturuma çevrilir. Sağlayıcılar Supabase →
- * Authentication → Sign In / Providers'ta açık olmalı. */
+/** GitHub / Google ile giriş (yalnızca web; masaüstünde sadece e-posta + şifre):
+ * sağlayıcının sayfasına yönlendirir, dönüş /auth/callback'te oturuma çevrilir.
+ * Sağlayıcılar Supabase → Authentication → Sign In / Providers'ta açık olmalı. */
 export async function oauthIleGiris(saglayici: 'github' | 'google', devam: string): Promise<void> {
+  // Masaüstü uygulamasının Next sunucusu (Electron LABSTOCK_VERI_DIZINI verir).
+  if (process.env.LABSTOCK_VERI_DIZINI) redirect('/giris');
   const { headers } = await import('next/headers');
   const h = await headers();
   const koken = h.get('origin') ?? `https://${h.get('host')}`;

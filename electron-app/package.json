@@ -1,6 +1,6 @@
 {
   "name": "labstock-desktop",
-  "version": "1.23.0",
+  "version": "1.23.1",
   "private": true,
   "description": "LabStock - electronic component inventory",
   "homepage": "https://github.com/recepuysal/labstock",
