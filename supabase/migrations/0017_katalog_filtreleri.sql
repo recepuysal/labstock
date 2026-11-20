@@ -7,6 +7,7 @@
 -- yani kod bu migration'dan önce de canlıya çıkabilir.
 --
 -- Supabase → SQL Editor'de bir kez çalıştır. Tekrar çalıştırmak güvenli.
+-- (Canlıya uygulandı: 2026-11-20.)
 
 create or replace function public.katalog_filtreleri()
 returns table (kategoriler text[], kiliflar text[])
