@@ -52,24 +52,21 @@ export default async function MobilStokSayfasi({
     return s.order('updated_at', { ascending: false }).order('stok_id', { ascending: true });
   }
 
-  let satirlar: EnvanterSatiri[] = [];
-  let hata: string | null = null;
-  try {
-    satirlar = await tumSatirlar<EnvanterSatiri>(sorgu, LIMIT);
-  } catch (e) {
-    hata = e instanceof Error ? e.message : String(e);
-  }
-
-  // Özet tüm depo için (filtreden bağımsız)
-  const { count: toplamKalem } = await supabase
-    .from('envanter')
-    .select('stok_id', { count: 'exact', head: true })
-    .eq('user_id', hedef);
-  const { count: eksikKalem } = await supabase
-    .from('envanter')
-    .select('stok_id', { count: 'exact', head: true })
-    .eq('user_id', hedef)
-    .in('durum', EKSIK_DURUMLAR);
+  // Liste ve iki özet sayısı aynı anda istenir (eskiden sırayla bekleniyordu).
+  // Özet tüm depo için (filtreden bağımsız).
+  const [liste, { count: toplamKalem }, { count: eksikKalem }] = await Promise.all([
+    tumSatirlar<EnvanterSatiri>(sorgu, LIMIT).then(
+      (satirlar) => ({ satirlar, hata: null as string | null }),
+      (e) => ({ satirlar: [] as EnvanterSatiri[], hata: e instanceof Error ? e.message : String(e) }),
+    ),
+    supabase.from('envanter').select('stok_id', { count: 'exact', head: true }).eq('user_id', hedef),
+    supabase
+      .from('envanter')
+      .select('stok_id', { count: 'exact', head: true })
+      .eq('user_id', hedef)
+      .in('durum', EKSIK_DURUMLAR),
+  ]);
+  const { satirlar, hata } = liste;
 
   return (
     <main className="m-kenar m-sayfa">

@@ -1,5 +1,7 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { createClient } from './supabase/server';
+import { kullaniciAl } from './oturum';
 import { sozlukAl } from './i18n/sunucu';
 
 export const GORUNUM_COOKIE = 'labstock_gorunum';
@@ -19,11 +21,11 @@ export type AktifGorunum = {
 /** Bu istekte hangi kullanıcının deposu gösterilecek ve yazmaya izin var mı — hem kendi
  * deposu hem de (varsa) izlediğin depo arasında geçiş yapılabildiği için, "gözlemci
  * misin" sorusu tek başına yetmez: aktif olarak hangi görünümde olduğun cookie'de tutulur. */
-export async function aktifGorunumAl(): Promise<AktifGorunum | null> {
+// cache(): kök layout, envanter layout ve sayfa aynı istekte ayrı ayrı çağırıyor —
+// profil/RPC sorguları istek başına bir kez çalışsın.
+export const aktifGorunumAl = cache(async (): Promise<AktifGorunum | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await kullaniciAl();
   if (!user) return null;
 
   const { data: profil } = await supabase
@@ -61,7 +63,7 @@ export async function aktifGorunumAl(): Promise<AktifGorunum | null> {
     izlenenAdi,
     izlenenResim,
   };
-}
+});
 
 export type AlinacaklarBildirimVerisi = {
   hedef: string;

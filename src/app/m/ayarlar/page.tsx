@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { cikisYap } from '@/app/auth-actions';
+import { kullaniciAl } from '@/lib/oturum';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +17,7 @@ export default async function MobilAyarlar() {
   const aktif = await aktifGorunumAl();
   if (!aktif) redirect('/giris?devam=/m/ayarlar');
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await kullaniciAl();
   const eposta = user?.email ?? '';
 
   return (

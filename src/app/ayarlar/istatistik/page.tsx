@@ -5,6 +5,7 @@ import { githubIndirmeleri, istatistikleriGetir, kaynakIstatistikleri, kurulumIs
 import { HaftalikGrafik } from '@/components/haftalik-grafik';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { sozluk, yerel } from '@/lib/i18n';
+import { kullaniciAl } from '@/lib/oturum';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,9 +33,7 @@ const izgara = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax
 
 export default async function IstatistikSayfasi() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await kullaniciAl();
   if (!user) redirect('/giris');
   // Yönetici olmayan biri adresi bilse bile sayfanın varlığını görmesin.
   if (!(await yoneticiMi(supabase))) notFound();

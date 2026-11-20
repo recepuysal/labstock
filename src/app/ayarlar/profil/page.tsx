@@ -8,14 +8,13 @@ import { yerelModda } from '@/lib/yerel/mod';
 import { basHarfleri } from '@/lib/types';
 import { GozlemcilikKarti } from '@/components/gozlemcilik-karti';
 import { sozlukAl } from '@/lib/i18n/sunucu';
+import { kullaniciAl } from '@/lib/oturum';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProfilSayfasi() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await kullaniciAl();
 
   if (!user) redirect('/giris');
 

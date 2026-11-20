@@ -21,6 +21,7 @@ import {
 import { sozluk } from '@/lib/i18n';
 import { dilAl } from '@/lib/i18n/sunucu';
 import { tumSatirlar } from '@/lib/sayfali';
+import { katalogFiltreleri } from '@/lib/katalog-filtreleri';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,28 +55,63 @@ export default async function EnvanterSayfasi({
   if (!aktif) redirect('/giris');
   const { kullaniciId: hedef, saltOkunur } = aktif;
 
-  const { data: konumVerisi } = await supabase
+  // Birbirinden bağımsız sorgular aynı anda başlatılır (eskiden ~8 sorgu sırayla
+  // bekleniyordu; her biri Supabase'e ayrı bir gidiş-dönüş demekti).
+  const konumP = supabase
     .from('locations')
     .select('id, parent_id, ad, kod, tip, aciklama, sira')
     .eq('user_id', hedef)
     .order('sira', { ascending: true });
 
+  const etiketliP: Promise<string[] | null> = etiket
+    ? tumSatirlar<{ stock_item_id: string }>(() =>
+        supabase
+          .from('stock_item_tags')
+          .select('stock_item_id, tags!inner(ad, user_id)')
+          .eq('tags.ad', etiket)
+          .eq('tags.user_id', hedef)
+          .order('stock_item_id', { ascending: true })
+          .order('tag_id', { ascending: true }),
+      )
+        .catch(() => [])
+        .then((r) => r.map((x) => x.stock_item_id))
+    : Promise.resolve(null);
+
+  const filtrelerP = katalogFiltreleri(supabase);
+
+  const etiketlerP = supabase.from('tags').select('ad').eq('user_id', hedef).order('ad', { ascending: true });
+
+  const toplamCesitP = supabase
+    .from('stock_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', hedef);
+
+  // Konum sayıları ve depo değeri tüm kalemlerden hesaplanır (1000 satır sınırına takılmadan)
+  const stokOzetP = tumSatirlar<{
+    location_id: string | null;
+    adet: number;
+    alis_fiyati: number | null;
+    para_birimi: string | null;
+  }>(() =>
+    supabase
+      .from('stock_items')
+      .select('location_id, adet, alis_fiyati, para_birimi')
+      .eq('user_id', hedef)
+      .order('id', { ascending: true }),
+  ).catch(() => []);
+
+  const sonHareketP = supabase
+    .from('stock_movements')
+    .select('created_at')
+    .eq('user_id', hedef)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Liste sorgusu sadece konumlara (alt ağaç filtresi) ve etiket eşleşmesine bağlı
+  const [{ data: konumVerisi }, stokIdleri] = await Promise.all([konumP, etiketliP]);
   const konumlar = (konumVerisi ?? []) as Konum[];
   const agac = agacKur(konumlar);
-
-  let stokIdleri: string[] | null = null;
-  if (etiket) {
-    const etiketliStokVerisi = await tumSatirlar<{ stock_item_id: string }>(() =>
-      supabase
-        .from('stock_item_tags')
-        .select('stock_item_id, tags!inner(ad, user_id)')
-        .eq('tags.ad', etiket)
-        .eq('tags.user_id', hedef)
-        .order('stock_item_id', { ascending: true })
-        .order('tag_id', { ascending: true }),
-    ).catch(() => []);
-    stokIdleri = etiketliStokVerisi.map((r) => r.stock_item_id);
-  }
 
   // Supabase tek istekte en fazla 1000 satır verdiği için liste sayfa sayfa
   // okunur; sorgu her sayfa için yeniden kurulur.
@@ -111,51 +147,17 @@ export default async function EnvanterSayfasi({
     return sorgu.order('stok_id', { ascending: true });
   }
 
-  let satirlar: EnvanterSatiri[] = [];
-  let error: { message: string } | null = null;
-  if (stokIdleri?.length !== 0) {
-    try {
-      satirlar = await tumSatirlar<EnvanterSatiri>(listeSorgusu, gosterilen);
-    } catch (e) {
-      error = { message: e instanceof Error ? e.message : String(e) };
-    }
-  }
+  const listeP: Promise<{ satirlar: EnvanterSatiri[]; error: { message: string } | null }> =
+    stokIdleri?.length !== 0
+      ? tumSatirlar<EnvanterSatiri>(listeSorgusu, gosterilen).then(
+          (satirlar) => ({ satirlar, error: null }),
+          (e) => ({ satirlar: [], error: { message: e instanceof Error ? e.message : String(e) } }),
+        )
+      : Promise.resolve({ satirlar: [], error: null });
 
-  const katalogVerisi = await tumSatirlar<{ kategori: string | null; kilif: string | null }>(() =>
-    supabase.from('parts').select('kategori, kilif').order('id', { ascending: true }),
-  ).catch(() => []);
-  const kategoriler = Array.from(
-    new Set((katalogVerisi ?? []).map((p) => p.kategori).filter((v): v is string => Boolean(v))),
-  ).sort((a, b) => a.localeCompare(b, 'tr'));
-  const kiliflar = Array.from(
-    new Set((katalogVerisi ?? []).map((p) => p.kilif).filter((v): v is string => Boolean(v))),
-  ).sort((a, b) => a.localeCompare(b, 'tr'));
-
-  const { data: etiketVerisi } = await supabase
-    .from('tags')
-    .select('ad')
-    .eq('user_id', hedef)
-    .order('ad', { ascending: true });
+  const [{ satirlar, error }, { kategoriler, kiliflar }, { data: etiketVerisi }, { count: toplamCesit }, stokOzetVerisi, { data: sonHareket }] =
+    await Promise.all([listeP, filtrelerP, etiketlerP, toplamCesitP, stokOzetP, sonHareketP]);
   const etiketler = (etiketVerisi ?? []).map((t) => t.ad);
-
-  const { count: toplamCesit } = await supabase
-    .from('stock_items')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', hedef);
-
-  // Konum sayıları ve depo değeri tüm kalemlerden hesaplanır (1000 satır sınırına takılmadan)
-  const stokOzetVerisi = await tumSatirlar<{
-    location_id: string | null;
-    adet: number;
-    alis_fiyati: number | null;
-    para_birimi: string | null;
-  }>(() =>
-    supabase
-      .from('stock_items')
-      .select('location_id, adet, alis_fiyati, para_birimi')
-      .eq('user_id', hedef)
-      .order('id', { ascending: true }),
-  ).catch(() => []);
 
   const dogrudanSayilar = new Map<string, number>();
   const depoDegeri = new Map<string, number>();
@@ -170,14 +172,6 @@ export default async function EnvanterSayfasi({
   }
   const sayilar = Object.fromEntries(konumToplamSayilari(agac, dogrudanSayilar));
   const tipOzeti = konumTipOzeti(konumlar, dil);
-
-  const { data: sonHareket } = await supabase
-    .from('stock_movements')
-    .select('created_at')
-    .eq('user_id', hedef)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   const seciliKonum = konum ? konumlar.find((k) => k.id === konum) : undefined;
   const toplamAdet = satirlar.reduce((t, r) => t + Number(r.adet), 0);

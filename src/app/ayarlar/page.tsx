@@ -20,14 +20,13 @@ import { VeriDepolamaKarti } from '@/components/veri-depolama-karti';
 import { ayarOku, yerelModDestekleniyor } from '@/lib/yerel/mod';
 import { veritabaniYolu } from '@/lib/yerel/veritabani';
 import { yedekleriListele } from '@/lib/yerel/aktarim';
+import { kullaniciAl } from '@/lib/oturum';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AyarlarSayfasi() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await kullaniciAl();
 
   if (!user) redirect('/giris');
 

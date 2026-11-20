@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { aktifGorunumAl } from '@/lib/gozlemci';
 import { AlinacaklarListesi, type AlinacakKaydi } from '@/components/alinacaklar-listesi';
 import { sozlukAl } from '@/lib/i18n/sunucu';
+import { kullaniciAl } from '@/lib/oturum';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,9 +41,7 @@ export default async function AlinacaklarSayfasi() {
 
   // "Kim ekledi" için isim haritası: kendi adın, izlediğin hesabın adı ve
   // (kendi deponda) seni izleyenlerin adları.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await kullaniciAl();
   const isimler: Record<string, string> = {};
   if (saltOkunur) {
     isimler[hedef] = izlenenAdi || s.depoSahibi;

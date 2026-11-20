@@ -39,3 +39,19 @@ export async function createClient() {
 export async function createBulutClient() {
   return bulutIstemcisi(await cookies());
 }
+
+/** `after()` içinde kullanılacak istemci. Sunucu bileşenlerinde after
+ * geri çağrısı cookies()'e erişemediği için çerezlerin kopyası şimdiden
+ * alınır; istemci o kopyayla çalışır (oturum tazeleme yapmaz). */
+export async function createSonradanClient() {
+  if (yerelModda()) return yerelIstemci() as unknown as ReturnType<typeof bulutIstemcisi>;
+  const kopya = (await cookies()).getAll();
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookies: {
+      getAll() {
+        return kopya;
+      },
+      setAll() {},
+    },
+  });
+}

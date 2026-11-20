@@ -50,10 +50,12 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // getUser() oturumu tazeler; getSession() sunucuda güvenilir değil.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() oturumu gerekirse tazeler ve JWT'yi doğrular. Supabase'de
+  // asimetrik imza anahtarları (Settings → JWT Keys) açıksa doğrulama yerelde,
+  // ağa çıkmadan yapılır; değilse getUser() gibi Auth sunucusuna sorar.
+  // getSession() sunucuda güvenilir değil.
+  const { data: iddialar } = await supabase.auth.getClaims();
+  const user = iddialar?.claims ?? null;
 
   const { pathname } = request.nextUrl;
   const acik = HERKESE_ACIK.some((p) => pathname.startsWith(p));
